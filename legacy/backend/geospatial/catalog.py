@@ -1,0 +1,18 @@
+SPATIAL_CATALOG = {
+    'hospital': {'osm_tags': [('amenity','hospital')], 'regulatory_relevance':'Potential proximity sensitivity'},
+    'school': {'osm_tags': [('amenity','school')], 'regulatory_relevance':'Potential proximity sensitivity'},
+    'residential': {'osm_tags': [('landuse','residential')], 'regulatory_relevance':'Residential land-use proximity'},
+    'industrial': {'osm_tags': [('landuse','industrial')], 'regulatory_relevance':'Industrial land-use proximity'},
+    'commercial': {'osm_tags': [('landuse','commercial')], 'regulatory_relevance':'Commercial land-use proximity'},
+    'forest': {'osm_tags': [('landuse','forest'),('natural','wood')], 'regulatory_relevance':'Forest/woodland proximity'},
+    'wetland': {'osm_tags': [('natural','wetland')], 'regulatory_relevance':'Wetland proximity'},
+    'water_body': {'osm_tags': [('natural','water'),('landuse','reservoir')], 'regulatory_relevance':'Water-body proximity'},
+    'river': {'osm_tags': [('waterway','river'),('waterway','riverbank')], 'regulatory_relevance':'River/waterway proximity'},
+    'stream': {'osm_tags': [('waterway','stream')], 'regulatory_relevance':'Waterway proximity'},
+    'coastline': {'osm_tags': [('natural','coastline')], 'regulatory_relevance':'Coastal proximity'},
+    'protected_area': {'osm_tags': [('boundary','protected_area')], 'regulatory_relevance':'Protected-area proximity'},
+    'national_park': {'osm_tags': [('boundary','national_park')], 'regulatory_relevance':'National park proximity'},
+    'military': {'osm_tags': [('landuse','military')], 'regulatory_relevance':'Restricted land-use proximity'},
+    'airport': {'osm_tags': [('aeroway','aerodrome')], 'regulatory_relevance':'Airport proximity'},
+    'railway': {'osm_tags': [('railway','rail')], 'regulatory_relevance':'Railway proximity'},
+}

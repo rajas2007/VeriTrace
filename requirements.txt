@@ -1,0 +1,10 @@
+# ============================================================
+# VeriTrace Desktop - Canonical Dependencies Pointer
+# ============================================================
+# pyproject.toml is the SINGLE authoritative source of truth
+# for package metadata, dependencies, and optional dependency tiers.
+#
+# This file bridges standard pip workflows by installing VeriTrace
+# in editable mode with all development, testing, packaging, and
+# optional AI dependencies directly from pyproject.toml:
+-e .[all]

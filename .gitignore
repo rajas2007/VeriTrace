@@ -1,0 +1,92 @@
+# ============================================================
+# VeriTrace Desktop - Git Ignore Policy
+# ============================================================
+
+# Python bytecode, caches, and test artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+.eggs/
+
+# Python Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+
+# Qt / PySide6 Generated Artifacts
+ui_*.py
+rc_*.py
+*_rc.py
+.qmake.stash
+
+# PyInstaller & Build Artifacts
+/build/
+/dist/
+packaging/build/
+*.spec.bak
+
+# Inno Setup Packaging Output
+/Output/
+packaging/Output/
+packaging/dist/
+
+# Runtime Application Storage & Local Data (ISO/IEC 27037 Forensic Isolation)
+# Active runtime data resides in %LOCALAPPDATA%/VeriTrace/
+/storage/
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+*.bin
+
+# Temporary Processing Directories and Logs
+/tmp/
+/temp/
+*.tmp
+/logs/
+*.log
+
+# Investigation Artifacts (Protecting User PII & Confidential Scans)
+*.png
+*.jpg
+*.jpeg
+*.pdf
+!src/veritrace/gui/resources/**/*.png
+!src/veritrace/gui/resources/**/*.svg
+!src/veritrace/gui/resources/**/*.ico
+!packaging/resources/**/*.ico
+!packaging/resources/**/*.bmp
+!tests/fixtures/**/*.pdf
+!tests/fixtures/**/*.png
+!legacy/**/*.png
+!legacy/**/*.jpg
+!legacy/**/*.jpeg
+!legacy/**/*.svg
+
+# Secrets & Environment Configurations
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Operating System & IDE Configurations
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Quarantined Legacy Assets (Node / Rust / Tauri archives)
+legacy/**/node_modules/
+legacy/**/target/
+legacy/**/dist/

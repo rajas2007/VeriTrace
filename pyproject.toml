@@ -1,0 +1,85 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "veritrace"
+version = "0.1.0"
+description = "VeriTrace - Native Desktop Document Forensics and Contextual Intelligence System"
+authors = [{ name = "VeriTrace Team" }]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    # Core Desktop UI & Presentation
+    "PySide6>=6.7.0",
+    "pydantic>=2.8.0",
+    "pydantic-settings>=2.4.0",
+    # Local SQLite WAL Persistence
+    "sqlalchemy>=2.0.30",
+    "alembic>=1.13.0",
+    # Document Ingestion & High-DPI PDF Rasterization
+    "pymupdf>=1.24.0",
+    # Scanned Document OCR Fallback
+    "pytesseract>=0.3.10",
+    # Computer Vision & Forensic Differentials (ELA, Baselines)
+    "pillow>=10.4.0",
+    "numpy>=1.26.0",
+    "opencv-python-headless>=4.10.0",
+    # Fast Levenshtein & Cross-Document Entity Alignment
+    "rapidfuzz>=3.9.0",
+    # Auditor-Grade PDF Dossier Compilation
+    "reportlab>=4.2.0",
+    # Environment & System Metrics
+    "python-dotenv>=1.0.0",
+    "psutil>=6.0.0",
+]
+
+[project.optional-dependencies]
+# Optional Cloud AI Narrative Reasoning (user-controlled, offline fallback exists)
+ai = [
+    "groq>=0.4.2",
+    "langchain-groq>=0.1.9",
+    "langgraph>=0.2.0",
+]
+
+# Development & Code Quality Tools
+dev = [
+    "ruff>=0.6.0",
+    "mypy>=1.11.0",
+]
+
+# Automated Testing Suite
+test = [
+    "pytest>=8.0.0",
+    "pytest-qt>=4.4.0",
+    "pytest-cov>=5.0.0",
+    "pytest-mock>=3.14.0",
+]
+
+# Standalone Desktop Packaging
+packaging = [
+    "pyinstaller>=6.10.0",
+]
+
+# Complete developer bundle
+all = [
+    "veritrace[ai,dev,test,packaging]",
+]
+
+[project.scripts]
+veritrace = "veritrace.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["veritrace*"]
+
+[tool.setuptools.package-data]
+veritrace = [
+    "gui/styles/*.qss",
+    "gui/resources/**/*",
+    "**/*.json",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "scripts/validation"]
+testpaths = ["tests"]

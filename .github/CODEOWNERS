@@ -1,0 +1,38 @@
+# VeriTrace Code Ownership Specification
+# Aligned with dev/26_TEAM_DEVELOPMENT_AND_GITHUB_WORKFLOW.md
+
+# Global fallback: Lead Architect / Core Maintainers
+*                                       @rajas2007
+
+# Workstream 1: Desktop UI & UX
+/src/veritrace/gui/                     @rajas2007
+
+# Workstream 2: Document Ingestion & Extraction
+/src/veritrace/capabilities/ingestion/  @rajas2007
+/src/veritrace/capabilities/extraction/ @rajas2007
+/src/veritrace/infrastructure/pdf/      @rajas2007
+/src/veritrace/infrastructure/ocr/      @rajas2007
+
+# Workstream 3: Extraction Quality & Structured Data
+/src/veritrace/capabilities/quality/    @rajas2007
+/src/veritrace/application/dtos/        @rajas2007
+
+# Workstream 4: Validation & Cross-Doc Intelligence
+/src/veritrace/domain/rules/            @rajas2007
+/src/veritrace/capabilities/correlation/ @rajas2007
+/src/veritrace/capabilities/reasoning/  @rajas2007
+/src/veritrace/infrastructure/ai/       @rajas2007
+
+# Workstream 5: Visual Forensics & Evidence
+/src/veritrace/capabilities/forensics/  @rajas2007
+/src/veritrace/infrastructure/vision/   @rajas2007
+
+# Workstream 6: Integration, Database & Packaging
+/src/veritrace/domain/entities/         @rajas2007
+/src/veritrace/domain/value_objects/    @rajas2007
+/src/veritrace/infrastructure/persistence/ @rajas2007
+/src/veritrace/workers/                 @rajas2007
+/packaging/                             @rajas2007
+/alembic.ini                            @rajas2007
+/pyproject.toml                         @rajas2007
+/requirements.txt                       @rajas2007
