@@ -6,9 +6,9 @@ local %LOCALAPPDATA%/VeriTrace directories, and establishes Qt High-DPI attribut
 Execution scheduled for Milestone 0.
 """
 
+import logging
 import os
 import sys
-import logging
 from pathlib import Path
 
 logger = logging.getLogger("veritrace.bootstrap")
@@ -16,10 +16,7 @@ logger = logging.getLogger("veritrace.bootstrap")
 
 def setup_logging(log_level: int = logging.INFO) -> None:
     """Configure structured logging for desktop runtime."""
-    logging.basicConfig(
-        level=log_level,
-        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s"
-    )
+    logging.basicConfig(level=log_level, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
 
 def resolve_data_directory() -> Path:

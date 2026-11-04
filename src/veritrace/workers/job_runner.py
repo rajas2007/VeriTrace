@@ -7,8 +7,8 @@ and safely recovers stale or crashed jobs.
 Execution scheduled for Milestone 1.
 """
 
-import sys
 import logging
+import sys
 
 logger = logging.getLogger("veritrace.workers.job_runner")
 

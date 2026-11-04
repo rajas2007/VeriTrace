@@ -7,8 +7,8 @@ shutdown of background QThreadPool tasks and database connections.
 Execution scheduled for Milestone 0.
 """
 
-import sys
 import logging
+import sys
 
 logger = logging.getLogger("veritrace.gui.app")
 

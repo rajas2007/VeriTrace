@@ -1,11 +1,14 @@
 """Architecture Boundary and Import Rule Validator for VeriTrace.
 
 Enforces strict layered architecture principles:
-1. Domain layer must NOT import GUI, Infrastructure, Capabilities, Application, or external libraries (PySide6, cv2, fitz, sqlalchemy, sqlite3, pytesseract, groq, langchain).
+1. Domain layer must NOT import GUI, Infrastructure, Capabilities, Application,
+   or external libraries (PySide6, cv2, fitz, sqlalchemy, sqlite3, pytesseract, groq, langchain).
 2. Capabilities must NOT import GUI or PySide6 (no UI widget manipulation).
 3. Application services must NOT import GUI or PySide6 (headless business coordination).
-4. GUI layer must NOT import Infrastructure, Capabilities, or direct forensic/database engines (must route through Application & Domain).
-5. Active codebase must NOT import legacy or obsolete web frameworks (fastapi, uvicorn, starlette, tauri, bhuvan).
+4. GUI layer must NOT import Infrastructure, Capabilities, or direct forensic/database
+   engines (must route through Application & Domain).
+5. Active codebase must NOT import legacy or obsolete web frameworks
+   (fastapi, uvicorn, starlette, tauri, bhuvan).
 """
 
 import ast
@@ -21,40 +24,75 @@ APPLICATION_DIR = SRC_DIR / "application"
 GUI_DIR = SRC_DIR / "gui"
 
 FORBIDDEN_DOMAIN_IMPORTS = {
-    "gui", "veritrace.gui",
-    "infrastructure", "veritrace.infrastructure",
-    "capabilities", "veritrace.capabilities",
-    "application", "veritrace.application",
-    "PySide6", "PyQt5", "PyQt6",
-    "cv2", "fitz", "sqlalchemy", "sqlite3",
-    "pytesseract", "reportlab", "PIL", "Pillow",
-    "groq", "langchain", "langgraph", "fastapi"
+    "gui",
+    "veritrace.gui",
+    "infrastructure",
+    "veritrace.infrastructure",
+    "capabilities",
+    "veritrace.capabilities",
+    "application",
+    "veritrace.application",
+    "PySide6",
+    "PyQt5",
+    "PyQt6",
+    "cv2",
+    "fitz",
+    "sqlalchemy",
+    "sqlite3",
+    "pytesseract",
+    "reportlab",
+    "PIL",
+    "Pillow",
+    "groq",
+    "langchain",
+    "langgraph",
+    "fastapi",
 }
 
 FORBIDDEN_CAPABILITIES_IMPORTS = {
-    "PySide6", "PyQt5", "PyQt6",
-    "gui", "veritrace.gui",
-    "fastapi", "uvicorn", "tauri"
+    "PySide6",
+    "PyQt5",
+    "PyQt6",
+    "gui",
+    "veritrace.gui",
+    "fastapi",
+    "uvicorn",
+    "tauri",
 }
 
 FORBIDDEN_APPLICATION_IMPORTS = {
-    "PySide6", "PyQt5", "PyQt6",
-    "gui", "veritrace.gui",
-    "fastapi", "uvicorn", "tauri"
+    "PySide6",
+    "PyQt5",
+    "PyQt6",
+    "gui",
+    "veritrace.gui",
+    "fastapi",
+    "uvicorn",
+    "tauri",
 }
 
 FORBIDDEN_GUI_IMPORTS = {
-    "infrastructure", "veritrace.infrastructure",
-    "capabilities", "veritrace.capabilities",
-    "cv2", "fitz", "pytesseract",
-    "sqlalchemy", "sqlite3",
-    "fastapi", "uvicorn"
+    "infrastructure",
+    "veritrace.infrastructure",
+    "capabilities",
+    "veritrace.capabilities",
+    "cv2",
+    "fitz",
+    "pytesseract",
+    "sqlalchemy",
+    "sqlite3",
+    "fastapi",
+    "uvicorn",
 }
 
 FORBIDDEN_GLOBAL_IMPORTS = {
-    "legacy", "veritrace.legacy",
-    "fastapi", "uvicorn", "starlette", "tauri",
-    "bhuvan_checker"
+    "legacy",
+    "veritrace.legacy",
+    "fastapi",
+    "uvicorn",
+    "starlette",
+    "tauri",
+    "bhuvan_checker",
 }
 
 
@@ -63,7 +101,7 @@ def check_file(file_path: Path, forbidden: set[str]) -> list[str]:
     try:
         content = file_path.read_text(encoding="utf-8")
         tree = ast.parse(content, filename=str(file_path))
-    except Exception as e:
+    except (SyntaxError, UnicodeDecodeError, OSError) as e:
         return [f"Could not parse {file_path}: {e}"]
 
     for node in ast.walk(tree):
@@ -71,12 +109,13 @@ def check_file(file_path: Path, forbidden: set[str]) -> list[str]:
             for alias in node.names:
                 for f in forbidden:
                     if alias.name == f or alias.name.startswith(f + "."):
-                        violations.append(f"{file_path}:{node.lineno} imports forbidden '{alias.name}'")
-        elif isinstance(node, ast.ImportFrom):
-            if node.module:
-                for f in forbidden:
-                    if node.module == f or node.module.startswith(f + "."):
-                        violations.append(f"{file_path}:{node.lineno} imports forbidden '{node.module}'")
+                        msg = f"{file_path}:{node.lineno} imports forbidden '{alias.name}'"
+                        violations.append(msg)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            for f in forbidden:
+                if node.module == f or node.module.startswith(f + "."):
+                    msg = f"{file_path}:{node.lineno} imports forbidden '{node.module}'"
+                    violations.append(msg)
     return violations
 
 

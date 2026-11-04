@@ -7,8 +7,9 @@ and enters the Qt event loop.
 Execution scheduled for Milestone 0.
 """
 
-import sys
 import logging
+import sys
+
 from veritrace.bootstrap import bootstrap_application
 from veritrace.gui.app import VeriTraceApp
 

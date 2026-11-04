@@ -10,4 +10,5 @@ sys.path.insert(0, str(src_dir))
 
 if __name__ == "__main__":
     from veritrace.main import main
+
     sys.exit(main())

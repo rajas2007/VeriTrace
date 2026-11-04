@@ -2,7 +2,12 @@
 
 import os
 from pathlib import Path
-from veritrace.bootstrap import setup_logging, resolve_data_directory, bootstrap_application
+
+from veritrace.bootstrap import (
+    bootstrap_application,
+    resolve_data_directory,
+    setup_logging,
+)
 
 
 def test_resolve_data_directory_custom_env(monkeypatch):
