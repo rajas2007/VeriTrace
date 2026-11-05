@@ -101,19 +101,19 @@ sequenceDiagram
   The worker picks up execution directly at the first incomplete stage, avoiding redundant computation.
 * **Retry Counter:** `retry_count` is incremented on each retry attempt. If `retry_count >= 3`, the job is marked permanently `FAILED_ABORTED` to prevent infinite failure loops.
 
-### 2.6 Frontend Progress Updates
-* The frontend polls `GET /api/v1/investigations/{id}/status` every 1500ms.
-* The response delivers current `status`, `stage`, `progress_percent`, `stage_message`, and `can_resume`.
-* The `PipelineStatus.jsx` banner maps the stage directly to its animated wave indicator.
+### 2.6 Desktop UI Progress Updates & Reactive Telemetry
+* Multi-threaded background tasks (`QRunnable` managed by `QThreadPool`) emit custom Qt Signals: `progress_updated(stage: str, percent: int)` and `pipeline_finished(investigation_id: str)`.
+* The PySide6 UI main window subscribes to these signals, updating the progress bar in `StatusBar` and refreshing document tree views asynchronously without blocking the UI thread.
+* For external status inspection or recovery, callers read SQLite `investigation_jobs` directly via `JobService.get_job_status(job_id)`.
 
 ---
 
 ## 3. Database Model Reconciliation & Final Entity Count
 
 ### 3.1 Entity Reconciliation Summary
-The preliminary Task 02 documentation mentioned varying counts (10 to 12) depending on whether association tables or theoretical versioning were included. 
+The preliminary Task 02 documentation mentioned varying counts (10 to 12) depending on whether association tables or theoretical versioning were included. With the evolution to industrial forensics and signature verification, 3 additional models are integrated: `Organization`, `AuthorizedSubject`, and `SignatureReferenceProfile`.
 
-**Definitive Entity Count: Exactly 12 Core Entities + 1 Association Table**
+**Definitive Entity Count: Exactly 15 Core Entities + 1 Association Table (16 Tables Total)**
 
 | # | Entity Name | Table Name | Purpose | Model Class Location |
 | :-: | :--- | :--- | :--- | :--- |
@@ -130,6 +130,9 @@ The preliminary Task 02 documentation mentioned varying counts (10 to 12) depend
 | **11**| `ReviewDecision` | `review_decisions` | Human sign-off, dismissal, and rationale | `src/veritrace/infrastructure/persistence/models.py` |
 | **12**| `Dossier` | `dossiers` | Compiled 6-section PS-2 report & PDF hash | `src/veritrace/infrastructure/persistence/models.py` |
 | **13**| `AuditEvent` | `audit_events` | Immutable append-only audit trail | `src/veritrace/infrastructure/persistence/models.py` |
+| **14**| `Organization` | `organizations` | Supplier, vendor, customer enterprise profile | `src/veritrace/infrastructure/persistence/models.py` |
+| **15**| `AuthorizedSubject`| `authorized_subjects`| Signatory profile, corporate role & department | `src/veritrace/infrastructure/persistence/models.py` |
+| **16**| `SignatureReferenceProfile` | `signature_reference_profiles` | Reference signature sample crops & ONNX feature vectors | `src/veritrace/infrastructure/persistence/models.py` |
 
 ### 3.2 Formal Exclusion of `DocumentVersion` for Prototype
 * **Verdict:** `DocumentVersion` is **EXCLUDED** from the hackathon prototype.
@@ -383,7 +386,7 @@ To develop, test, and validate **VeriTrace Desktop** locally on Windows 10/11 x6
 #### Command 1: Launch Native PySide6 Desktop Application
 ```powershell
 # Navigate to project root and launch desktop entrypoint
-cd c:\Users\ghong\OneDrive\Attachments\Desktop\VeriTrace
+cd <repo-root>  # e.g., cd path/to/VeriTrace
 python scripts\development\run_desktop.py
 ```
 *Initializes PySide6 QApplication, applies dark forensic QSS stylesheet, and mounts the 4-pane workstation layout.*

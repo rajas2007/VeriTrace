@@ -71,13 +71,13 @@ VeriTrace/
 
 ## 3. Backend Architecture Audit
 
-### 3.1 FastAPI Application ([`backend/main.py`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/backend/main.py))
+### 3.1 FastAPI Application ([`backend/main.py`](..\legacy\backend\main.py))
 * **Application Initialization:** Initialized with title `"UdyogPermit AI Backend"` on FastAPI `>=0.115`.
 * **CORS Middleware:** Configured with `allow_origins=["*"]`, `allow_credentials=True`, `allow_methods=["*"]`, `allow_headers=["*"]`.
 * **Environment Configuration:** Reads `GROQ_API_KEY` and optional `GROQ_MODEL` (default: `"openai/gpt-oss-20b"`).
 * **Static File Serving:** Mounts `/assets` from `backend/static/assets` and serves `backend/static/index.html` as a SPA catch-all route for production deployments.
 
-### 3.2 LangGraph Orchestration ([`backend/main.py#L188-L226`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/backend/main.py#L188-L226))
+### 3.2 LangGraph Orchestration ([`backend/main.py#L188-L226`](..\legacy\backend\main.py#L188-L226))
 * **State Graph:** Utilizes `langgraph.graph.StateGraph` typed to `WorkflowState`.
 * **In-Memory Checkpointing:** Uses `MemorySaver()`, which persists state only in volatile process RAM.
 * **Nodes Defined:**
@@ -95,23 +95,23 @@ VeriTrace/
 * **Conditional Edges:** Routes from `completeness_gate` to either `regulatory` or `question_generation`.
 * **Human-in-the-Loop Interrupts:** Graph is compiled with `interrupt_before=["clarify_wait", "hitl_wait"]`.
 
-### 3.3 Agent Implementations ([`backend/agents/`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/backend/agents/))
+### 3.3 Agent Implementations ([`backend/agents/`](..\legacy\backend\agents/))
 
 | Agent File | Actual Verified Functionality | Reusability in VeriTrace |
 | :--- | :--- | :--- |
-| [`agent1.py`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/backend/agents/agent1.py) | Extracts industrial profile (power, land, emissions) from raw text; manages clarification loops. | Pattern of state gating and LLM parsing is reusable; industrial fields must be replaced. |
-| [`agent2.py`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/backend/agents/agent2.py) | Analyzes compliance permits (PCB, Fire, Factory) and subsidy schemes using Groq JSON mode. | Multi-rule evaluation pattern is reusable; permit logic must be replaced with forensic checks. |
-| [`agent3.py`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/backend/agents/agent3.py) | Generates a sequential Markdown roadmap explaining dependencies. | Reusable as the narrative synthesis generator for the Investigation Dossier. |
-| [`agent4.py`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/backend/agents/agent4.py) | Transforms state into ReactFlow nodes, edges, and swimlanes with layout coordinates. | Highly reusable for transforming cross-document evidence into a visual relationship graph. |
-| [`category_classifier.py`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/backend/agents/category_classifier.py) | Keyword-based matching of industrial facilities into Red/Orange/Green/White pollution categories. | Irrelevant to document forensics; to be deprecated. |
-| [`resolver.py`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/backend/agents/resolver.py) | Massive 33KB hardcoded registry of Maharashtra government offices, districts, and approvals. | Irrelevant to document forensics; to be deprecated. |
+| [`agent1.py`](..\legacy\backend\agents\agent1.py) | Extracts industrial profile (power, land, emissions) from raw text; manages clarification loops. | Pattern of state gating and LLM parsing is reusable; industrial fields must be replaced. |
+| [`agent2.py`](..\legacy\backend\agents\agent2.py) | Analyzes compliance permits (PCB, Fire, Factory) and subsidy schemes using Groq JSON mode. | Multi-rule evaluation pattern is reusable; permit logic must be replaced with forensic checks. |
+| [`agent3.py`](..\legacy\backend\agents\agent3.py) | Generates a sequential Markdown roadmap explaining dependencies. | Reusable as the narrative synthesis generator for the Investigation Dossier. |
+| [`agent4.py`](..\legacy\backend\agents\agent4.py) | Transforms state into ReactFlow nodes, edges, and swimlanes with layout coordinates. | Highly reusable for transforming cross-document evidence into a visual relationship graph. |
+| [`category_classifier.py`](..\legacy\backend\agents\category_classifier.py) | Keyword-based matching of industrial facilities into Red/Orange/Green/White pollution categories. | Irrelevant to document forensics; to be deprecated. |
+| [`resolver.py`](..\legacy\backend\agents\resolver.py) | Massive 33KB hardcoded registry of Maharashtra government offices, districts, and approvals. | Irrelevant to document forensics; to be deprecated. |
 
-### 3.4 Pydantic Schemas ([`backend/agents/schemas.py`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/backend/agents/schemas.py))
+### 3.4 Pydantic Schemas ([`backend/agents/schemas.py`](..\legacy\backend\agents\schemas.py))
 * Uses Pydantic V2 (`pydantic>=2.0`).
 * Defines `IndustrialProfile`, `RequiredApproval`, `Subsidy`, `FlowNode`, `FlowEdge`, `FlowLayoutData`, and `ClarificationQuestion`.
 * Fully typed models with `Field(...)` descriptions, enabling automatic JSON schema generation for Groq structured output.
 
-### 3.5 Existing Document Validation Endpoint ([`backend/main.py#L340-L354`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/backend/main.py#L340-L354))
+### 3.5 Existing Document Validation Endpoint ([`backend/main.py#L340-L354`](..\legacy\backend\main.py#L340-L354))
 * **Verified Implementation:**
   ```python
   @app.post("/api/v1/document/validate")
@@ -123,7 +123,7 @@ VeriTrace/
   ```
 * **Critical Finding:** This endpoint is a rudimentary text-in/text-out prompt. It performs **no OCR, no file upload parsing, no image processing, no bounding box generation, and has no grounding**. It is completely inadequate for PS-2 and must be replaced.
 
-### 3.6 Geospatial & ISRO Bhuvan Module ([`backend/geospatial/`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/backend/geospatial/))
+### 3.6 Geospatial & ISRO Bhuvan Module ([`backend/geospatial/`](..\legacy\backend\geospatial/))
 * Complex GIS engine using `shapely`, `pyproj`, and OpenStreetMap Overpass querying buffers around latitude/longitude coordinates.
 * `bhuvan_checker.py` sends OGC requests to ISRO Bhuvan WMS servers to detect eco-sensitive zones.
 * **Finding:** Entirely outside the scope of PS-2 Document Forensics. Must be isolated and deprecated.
@@ -132,7 +132,7 @@ VeriTrace/
 
 ## 4. Frontend Architecture Audit
 
-### 4.1 Technology Stack ([`frontend/udyog-permit-frontend/package.json`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/frontend/udyog-permit-frontend/package.json))
+### 4.1 Technology Stack ([`frontend/udyog-permit-frontend/package.json`](..\legacy\frontend\package.json))
 * **Framework:** React 18.3.1 with Vite 5.4.1
 * **Styling:** Tailwind CSS 4.0.0
 * **Graphing & Visualization:**
@@ -146,17 +146,17 @@ VeriTrace/
 
 | Component | Source Path | Key Verified Features | Reusability in VeriTrace |
 | :--- | :--- | :--- | :--- |
-| **`WorkflowCanvas.jsx`** | [`src/WorkflowCanvas.jsx`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/frontend/udyog-permit-frontend/src/WorkflowCanvas.jsx) | ReactFlow canvas with MiniMap, Controls, Background grid, custom node rendering, node click selection, and responsive zoom/pan. | **HIGH (KEEP/MODIFY):** Serves directly as the Document-Evidence Relational Graph viewer. |
-| **`ApprovalNode.jsx`** | [`src/ApprovalNode.jsx`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/frontend/udyog-permit-frontend/src/ApprovalNode.jsx) | Custom ReactFlow node with status badges, icons, department tags, and handle connection points. | **HIGH (MODIFY):** Repurpose into `DocumentNode` and `EvidenceNode`. |
-| **`elkLayout.js`** | [`src/elkLayout.js`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/frontend/udyog-permit-frontend/src/elkLayout.js) | Asynchronous layout calculation organizing nodes into layered hierarchical swimlanes. | **HIGH (KEEP):** Automatically arranges documents, extracted entities, and anomaly clusters. |
-| **`RightDetailPanel.jsx`** | [`src/RightDetailPanel.jsx`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/frontend/udyog-permit-frontend/src/RightDetailPanel.jsx) | Slide-out drawer with tabs, status tags, document checklists, and action buttons. | **HIGH (MODIFY):** Adapt into the **Evidence Inspector** to display bounding box crops, confidence scores, and ELA heatmaps. |
-| **`AgentThinkingStatus.jsx`** | [`src/AgentThinkingStatus.jsx`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/frontend/udyog-permit-frontend/src/AgentThinkingStatus.jsx) | Animated execution status indicator showing which agent is processing in real-time. | **HIGH (MODIFY):** Update agent step labels to match the 10-stage forensic workflow. |
-| **`Home.jsx`** | [`src/Home.jsx`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/frontend/udyog-permit-frontend/src/Home.jsx) | Massive 77KB single-page form for entering industrial project details, capital investment, and location. | **LOW (REPLACE):** Replace with a clean Multi-Document Investigation Upload & Case Setup interface. |
-| **`App.jsx`** | [`src/App.jsx`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/frontend/udyog-permit-frontend/src/App.jsx) | Orchestrates navigation state, API calls (`/start`, `/clarify`, `/resume`), and modal overlays. | **MEDIUM (MODIFY):** Adapt state flow to handle multi-file uploads and forensic investigation stages. |
+| **`WorkflowCanvas.jsx`** | [`src/WorkflowCanvas.jsx`](..\legacy\frontend\src\WorkflowCanvas.jsx) | ReactFlow canvas with MiniMap, Controls, Background grid, custom node rendering, node click selection, and responsive zoom/pan. | **HIGH (KEEP/MODIFY):** Serves directly as the Document-Evidence Relational Graph viewer. |
+| **`ApprovalNode.jsx`** | [`src/ApprovalNode.jsx`](..\legacy\frontend\src\ApprovalNode.jsx) | Custom ReactFlow node with status badges, icons, department tags, and handle connection points. | **HIGH (MODIFY):** Repurpose into `DocumentNode` and `EvidenceNode`. |
+| **`elkLayout.js`** | [`src/elkLayout.js`](..\legacy\frontend\src\elkLayout.js) | Asynchronous layout calculation organizing nodes into layered hierarchical swimlanes. | **HIGH (KEEP):** Automatically arranges documents, extracted entities, and anomaly clusters. |
+| **`RightDetailPanel.jsx`** | [`src/RightDetailPanel.jsx`](..\legacy\frontend\src\RightDetailPanel.jsx) | Slide-out drawer with tabs, status tags, document checklists, and action buttons. | **HIGH (MODIFY):** Adapt into the **Evidence Inspector** to display bounding box crops, confidence scores, and ELA heatmaps. |
+| **`AgentThinkingStatus.jsx`** | [`src/AgentThinkingStatus.jsx`](..\legacy\frontend\src\AgentThinkingStatus.jsx) | Animated execution status indicator showing which agent is processing in real-time. | **HIGH (MODIFY):** Update agent step labels to match the 10-stage forensic workflow. |
+| **`Home.jsx`** | [`src/Home.jsx`](..\legacy\frontend\src\Home.jsx) | Massive 77KB single-page form for entering industrial project details, capital investment, and location. | **LOW (REPLACE):** Replace with a clean Multi-Document Investigation Upload & Case Setup interface. |
+| **`App.jsx`** | [`src/App.jsx`](..\legacy\frontend\src\App.jsx) | Orchestrates navigation state, API calls (`/start`, `/clarify`, `/resume`), and modal overlays. | **MEDIUM (MODIFY):** Adapt state flow to handle multi-file uploads and forensic investigation stages. |
 
 ---
 
-## 5. Docker & Containerization Audit ([`Dockerfile`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/Dockerfile))
+## 5. Docker & Containerization Audit ([`Dockerfile`](..\legacy\Dockerfile))
 
 The existing Dockerfile implements a two-stage build:
 1. `node:20-alpine` builds the Vite production static bundle.

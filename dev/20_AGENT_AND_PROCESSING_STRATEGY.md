@@ -88,3 +88,51 @@ The following table evaluates every proposed technology, verifying its necessity
 | **QGraphicsView / Scene** | High-performance document & bounding box viewing | `src/veritrace/gui/components/document_viewer.py` | **PLANNED** | Hardware-accelerated 2D canvas with pan/zoom and coordinate bounding box overlays. |
 | **PyInstaller** | Python application bundler (one-folder mode) | `packaging/pyinstaller/` | **PLANNED** | Bundles Python 3.11 runtime, PySide6 plugins, and C-extensions into standalone folder. |
 | **Inno Setup** | Single-click Windows setup installer | `packaging/installer/` | **PLANNED** | Produces single-click `VeriTrace-Setup.exe` installer with desktop shortcut and clean uninstallation. |
+
+---
+
+### 3.4 Exhaustive New Technology & Dependency Governance Matrix
+
+In accordance with Phase 5 of the Industrial Architecture Evolution, all newly evaluated technologies are classified into five strict governance tiers:
+1. **Adopted:** Integrated into the active baseline architecture and dependencies.
+2. **Evaluate / Benchmark:** Under active empirical benchmarking; abstracted behind protocols; **NOT** added to `pyproject.toml` until validated.
+3. **Optional:** Available as user-controlled plugins or configurations with zero impact on offline execution.
+4. **Deferred:** Validated for post-hackathon enterprise production; excluded from prototype runtime.
+5. **Rejected:** Architecturally incompatible, redundant, or violating core principles.
+
+| Technology | Architectural Domain | Governance Tier | Python 3.11 & Windows Compat | CPU / GPU Req | Disk & Package Size | License & Redistribution | Offline Support | Initial Release Req? | Technical Decision Rationale |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **PaddleOCR (`paddlepaddle`)** | Multilingual OCR Engine | **Evaluate / Benchmark** | Compatible with Python 3.11 x64 on Windows; wheels available. | CPU-optimized inference (OpenMP/AVX); GPU optional. | **Heavy:** $\sim 1.8\text{GB}$ total (framework + models). | Apache 2.0 (Permissive, commercial redistribution OK). | **100% Offline** (bundled local model weights). | **NO** (Evaluated behind `TextExtractorProtocol`) | SOTA text detection (DBNet++) and recognition (SVTR) for Devanagari (Hindi, Marathi) and Indic scripts. Kept behind protocol; not added to `pyproject.toml` during architecture phase. |
+| **Docling (IBM Docling)** | Document Structure & Layout | **Evaluate / Benchmark** | Compatible with Python 3.11 x64 on Windows. | CPU-friendly; multi-core recommended. | **Medium-Heavy:** $\sim 650\text{MB}$ with layout models. | MIT License (Permissive, commercial OK). | **100% Offline** (bundled layout weights). | **NO** (Optional layout adapter) | Evaluated as an optional adapter for complex nested engineering tables and reading order. PyMuPDF remains default vector foundation. |
+| **Language / Script Detection (`pycld2` / `fasttext-wheel`)** | Ingestion & Script ID | **Evaluate / Benchmark** | Windows pre-compiled wheels available for Python 3.11. | Minimal CPU overhead ($<5\text{ms}$ per page). | **Lightweight:** $<25\text{MB}$ total. | Apache 2.0 / BSD. | **100% Offline**. | **YES (Experimental)** | Essential for routing multilingual Indian pages to script-specific OCR models. Fallback to Unicode block analysis. |
+| **PyTorch (`torch`)** | Model Development & Training | **Evaluate (Offline Dev Only)** | Fully compatible on Windows x64. | GPU recommended for training; CPU adequate for test. | **Very Heavy:** $>2.5\text{GB}$ with CUDA runtime. | BSD-style (Permissive). | **100% Offline**. | **NO (Zero Runtime Presence)** | **STRICT ISOLATION:** PyTorch is strictly used for offline research and Siamese CNN training on developer workstations. It is **NEVER** bundled into the desktop client distribution. |
+| **ONNX Runtime (`onnxruntime`)** | Local Model Inference | **Evaluate / Benchmark** | Outstanding Windows 10/11 x64 compatibility via pre-compiled DLLs. | Optimized CPU inference via Eigen/MKL; zero GPU requirement. | **Lightweight:** $\sim 35\text{MB}$ pip package; quantized model $<20\text{MB}$. | MIT License (Permissive). | **100% Offline**. | **YES (Signature Prototype)** | Enables local, blazing-fast execution of quantized Siamese CNN signature comparison models on standard enterprise laptops without PyTorch overhead. |
+| **scikit-image (`skimage`)** | Morphological Forensics | **Evaluate / Benchmark** | Fully compatible on Python 3.11 Windows x64. | Pure CPU array math. | **Lightweight:** $\sim 45\text{MB}$. | BSD-3-Clause (Permissive). | **100% Offline**. | **NO (Optional CV tool)** | Evaluated for specialized structural similarity (SSIM) and advanced morphological filters; OpenCV remains primary vision baseline. |
+| **Sentence Transformers** | Multilingual Semantic Matching | **Evaluate / Benchmark** | Compatible via ONNX Runtime or lightweight PyTorch. | CPU inference acceptable for single phrases. | **Medium:** $\sim 150\text{MB}$ (quantized MiniLM model). | Apache 2.0 (Permissive). | **100% Offline**. | **NO (Roadmap)** | Evaluated for cross-language phrase matching ("Total Amount" vs "एकूण रक्कम"). Deterministic dictionary prioritized for critical totals. |
+| **Groq ChatGroq API** | Contextual Narrative Synthesis | **Optional / User-Gated** | Pure HTTP/JSON protocol; zero system binary requirements. | Zero workstation compute; remote cloud execution. | **Trivial:** Python client $<5\text{MB}$. | Proprietary Cloud API (Gated by user API key). | **Requires Internet** (100% offline template fallback). | **NO (Optional Enhancement)** | User-controlled narrative synthesizer. Never receives raw scans; operates only on anonymized numerical/textual findings. |
+| **FastAPI / Uvicorn** | Web Gateway | **REJECTED** | Obsolete legacy web stack. | Unnecessary network loopback overhead. | Bloat. | Permissive. | N/A | **NO (Eliminated)** | Eliminated under ADR-026 and ADR-030. Direct in-process Python calls provide zero-overhead communication with PySide6. |
+| **Tauri 2 / Rust** | Desktop Shell | **REJECTED** | Deprecated in Task 02.4. | Complex dual-runtime IPC (Rust-Python). | Bloat. | Permissive. | N/A | **NO (Eliminated)** | Replaced by native PySide6 under ADR-025, unifying entire stack in pure Python 3.11. |
+| **Docker / PostgreSQL** | Database Containers | **DEFERRED (Enterprise)** | Requires Docker Desktop on Windows. | Heavy memory and virtualization overhead. | Multi-gigabyte containers. | Permissive. | Local container. | **NO (Excluded from Prototype)** | SQLite WAL mode provides complete local ACID persistence with zero external service dependencies. |
+
+---
+
+### 3.5 AI Privacy Modes & Data Governance Policies
+
+To ensure industrial trade secrets, competitive procurement prices, and proprietary manufacturing formulations are protected:
+
+1. **Mode A: Offline Deterministic Explanations (Default & Air-Gapped):**
+   * 100% local execution using deterministic rule evaluation, math checks, and Jinja2 text templates.
+   * Guarantees zero external network or AI calls for document intake, extraction, analysis, forensics, and dossier generation.
+   * Mandatory for defense, government tenders, and zero-trust networks.
+
+2. **Mode B: Privacy-Preserving AI (Opt-In Statistical Synthesis):**
+   * Investigator-controlled toggle in workstation settings.
+   * Sends **strictly pre-calculated anonymized numerical metrics**, classification labels, and error codes.
+   * **Zero document text, zero page pixel crops, zero personal names, zero tax IDs, and zero proprietary formulas** are transmitted.
+   * Cloud LLM synthesizes natural language summaries from abstract statistics.
+
+3. **Mode C: Explicitly Authorized AI Processing (Selected Redacted Excerpts):**
+   * Requires dual-key authorization: organizational policy enablement and per-case affirmative investigator consent.
+   * Transmits short, explicitly selected textual excerpts (e.g., a specific disputed warranty clause) strictly after automated and manual PII/IP redaction.
+   * **Full unredacted page scans and raw PDF binaries are NEVER transmitted.**
+   * Mandatory audit logging in `audit_events` with UTC timestamp, user ID, API endpoint, and SHA-256 hash of the exact redacted payload transmitted.

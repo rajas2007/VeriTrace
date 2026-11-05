@@ -39,7 +39,7 @@ To ensure that **VeriTrace** operates as a clean, scalable, and decoupled native
 | **Capability: Classification** | `src/veritrace/capabilities/classification/` | Document type categorization (invoice, bank statement, tax ID, certificate), page role classification, template matching, schema dispatch. | `domain/entities/` | **Workstream 3: Processing & Extraction** |
 | **Capability: Extraction** | `src/veritrace/capabilities/extraction/` | Vector text extraction, raster OCR text/token extraction, normalized coordinate projection ($[0.0, 1.0]$), layout parsing (tables, key-value pairs). | `domain/entities/`, `infrastructure/pdf/`, `infrastructure/ocr/` | **Workstream 3: Processing & Extraction** |
 | **Capability: Quality** | `src/veritrace/capabilities/quality/` | **Extraction Quality Assessment:** OCR word/character confidence scoring, vector vs. OCR mismatch detection, image degradation assessment (blur, low contrast, skew), extraction quality gating. | `domain/entities/` | **Workstream 3: Processing & Extraction** |
-| **Capability: Forensics** | `src/veritrace/capabilities/forensics/` | Deterministic visual forensics (Error Level Analysis / ELA, font baseline alignment, copy-move detection), PDF metadata forensic analysis, token-level manipulation checks, crop generation. | `domain/entities/`, `infrastructure/vision/` | **Workstream 4: Forensics & Intelligence** |
+| **Capability: Forensics** | `src/veritrace/capabilities/forensics/` | Deterministic visual forensics (Error Level Analysis / ELA, font baseline alignment, copy-move detection), signature forensics sub-capability (`forensics/signatures/`: detector, verifier via ONNX Runtime CPU, stroke analyzer, tampering detector), PDF metadata forensic analysis, token-level manipulation checks, crop generation. | `domain/entities/`, `infrastructure/vision/`, `infrastructure/inference/` | **Workstream 4: Forensics & Intelligence** |
 | **Capability: Correlation** | `src/veritrace/capabilities/correlation/` | Multi-document entity reconciliation, cross-document discrepancy detection (PAN, GSTIN, names, dates, amounts), contradiction matrix generation. | `domain/entities/` | **Workstream 4: Forensics & Intelligence** |
 | **Capability: Reasoning** | `src/veritrace/capabilities/reasoning/` | Contextual intelligence synthesis: converting deterministic findings and discrepancies into structured, evidence-grounded forensic narratives; Groq LLM prompt assembly and schema enforcement. | `domain/entities/`, `infrastructure/ai/` | **Workstream 4: Forensics & Intelligence** |
 | **Capability: Reporting** | `src/veritrace/capabilities/reporting/` | Compilation of complete investigation dossier: structured JSON dossier generation, ReportLab-based executive PDF generation with embedded evidence crops and audit logs. | `domain/entities/`, `infrastructure/reporting/` | **Workstream 2: Application & Dossier** |
@@ -87,13 +87,13 @@ flowchart TD
     subgraph WS5["Workstream 5: Visual Forensics & Evidence"]
         F1["Error Level Analysis (ELA) Engine"]
         F2["Font Baseline Regression Module (>2.5σ)"]
-        F3["Signature & Stamp Clone Matching (ORB)"]
+        F3["Signature Forensics & Reference Verification (ONNX)"]
         F4["High-Res Visual Evidence Cropper (20px pad)"]
     end
 
     subgraph WS6["Workstream 6: Integration, Database & Packaging"]
         I1["SQLite WAL Database & Repositories"]
-        I2["Alembic Migrations (12 Core Entities)"]
+        I2["Alembic Migrations (15 Core Entities + 1 Assoc)"]
         I3["QThreadPool Worker Pool & 12 Checkpoint Rules"]
         I4["PyInstaller & Inno Setup Packaging"]
     end
@@ -213,7 +213,7 @@ class QualityMetrics:
 
 ## 5. Architectural Enforcement & Automated Validation
 
-The architectural rules defined above are enforced automatically via [scripts/validation/check_architecture.py](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/scripts/validation/check_architecture.py).
+The architectural rules defined above are enforced automatically via [scripts/validation/check_architecture.py](..\scripts\validation\check_architecture.py).
 
 Running:
 ```powershell

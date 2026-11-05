@@ -109,7 +109,7 @@ VeriTrace/
 │       │
 │       ├── domain/                    # Pure Domain Layer (No UI/DB/External deps)
 │       │   ├── __init__.py
-│       │   ├── entities/              # 12 Core Entities
+│       │   ├── entities/              # 15 Core Entities + 1 Assoc Table
 │       │   │   ├── __init__.py
 │       │   │   ├── investigation.py   # Root aggregate case container
 │       │   │   ├── document.py        # Submitted document entity
@@ -122,13 +122,17 @@ VeriTrace/
 │       │   │   ├── review_decision.py # Human sign-off / dismissal entity
 │       │   │   ├── dossier.py         # Compiled report record
 │       │   │   ├── audit_event.py     # Immutable event ledger entity
-│       │   │   └── job.py             # Investigation processing job entity
+│       │   │   ├── job.py             # Investigation processing job entity
+│       │   │   ├── organization.py    # Industrial supplier, vendor, customer organization
+│       │   │   ├── authorized_subject.py # Designated signatory / officer profile
+│       │   │   └── signature_reference_profile.py # Reference signature vector embeddings & metadata
 │       │   ├── value_objects/         # Domain Value Objects
 │       │   │   ├── __init__.py
 │       │   │   ├── coordinates.py     # BoundingBox [ymin, xmin, ymax, xmax]
 │       │   │   ├── finding_tier.py    # Epistemic tier enum (Observation, Inconsistency, Manipulation)
 │       │   │   ├── severity.py        # Severity enum (Critical, Warning, Informational)
-│       │   │   └── hash.py            # SHA-256 value object
+│       │   │   ├── hash.py            # SHA-256 value object
+│       │   │   └── signature_assessment.py # 6-level forensic assessment scale enum
 │       │   ├── rules/                 # Business invariants & verification formulas
 │       │   │   └── __init__.py
 │       │   ├── interfaces/            # Protocol definitions for adapters and repositories
@@ -142,19 +146,25 @@ VeriTrace/
 │       │   ├── __init__.py
 │       │   ├── ingestion/             # File intake validation, MIME checking & SHA-256 hash computation
 │       │   │   └── __init__.py
-│       │   ├── classification/        # Document type classifier (ID, Salary Slip, Invoice, etc.)
+│       │   ├── classification/        # Document type classifier (PO, Challan, MTC, Invoice, ID, etc.)
 │       │   │   └── __init__.py
-│       │   ├── extraction/            # Hybrid text extraction (TextExtractorProtocol, vector + OCR fallback)
+│       │   ├── extraction/            # Hybrid text extraction (TextExtractorProtocol, vector + OCR fallback, multilingual Indic)
 │       │   │   └── __init__.py
 │       │   ├── quality/               # Explicit extraction quality assessment & confidence gating
 │       │   │   └── __init__.py
 │       │   ├── forensics/             # Visual forensics: ELA, font baseline, clone stamps, evidence crops
-│       │   │   └── __init__.py
+│       │   │   ├── __init__.py
+│       │   │   └── signatures/        # Signature Forensics Sub-Capability
+│       │   │       ├── __init__.py
+│       │   │       ├── detector.py    # Signature detection & bounding box extraction
+│       │   │       ├── verifier.py    # Local ONNX CPU Siamese feature distance & threshold evaluation
+│       │   │       ├── stroke_analyzer.py # Stroke curvature, density, tracing & pen lift heuristics
+│       │   │       └── tampering_detector.py # Digital cut-and-paste, pixel halo & clone artifact analysis
 │       │   ├── correlation/           # Cross-document entity reconciliation (RapidFuzz) & contradiction matrix
 │       │   │   └── __init__.py
 │       │   ├── reasoning/             # Grounded AI reasoning & narrative synthesis (with offline template fallback)
 │       │   │   └── __init__.py
-│       │   └── reporting/             # PS-2 Section 7.1-7.6 forensic dossier compilation (ReportLab PDF & JSON)
+│       │   └── reporting/             # PS-2 Section 7.1-7.6 forensic dossier compilation & Signature Verification Reports
 │       │       └── __init__.py
 │       │
 │       ├── infrastructure/            # Concrete External Adapters & Third-Party Wrappers
@@ -163,7 +173,7 @@ VeriTrace/
 │       │   │   ├── __init__.py
 │       │   │   ├── session.py         # Engine & sessionmaker (PRAGMA journal_mode=WAL)
 │       │   │   ├── base.py            # DeclarativeBase
-│       │   │   ├── models/            # SQLAlchemy table definitions (12 entities + 1 assoc)
+│       │   │   ├── models/            # SQLAlchemy table definitions (15 entities + 1 assoc)
 │       │   │   │   └── __init__.py
 │       │   │   └── migrations/        # Alembic versioned migration scripts
 │       │   │       └── __init__.py
@@ -171,13 +181,15 @@ VeriTrace/
 │       │   │   └── __init__.py
 │       │   ├── pdf/                   # PyMuPDF adapter (300 DPI render, vector text parser)
 │       │   │   └── __init__.py
-│       │   ├── ocr/                   # Tesseract OCR engine adapter
+│       │   ├── ocr/                   # Multilingual OCR engine adapters (Tesseract, PaddleOCR abstraction)
 │       │   │   └── __init__.py
 │       │   ├── vision/                # OpenCV & Pillow image processing adapter
 │       │   │   └── __init__.py
+│       │   ├── inference/             # Local offline CPU model execution (ONNX Runtime adapter)
+│       │   │   └── __init__.py
 │       │   ├── reporting/             # ReportLab PDF compiler adapter
 │       │   │   └── __init__.py
-│       │   ├── ai/                    # Groq client adapter (ChatGroq with JSON schema)
+│       │   ├── ai/                    # Groq client adapter (ChatGroq with JSON schema, opt-in metrics only)
 │       │   │   └── __init__.py
 │       │   └── security/              # Windows DPAPI encryption adapter
 │       │       └── __init__.py

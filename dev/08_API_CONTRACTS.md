@@ -141,10 +141,26 @@ class EvidenceAnchorDTO(BaseModel):
     heatmap_image_path: Optional[str]
     grounding_explanation: str
 
+class SignatureVerificationDTO(BaseModel):
+    signature_id: str
+    document_id: str
+    page_number: int
+    normalized_bbox: list[float]
+    subject_id: Optional[str]
+    assessment: str  # 6-level scale (SIGNATURE_DETECTED, VISUAL_ANOMALY_OBSERVED, etc.)
+    similarity_distance: Optional[float]
+    threshold: Optional[float]
+    stroke_anomaly_score: float
+    is_clone_suspect: bool
+    notes: str
+
 class IForensicsService(ABC):
     @abstractmethod
     def get_findings(self, investigation_id: str, tier: Optional[str] = None) -> list[FindingDTO]: ...
     
+    @abstractmethod
+    def verify_signature(self, investigation_id: str, document_id: str, page_number: int, bbox: list[float], subject_id: Optional[str] = None) -> SignatureVerificationDTO: ...
+
     @abstractmethod
     def record_review_decision(self, finding_id: str, decision: str, notes: str) -> None: ...
 ```

@@ -1,23 +1,23 @@
-# VeriTrace Desktop
+# VeriTrace
 
-### **AI-Powered Document Forensics & Contextual Intelligence System**
+### **Industrial Document Intelligence, Forensics & Authenticity Verification Platform**
 > *Every document tells a story. Every inconsistency leaves evidence.*
 
 **Target Competition:** DataOps Innovation Hackathon – Problem Statement 2 (PS-2)
-**Product Form Factor:** Standalone Desktop Application (Windows 10/11 x64)
-**Development Status:** PySide6 Architecture Finalized & Repository Restructured (Ready for Milestone 0)
+**Product Form Factor:** Standalone Industrial Desktop Software (Windows 10/11 x64)
+**Development Status:** Industrial Architecture & Shared Contracts Baseline Approved (Milestones 1 & 2 Completed)
 
 ---
 
 ## 1. Executive Summary & Vision
 
-Financial institutions, enterprise auditors, and regulatory bodies process millions of critical documents daily—including national identity cards, salary slips, bank transaction statements, commercial invoices, and tax filings. Traditional document-processing pipelines rely predominantly on Optical Character Recognition (OCR) to convert pixels into text strings, followed by hardcoded regex rules.
+Modern manufacturing enterprises, supply chain operators, financial institutions, and government bodies process millions of mission-critical business and technical documents daily—including purchase orders, delivery challans, mill test certificates, commercial invoices, identity credentials, bills of lading, and compliance affidavits. Traditional document-processing pipelines rely predominantly on Optical Character Recognition (OCR) to convert pixels into text strings, followed by hardcoded regex rules.
 
 However, **text extraction does not establish whether that information is authentic, internally consistent, or contextually reliable.**
 
-Digital alteration tools allow malicious actors to modify financial numbers, overwrite names, splice signatures, and alter dates with sub-millimeter precision. Furthermore, discrepancies frequently cross document boundaries (e.g., stated monthly earnings on a salary slip contradicting bank deposit records), remaining completely invisible when documents are parsed in isolation.
+Digital alteration tools allow malicious actors to modify critical quantities, alter unit rates, splice metallurgical test numbers, forge authorization signatures, and alter dates with sub-millimeter precision. Furthermore, discrepancies frequently cross document boundaries (e.g., delivered quantities on a challan conflicting with purchase order schedules), remaining completely invisible when documents are parsed in isolation. Moreover, Indian enterprise workflows routinely span multiple regional scripts and languages, presenting complex mixed-script challenges.
 
-**VeriTrace Desktop** transforms document review from passive, field-isolated text extraction into an **active, contextual, and evidence-backed forensic investigation workstation**. Combining computer vision, layout-aware OCR, deterministic cross-document reconciliation, and grounded Large Language Model (LLM) reasoning, VeriTrace delivers complete visual-to-data traceability and compiles an authoritative, auditor-grade Document Investigation Dossier.
+**VeriTrace** transforms document review from passive, field-isolated text extraction into an **active, multilingual, contextual, and evidence-backed industrial forensic investigation platform**. Combining computer vision, layout-aware multilingual OCR, offline signature analysis, deterministic cross-document reconciliation, and grounded Large Language Model (LLM) reasoning, VeriTrace delivers complete visual-to-data traceability and compiles an authoritative, auditor-grade Document Investigation Dossier.
 
 ---
 
@@ -27,24 +27,24 @@ VeriTrace is intentionally architected as **standalone native desktop software**
 * **Target Operating System:** Windows 10/11 x64.
 * **Planned Distribution:** Downloadable, single-click Windows installer (`VeriTrace-Setup.exe`).
 * **Zero Developer Setup:** End-users do not install Python, Node.js, Rust, terminal environments, databases, or manual Tesseract OCR binaries.
-* **Investigator Experience:** `DOWNLOAD → INSTALL → OPEN → CREATE INVESTIGATION → IMPORT DOCUMENTS → ANALYSE → REVIEW EVIDENCE → GENERATE DOSSIER`.
+* **Investigator Experience:** `DOWNLOAD → INSTALL → OPEN → SELECT WORKSPACE → CREATE INVESTIGATION → IMPORT INDUSTRIAL DOCUMENTS → ANALYSE → REVIEW EVIDENCE & SIGNATURES → GENERATE DOSSIER`.
 * **Complete Local Privacy:** The application runs locally on the user's workstation. All raw document binaries, rendered 300 DPI pages, visual evidence crops, and SQLite relational databases reside strictly in `%LOCALAPPDATA%/VeriTrace/`.
 
 ---
 
-## 3. Core Planned Forensic Capabilities
+## 3. Eight Core Planned Forensic Capabilities
 
-1. **Multi-Document Case Ingestion:** Native OS drag-and-drop import for multi-page PDFs, PNGs, and JPEGs grouped into an immutable investigation case container with cryptographic SHA-256 evidence hashing.
-2. **Multi-Factor Text Quality & Hybrid OCR:** Native PyMuPDF vector text extraction combined with bundled Tesseract OCR fallback for scanned sheets, routing pages based on glyph geometry, raster coverage ratio, and credential regex patterns.
-3. **Visual Forensics Suite (OpenCV & Pillow):**
+1. **Multi-Document Industrial Ingestion:** Native OS drag-and-drop import for multi-page PDFs, PNGs, and JPEGs grouped into an immutable investigation container with cryptographic SHA-256 evidence hashing across manufacturing, logistics, and BFSI packages.
+2. **Multilingual Text Quality & Multi-Engine OCR:** Native PyMuPDF vector extraction combined with an extensible multilingual OCR engine abstraction (PaddleOCR / Tesseract) covering 12 Indian languages (English, Hindi, and Marathi priority).
+3. **Advanced Layout & Structure Understanding:** Hierarchical reading order, complex table extraction, and header-item-footer relationships via PyMuPDF and optional Docling adapters.
+4. **Visual Forensics Suite (OpenCV & Pillow):**
    * **Error Level Analysis (ELA):** Detects localized JPEG compression differential anomalies to highlight spliced or modified figures.
    * **Font Baseline Regression:** Identifies inserted or manipulated characters offset from row regression baselines ($>2.5\sigma$).
    * **Clone & Seal Matching:** Segments signatures and official stamps, detecting duplicated copy-paste manipulation across documents via ORB feature matching.
-4. **Deterministic Contextual Rules:** Intra-document verification of financial line items (Gross = Basic + HRA + Allowances; Net = Gross - Deductions), temporal chronology, and credential formats (PAN, Aadhaar).
-5. **Cross-Document Correlation Engine:** Reconciles entities (names, birth dates, employers, accounts) across distinct files using RapidFuzz token sort matching and flags factual contradictions.
-6. **Pixel-Anchored Evidence Mapping:** Every finding links directly to an immutable evidence identifier with normalized bounding box coordinates `[ymin, xmin, ymax, xmax] \in [0.0, 1.0]` and high-resolution visual crops.
-7. **Interactive Workstation UI (PySide6 / Qt 6.7+):** 4-pane workstation layout featuring High-DPI document viewing (`QGraphicsView`), docking Evidence Inspector (`QDockWidget`), case tree sidebar, and real-time status bar.
-8. **Automated Investigation Dossier (ReportLab):** One-click compilation of an auditor-grade forensic report in structured JSON and downloadable PDF formats, strictly complying with Sections 7.1–7.6 of PS-2.
+5. **Signature Forensics Sub-Capability:** Dedicated signature localization, offline stroke curvature/tracing analysis, and authorized reference sample verification via local **ONNX Runtime (`onnxruntime`) on CPU**, governed by a strict 6-level forensic assessment scale.
+6. **Deterministic Contextual Rules:** Intra-document verification of procurement line items (Quantity $\times$ Unit Rate = Amount; Subtotal + GST = Total), net tare weights, and temporal chronology.
+7. **Cross-Document Correlation Engine:** Reconciles entities and facts across distinct files (PO $\leftrightarrow$ Delivery Challan $\leftrightarrow$ Mill Test Cert $\leftrightarrow$ Invoice) using RapidFuzz and multilingual concept dictionaries to flag contradictions.
+8. **Automated Investigation Dossier (ReportLab):** One-click compilation of an auditor-grade forensic report in structured JSON and downloadable PDF formats, strictly complying with Sections 7.1–7.6 of PS-2, accompanied by specialized Signature Verification Reports.
 
 ---
 
@@ -54,10 +54,17 @@ VeriTrace is intentionally architected as **standalone native desktop software**
 | :--- | :--- | :--- |
 | **Desktop Framework** | **PySide6 (Qt 6.7+)** | Native Windows desktop application, Qt Widgets, QSS stylesheet theme. |
 | **UI Architecture** | **Qt Model/View & Docking** | High-performance document canvas (`QGraphicsView`), dockable inspector, tree views. |
-| **Application Layer** | **Python 3.11 Services** | In-process application services (`InvestigationService`, `DocumentService`, `DossierService`). |
+| **Application Layer** | **Python 3.11 Services** | In-process application services (`InvestigationService`, `DocumentService`, `ForensicsService`, `DossierService`). |
 | **Background Threading** | **QThreadPool & QRunnable** | Multi-threaded forensic pipeline execution without blocking UI event loop. |
-| **Database & ORM** | **SQLite (WAL) + SQLAlchemy 2.0** | Local relational persistence (12 Core Entities + 1 Association Table) in `%LOCALAPPDATA%`. |
-| **PDF & OCR Engine** | **PyMuPDF + Bundled Tesseract (Baseline)** | Direct vector text extraction, 300 DPI page rendering, TextExtractorProtocol abstraction, empirical benchmark suite. |
+| **Database & ORM** | **SQLite (WAL) + SQLAlchemy 2.0** | Local relational persistence (15 Core Entities + 1 Association Table) in `%LOCALAPPDATA%`. |
+| **PDF Processing** | **PyMuPDF (`fitz`)** | Direct vector text extraction, font auditing, and 300 DPI lossless page rendering. |
+| **OCR Engines** | **Tesseract 5.x & PaddleOCR (Eval)** | Extensible `TextExtractorProtocol` abstraction for English and Indian scripts (Hindi, Marathi). |
+| **Computer Vision** | **OpenCV + Pillow + NumPy** | Error Level Analysis (ELA), baseline regression, visual evidence cropping. |
+| **Local ML Inference** | **ONNX Runtime (`onnxruntime`)** | Local CPU inference for quantized Siamese CNN signature comparison models. |
+| **Text Matching** | **RapidFuzz** | High-speed C++ Levenshtein string and entity alignment. |
+| **AI Reasoning** | **Configurable LLM + Offline Fallback** | Grounded narrative synthesis over verified findings via `LLMProviderProtocol` (*optional cloud Groq, with 100% deterministic template fallback*). |
+| **Reporting Engine** | **ReportLab** | Programmatic compilation of auditor-grade multi-page PDF dossiers. |
+| **Packaging & Distribution**| **PyInstaller + Inno Setup** | One-folder Python bundle + single-click Windows installer (`VeriTrace-Setup.exe`). |
 | **Computer Vision** | **OpenCV + Pillow + NumPy** | Error Level Analysis (ELA), baseline regression, visual evidence cropping. |
 | **Text Matching** | **RapidFuzz** | High-speed C++ Levenshtein string and entity alignment. |
 | **AI Reasoning** | **Configurable LLM + Offline Fallback** | Grounded narrative synthesis over verified findings via `LLMProviderProtocol` (*optional cloud Groq candidate, with 100% deterministic template fallback*). |
@@ -249,48 +256,49 @@ The distribution package will feature:
 
 * **Phase 0 (Initialization, Architecture & Restructuring):** **COMPLETED**
   * Source code migrated and verified from foundation repository.
-  * Standalone Windows desktop product direction formalized ([ADR-019](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/12_DECISION_LOG.md#adr-019-standalone-desktop-product-direction-target-windows-1011-x64)).
-  * PySide6 native desktop architecture approved ([ADR-025](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/12_DECISION_LOG.md#adr-025-native-pyside6-qt-desktop-application-framework)).
-  * FastAPI loopback eliminated in favor of direct in-process Python services ([ADR-026](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/12_DECISION_LOG.md#adr-026-direct-in-process-python-application-services-fastapi-removal)).
-  * Unified Python `src`-layout and layered monolith architecture consolidated ([ADR-030](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/12_DECISION_LOG.md#adr-030-unified-python-src-layout-and-layered-monolith-architecture)).
+  * Standalone Windows desktop product direction formalized ([ADR-019](dev/12_DECISION_LOG.md#adr-019-standalone-desktop-product-direction-target-windows-1011-x64)).
+  * PySide6 native desktop architecture approved ([ADR-025](dev/12_DECISION_LOG.md#adr-025-native-pyside6-qt-desktop-application-framework)).
+  * FastAPI loopback eliminated in favor of direct in-process Python services ([ADR-026](dev/12_DECISION_LOG.md#adr-026-direct-in-process-python-application-services-fastapi-removal)).
+  * Unified Python `src`-layout and layered monolith architecture consolidated ([ADR-030](dev/12_DECISION_LOG.md#adr-030-unified-python-src-layout-and-layered-monolith-architecture)).
   * Root build configurations established (`pyproject.toml`, `requirements.txt`, `alembic.ini`).
-  * 27 comprehensive technical architecture documents updated in [`dev/`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/).
+  * 27 comprehensive technical architecture documents updated in [`dev/`](dev/).
 * **Milestone 0 (PySide6 Desktop Prototype):** **PLANNED (Next Step)**
   * Technical feasibility gate: PySide6 application lifecycle, High-DPI support, QSS forensic dark stylesheet, 4-pane docking layout, and SQLite database connection in `%LOCALAPPDATA%`.
-* **Milestones 1 – 6:** Detailed in [23_DETAILED_DEVELOPMENT_PLAN.md](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/23_DETAILED_DEVELOPMENT_PLAN.md).
+* **Milestones 1 – 12:** Detailed in [23_DETAILED_DEVELOPMENT_PLAN.md](dev/23_DETAILED_DEVELOPMENT_PLAN.md).
 
 ---
 
 ## 10. Technical Documentation Suite (`dev/`)
 
-The permanent technical planning, architectural decisions, and progress tracking documentation are maintained in the [`dev/`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/) directory:
+The permanent technical planning, architectural decisions, and progress tracking documentation are maintained in the [`dev/`](dev/) directory:
 
 | Document | Title | Key Architectural Focus |
 | :--- | :--- | :--- |
-| **[`00_PROJECT_CHARTER.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/00_PROJECT_CHARTER.md)** | Project Charter | Standalone desktop product identity, vision, scope, non-goals. |
-| **[`01_PROBLEM_STATEMENT_ANALYSIS.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/01_PROBLEM_STATEMENT_ANALYSIS.md)** | PS-2 Problem Analysis | Exhaustive breakdown of PS-2 requirements and scoring criteria. |
-| **[`04_SYSTEM_ARCHITECTURE.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/04_SYSTEM_ARCHITECTURE.md)** | System Architecture | Native PySide6 monolith, in-process services, QThreadPool execution. |
-| **[`05_BACKEND_ARCHITECTURE.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/05_BACKEND_ARCHITECTURE.md)** | Backend Architecture | Application services, capability modules, PyInstaller bundling. |
-| **[`06_FRONTEND_ARCHITECTURE.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/06_FRONTEND_ARCHITECTURE.md)** | UI Architecture | Workstation layout, PySide6 widgets, QSS theming, QGraphicsView. |
-| **[`07_DATABASE_AND_DATA_MODELS.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/07_DATABASE_AND_DATA_MODELS.md)** | Database & Storage | SQLite WAL persistence at `%LOCALAPPDATA%/VeriTrace/database/veritrace.sqlite`. |
-| **[`08_API_CONTRACTS.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/08_API_CONTRACTS.md)** | Service Contracts | Strongly-typed in-process Python service contracts and DTOs. |
-| **[`09_AI_AND_FORENSICS_STRATEGY.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/09_AI_AND_FORENSICS_STRATEGY.md)** | AI & Forensics Strategy | Deterministic-first principles, offline resilience, and data minimization. |
-| **[`10_IMPLEMENTATION_ROADMAP.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/10_IMPLEMENTATION_ROADMAP.md)** | Implementation Roadmap | Phased schedule from Milestone 0 (Feasibility Gate) to Milestone 6 (Release). |
-| **[`11_TECHNICAL_RISKS.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/11_TECHNICAL_RISKS.md)** | Technical Risk Register | 18 technical failure modes, including PySide6 DLLs and offline fallback. |
-| **[`12_DECISION_LOG.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/12_DECISION_LOG.md)** | Architectural Decision Log | Formal ADR register (ADR-001 through ADR-033) recording all design choices. |
-| **[`13_PROGRESS_TRACKER.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/13_PROGRESS_TRACKER.md)** | Progress Tracker | Milestone checklist and compliance tracking matrix. |
-| **[`15_FINAL_SYSTEM_DESIGN.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/15_FINAL_SYSTEM_DESIGN.md)** | Modular Monolith Design | Comprehensive specifications for the 14 lifecycle capabilities. |
-| **[`16_FINAL_DIRECTORY_STRUCTURE.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/16_FINAL_DIRECTORY_STRUCTURE.md)** | Target Directory Structure | Authoritative desktop repository tree and migration matrix. |
-| **[`17_MODULE_RESPONSIBILITY_MATRIX.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/17_MODULE_RESPONSIBILITY_MATRIX.md)** | Module Responsibilities | Public interfaces, service boundaries, workstreams, and engineering conventions. |
-| **[`18_END_TO_END_DATA_FLOW.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/18_END_TO_END_DATA_FLOW.md)** | End-to-End Investigation Flow | 16-stage pipeline from native drag-and-drop to compiled PDF dossier. |
-| **[`19_DOMAIN_MODEL_SPECIFICATION.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/19_DOMAIN_MODEL_SPECIFICATION.md)** | Core Domain Models | 12 Core Entities + 1 Association Table, SQLite WAL constraints. |
-| **[`20_AGENT_AND_PROCESSING_STRATEGY.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/20_AGENT_AND_PROCESSING_STRATEGY.md)** | Agent Minimization & Deps | Pure determinism prioritized; all desktop & backend dependencies evaluated. |
-| **[`21_FRONTEND_FEATURE_SPECIFICATION.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/21_FRONTEND_FEATURE_SPECIFICATION.md)** | Desktop Feature Specs | Workstation features, QGraphicsView viewer, inspector, and status bar. |
-| **[`22_API_AND_INTERNAL_CONTRACTS.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/22_API_AND_INTERNAL_CONTRACTS.md)** | Internal Service Protocols | Application services DTOs, Qt signal protocols, and capability contracts. |
-| **[`23_DETAILED_DEVELOPMENT_PLAN.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/23_DETAILED_DEVELOPMENT_PLAN.md)** | Phased Development Plan | 3 parallel workstreams and 7 granular milestone blueprints (M0 to M6). |
-| **[`24_TESTING_AND_DEMO_STRATEGY.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/24_TESTING_AND_DEMO_STRATEGY.md)** | Testing & Demo Strategy | Desktop lifecycle tests, offline tests, installer validation, 5-min demo. |
-| **[`25_ARCHITECTURE_CORRECTIONS...md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/25_ARCHITECTURE_CORRECTIONS_AND_IMPLEMENTATION_READINESS.md)** | Implementation Readiness | Final review checklist and implementation readiness verdict. |
-| **[`26_TEAM_DEVELOPMENT_AND_GITHUB_WORKFLOW.md`](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/26_TEAM_DEVELOPMENT_AND_GITHUB_WORKFLOW.md)** | Team & Git Workflow | Authoritative onboarding guide, 6 workstreams, 13 shared contracts, coding standards, and PR process. |
+| **[`00_PROJECT_CHARTER.md`](dev/00_PROJECT_CHARTER.md)** | Project Charter | Standalone industrial desktop product identity, vision, 7 target industries, scope, non-goals. |
+| **[`01_PROBLEM_STATEMENT_ANALYSIS.md`](dev/01_PROBLEM_STATEMENT_ANALYSIS.md)** | PS-2 Problem Analysis | Exhaustive breakdown of PS-2 requirements, industrial documents, multilingual Indic extraction, and signature forensics. |
+| **[`04_SYSTEM_ARCHITECTURE.md`](dev/04_SYSTEM_ARCHITECTURE.md)** | System Architecture | Native PySide6 monolith, 8 canonical capabilities, in-process services, QThreadPool execution, offline ONNX inference. |
+| **[`05_BACKEND_ARCHITECTURE.md`](dev/05_BACKEND_ARCHITECTURE.md)** | Backend Architecture | Application services, 8 capability modules, multilingual OCR abstraction, signature forensics sub-capability. |
+| **[`06_FRONTEND_ARCHITECTURE.md`](dev/06_FRONTEND_ARCHITECTURE.md)** | UI Architecture | Workstation layout, PySide6 widgets, QSS theming, QGraphicsView, Evidence Inspector & Signature Verification dock. |
+| **[`07_DATABASE_AND_DATA_MODELS.md`](dev/07_DATABASE_AND_DATA_MODELS.md)** | Database & Storage | SQLite WAL persistence (15 Core Entities + 1 Assoc Table) at `%LOCALAPPDATA%/VeriTrace/database/veritrace.sqlite`. |
+| **[`08_API_CONTRACTS.md`](dev/08_API_CONTRACTS.md)** | Service Contracts | Strongly-typed in-process Python service contracts, DTOs, and signature verification contracts. |
+| **[`09_AI_AND_FORENSICS_STRATEGY.md`](dev/09_AI_AND_FORENSICS_STRATEGY.md)** | AI & Forensics Strategy | Deterministic-first principles, 12-language Indian OCR roadmap, offline signature forensics via ONNX Runtime, 6-level assessment scale. |
+| **[`10_IMPLEMENTATION_ROADMAP.md`](dev/10_IMPLEMENTATION_ROADMAP.md)** | Implementation Roadmap | Phased schedule from Milestone 1 (Industrial Product Foundation) to Milestone 12 (Packaging & Deployment). |
+| **[`11_TECHNICAL_RISKS.md`](dev/11_TECHNICAL_RISKS.md)** | Technical Risk Register | 22 technical failure modes, including multilingual Indic OCR degradation, signature comparison false accusations, and industrial storage security. |
+| **[`12_DECISION_LOG.md`](dev/12_DECISION_LOG.md)** | Architectural Decision Log | Formal ADR register (ADR-001 through ADR-042) recording all design and industrial evolution choices. |
+| **[`13_PROGRESS_TRACKER.md`](dev/13_PROGRESS_TRACKER.md)** | Progress Tracker | Milestone checklist (M1–M12) and compliance tracking matrix. |
+| **[`15_FINAL_SYSTEM_DESIGN.md`](dev/15_FINAL_SYSTEM_DESIGN.md)** | Modular Monolith Design | Comprehensive specifications for the 8 canonical capabilities and signature forensics sub-capability. |
+| **[`16_FINAL_DIRECTORY_STRUCTURE.md`](dev/16_FINAL_DIRECTORY_STRUCTURE.md)** | Target Directory Structure | Authoritative desktop repository tree, src-layout, and capability structure. |
+| **[`17_MODULE_RESPONSIBILITY_MATRIX.md`](dev/17_MODULE_RESPONSIBILITY_MATRIX.md)** | Module Responsibilities | Public interfaces, service boundaries, workstreams, and engineering conventions across all 8 capabilities. |
+| **[`18_END_TO_END_DATA_FLOW.md`](dev/18_END_TO_END_DATA_FLOW.md)** | End-to-End Investigation Flow | Industrial document pipeline from native drag-and-drop to compiled PDF dossier and signature reports. |
+| **[`19_DOMAIN_MODEL_SPECIFICATION.md`](dev/19_DOMAIN_MODEL_SPECIFICATION.md)** | Core Domain Models | 15 Core Entities + 1 Association Table, SQLite WAL constraints, multilingual & signature profile schemas. |
+| **[`20_AGENT_AND_PROCESSING_STRATEGY.md`](dev/20_AGENT_AND_PROCESSING_STRATEGY.md)** | Agent Minimization & Deps | Pure determinism prioritized; 5-tier technology classification & dependency governance matrix. |
+| **[`21_FRONTEND_FEATURE_SPECIFICATION.md`](dev/21_FRONTEND_FEATURE_SPECIFICATION.md)** | Desktop Feature Specs | Workstation features, QGraphicsView viewer, Evidence Inspector & Signature Verification dock, status bar. |
+| **[`22_API_AND_INTERNAL_CONTRACTS.md`](dev/22_API_AND_INTERNAL_CONTRACTS.md)** | Internal Service Protocols | Application services DTOs, Qt signal protocols, and capability contracts. |
+| **[`23_DETAILED_DEVELOPMENT_PLAN.md`](dev/23_DETAILED_DEVELOPMENT_PLAN.md)** | Phased Development Plan | 2 core workstreams (Rajas & Shravan) and 12 granular industrial milestone blueprints (M1 to M12). |
+| **[`24_TESTING_AND_DEMO_STRATEGY.md`](dev/24_TESTING_AND_DEMO_STRATEGY.md)** | Testing & Demo Strategy | Industrial testing, signature forensics test suite, offline tests, installer validation, industrial procurement demo. |
+| **[`25_ARCHITECTURE_CORRECTIONS...md`](dev/25_ARCHITECTURE_CORRECTIONS_AND_IMPLEMENTATION_READINESS.md)** | Implementation Readiness | Final review checklist and implementation readiness verdict. |
+| **[`26_TEAM_DEVELOPMENT_AND_GITHUB_WORKFLOW.md`](dev/26_TEAM_DEVELOPMENT_AND_GITHUB_WORKFLOW.md)** | Team & Git Workflow | Authoritative onboarding guide, 6 workstreams, 13 shared contracts, coding standards, and PR process. |
+| **[`27_MILESTONE_1_SHARED_CONTRACTS.md`](dev/27_MILESTONE_1_SHARED_CONTRACTS.md)** | Milestone 1 Shared Contracts | Frozen data contracts, service interfaces, ownership matrix, and 9-stage workflow. |
 
 ---
 

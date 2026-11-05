@@ -1,155 +1,146 @@
 # 00_PROJECT_CHARTER.md
-# VeriTrace Desktop: AI-Powered Document Forensics & Contextual Intelligence System
+# VeriTrace: Industrial Document Intelligence, Forensics & Authenticity Verification Platform
 
 ---
 
 ## 1. Project Identity
 
-* **Project Name:** VeriTrace Desktop
-* **Product Category:** Standalone Desktop Document Forensics & Investigation Software
+* **Project Name:** VeriTrace
+* **Product Category:** Standalone Industrial Desktop Document Intelligence & Forensic Investigation Platform
 * **Initial Target Platform:** Windows 10/11 x64
 * **Distribution Form:** Single self-contained Windows Installer (`VeriTrace-Setup.exe`)
-* **Project Title:** AI-Powered Document Forensics and Contextual Intelligence System
+* **Project Title:** Industrial Document Intelligence, Forensics & Authenticity Verification Platform
 * **Tagline:** *Every document tells a story. Every inconsistency leaves evidence.*
 * **Target Competition:** Innovation Hackathon – Problem Statement 2 (PS-2)
-* **Architectural Form Factor:** **Standalone desktop application + local-first processing + optional cloud AI**. Operates primarily on the local workstation without requiring internet access for core document intake, rendering, OCR, visual forensics, or dossier generation. Optional cloud LLM reasoning (via Groq API) is user-controlled.
-* **End-User Experience:** `DOWNLOAD → INSTALL → OPEN → CREATE INVESTIGATION → IMPORT DOCUMENTS → ANALYSE → REVIEW EVIDENCE → GENERATE DOSSIER` (zero manual Python, Node.js, terminal, database, or Tesseract setup).
+* **Architectural Form Factor:** **Standalone desktop application + local-first processing + optional cloud AI**. Operates primarily on the local workstation without requiring internet access for core document intake, rendering, multilingual OCR, visual forensics, signature analysis, or dossier generation. Optional cloud LLM reasoning (via Groq API) is user-controlled, strictly gated, and governed by explicit data-minimization policies.
+* **End-User Experience:** `DOWNLOAD → INSTALL → OPEN → SELECT WORKSPACE → CREATE INVESTIGATION → IMPORT INDUSTRIAL DOCUMENTS → ANALYSE → REVIEW EVIDENCE & SIGNATURES → GENERATE DOSSIER` (zero manual Python, Node.js, terminal, database, or external binary configuration).
 
 ---
 
 ## 2. Project Vision
 
-Modern enterprises, financial institutions, and government bodies process millions of mission-critical documents—including identity credentials, salary slips, bank statements, tax declarations, and legal affidavits. While traditional Optical Character Recognition (OCR) systems extract text strings and execute isolated field validations, they operate with a critical blind spot: **extraction does not verify authenticity, consistency, or contextual truth.**
+Modern enterprises, industrial manufacturers, financial institutions, and government bodies process millions of mission-critical business and industrial documents daily—including purchase orders, delivery challans, bills of lading, quality inspection reports, mill test certificates, commercial invoices, identity credentials, tax declarations, and authorized compliance affidavits.
 
-Subtle digital tampering (such as pixel manipulation, cloned signatures, overwritten numerals, and font inconsistencies) and multi-document contradictions (such as conflicting employer names, mismatched dates, or inconsistent financial totals across documents within the same submission) easily bypass single-document parsers.
+While traditional Optical Character Recognition (OCR) systems extract text strings and execute isolated regex checks, they operate with a critical blind spot: **extraction does not verify authenticity, consistency, signature legitimacy, or contextual truth.**
 
-**VeriTrace transforms document review from passive, field-isolated text extraction into an active, contextual, and evidence-backed forensic investigation.** By unifying computer vision, document layout analysis, deterministic cross-document reconciliation, and grounded Large Language Model (LLM) reasoning, VeriTrace delivers complete visual-to-data traceability and compiles an authoritative Document Investigation Dossier.
+Subtle digital tampering (such as pixel manipulation, cloned signatures, overwritten quantities/rates, spliced figures, and font irregularities), suspicious signature insertions, and cross-document contradictions (such as conflicting consignee details, mismatched batch numbers, or incompatible item totals across transaction files) easily bypass conventional single-document parsers. Furthermore, Indian enterprise workflows routinely span multiple regional scripts and languages, presenting complex mixed-script challenges.
 
----
-
-## 3. The Problem Addressed
-
-1. **Vulnerability to Synthetic & Tampered Records:** Fraudsters exploit off-the-shelf image editing tools to alter financial numbers, dates, and names on PDF/image submissions. Basic OCR reads the forged text as valid input without inspecting font morphology, compression artifacts, or pixel grid alignments.
-2. **Context Blindness in Siloed Validation:** Existing document processing tools inspect documents in complete isolation. When an applicant submits a PAN card, an Aadhaar card, and three months of bank statements, conflicting data points (e.g., date of birth discrepancies, misaligned salary deposits vs. stated income) go undetected because no cross-document relational graph exists.
-3. **Black-Box AI Hallucinations:** When modern generative AI is asked "is this document forged?", it frequently hallucinates confident assessments without pointing to verifiable physical pixels or bounding box coordinates.
-4. **Lack of Forensic Chain-of-Custody:** Enterprise auditors and risk underwriters cannot act on subjective "risk scores" alone. They require an admissible, evidence-backed dossier linking every flagged anomaly directly to document coordinates, page numbers, and forensic measurements.
+**VeriTrace transforms document review from passive, field-isolated text extraction into an active, multilingual, contextual, and evidence-backed industrial forensic investigation.** By unifying computer vision, layout-aware multilingual OCR, offline signature analysis, deterministic cross-document reconciliation, and grounded Large Language Model (LLM) reasoning, VeriTrace delivers complete visual-to-data traceability and compiles an authoritative, auditor-grade Document Investigation Dossier.
 
 ---
 
-## 4. Target Users & Stakeholders
+## 3. Target Industries & Scope Strategy
 
-| Stakeholder Role | Operational Pain Point | VeriTrace Value Proposition |
+The VeriTrace architecture is designed for **cross-industry industrial document intelligence**, engineered to be universally applicable while maintaining domain-specific contextual awareness:
+
+| Industry Sector | Typical Documents Analyzed | Primary Forensic & Verification Challenges |
 | :--- | :--- | :--- |
-| **Financial Underwriters & Loan Officers** | Manual cross-checking of pay stubs, bank statements, and tax forms for loan underwriting is slow and prone to oversight. | Instant automated cross-document reconciliation, flagging mismatched employers, altered net pay figures, and date incongruities. |
-| **Forensic Document Examiners & Fraud Analysts** | Analyzing manipulated image headers, altered typography, and forged digital seals requires multiple disjointed desktop tools. | Unified visual forensic tool suite (ELA, font alignment, clone detection) with page-level bounding box evidence inspector. |
-| **Enterprise Compliance & Legal Auditors** | Audit logs must prove *how* and *why* a document was accepted or rejected to satisfy regulatory standards (e.g., ISO/IEC 27037). | Immutable audit trail, deterministic anomaly classification, and exportable Investigation Dossiers with pixel-anchored proof. |
-| **Procurement & Vendor Risk Managers** | Invoices, purchase orders, and tax certificates submitted by vendors may contain altered bank account details or inflated amounts. | Real-time cross-checking of vendor credentials and financial math across multi-file transaction bundles. |
+| **1. Manufacturing** *(Initial Demonstration Domain)* | Purchase Orders (PO), Goods Receipt Notes (GRN), Mill Test Certificates (MTC), Quality Inspection Sheets, Material Dispatch Clearances. | Spliced material specifications, manipulated metallurgical test values, forged quality inspector signatures, quantity/rate mismatches. |
+| **2. Logistics & Supply Chain** *(Initial Demonstration Domain)* | Bills of Lading (BOL), Delivery Challans, Freight Invoices, Waybills, Gate Passes, Customs Declarations. | Altered shipment weights, duplicate delivery stamps, unauthorized driver signatures, route/date chronology conflicts. |
+| **3. Banking & Financial Services (BFSI)** | Loan applications, national ID proofs (Aadhaar, PAN), bank transaction statements, income certificates, audited balance sheets. | Forged account holder signatures, inflated salary figures, altered statement balances, mismatched identity details. |
+| **4. Insurance** | Claim forms, surveyor assessment reports, hospital bills, death certificates, vehicle repair estimates. | Manipulated medical invoices, duplicated damage photographs, reused stamp impressions, non-chronological incident dates. |
+| **5. Government & Public Administration** | Land deeds, caste/income affidavits, government tenders, municipal trade licenses, compliance certificates. | Spliced government seals, bilingual Devanagari/English typography discrepancies, unauthorized officer endorsements. |
+| **6. Construction & Infrastructure** | Contractor billing sheets, structural stability certificates, vendor supply bids, compliance checklists. | Inflated material quantities, forged structural engineer stamps, inconsistent progress payment line items. |
+| **7. Human Resources & Enterprise Administration** | Employment contracts, educational degrees, experience certificates, salary slips, non-disclosure agreements. | Digitally altered qualification dates, fabricated employer credentials, spliced HR executive signatures. |
+
+> **Scope Decision:** While VeriTrace supports cross-industry document intelligence, **manufacturing and supply-chain documentation serves as the initial demonstration domain**. The core system architecture, data models, and verification engines remain strictly modular and extensible across all seven sectors.
 
 ---
 
-## 5. Hackathon Objectives (DataOps PS-2)
+## 4. Multilingual Scope (Indian Languages Roadmap)
 
-1. **Score 90+ out of 100 points** across all evaluation criteria defined in the PS-2 rubric:
-   * OCR & Information Extraction (15 pts)
-   * Document Understanding (15 pts)
-   * Visual Forensic Analysis (15 pts)
-   * Contextual Intelligence (20 pts)
-   * Evidence & Traceability (10 pts)
-   * AI Reasoning & Explainability (10 pts)
-   * Technical Implementation (10 pts)
-   * Innovation (5 pts)
-2. **Deliver a Live, Demonstrable Prototype** running seamlessly during the judges' interactive demonstration checklist.
-3. **Execute End-to-End Investigation Workflow:** Demonstrate multi-document upload, automatic layout extraction, visual anomaly detection (e.g., Error Level Analysis heatmaps, font misalignment), cross-document conflict identification, and instant dossier export.
-4. **Demonstrate Strict Assessment Integrity:** Accurately separate confirmed observations from potential anomalies, preventing false accusations while providing human reviewers with clear evidence.
+Indian enterprise and industrial documentation is inherently multilingual. VeriTrace establishes an architectural roadmap supporting **twelve major Indian languages** (minimum ten target), categorized into three operational readiness stages:
+
+1. **Stage 3 — Validated for Initial Release:** English, Hindi, Marathi (Priority 1: Core Devanagari & Latin script extraction, normalization, and field alignment).
+2. **Stage 2 — Experimental / Benchmarking:** Bengali, Gujarati, Punjabi, Tamil, Telugu (Priority 2: Regional script OCR evaluation, font variation analysis, and multilingual dictionaries).
+3. **Stage 1 — Planned Roadmap:** Kannada, Malayalam, Odia, Urdu (Priority 3: Complex conjunct support, right-to-left layout integration for Urdu, and specialized font modeling).
 
 ---
 
-## 6. Core System Capabilities
+## 5. Eight Core System Capabilities
 
-VeriTrace delivers eight foundational capabilities:
+VeriTrace maintains exactly **eight canonical capability boundaries**. No additional top-level capabilities are introduced; signature forensics is integrated as a dedicated sub-capability of Forensics.
 
 ```mermaid
-flowchart LR
-    A["1. Multi-Doc Ingestion"] --> B["2. OCR & Layout Extraction"]
-    B --> C["3. Visual Forensics (ELA & CV)"]
-    B --> D["4. Contextual Field Rules"]
-    C --> E["5. Cross-Doc Correlation"]
-    D --> E
-    E --> F["6. Evidence Mapping (BBox)"]
-    F --> G["7. Grounded LLM Reasoning"]
-    G --> H["8. Investigation Dossier"]
+flowchart TD
+    C1["1. Ingestion Capability<br/>(Batch Intake, SHA-256 Hashing, Multi-Format)"] --> C2["2. Classification Capability<br/>(Industrial Doc Type & Language ID)"]
+    C2 --> C3["3. Extraction Capability<br/>(Vector Text, Multilingual OCR, Layout Understanding)"]
+    C3 --> C4["4. Quality Capability<br/>(OCR Confidence Gating, Degradation Scoring)"]
+    C3 --> C5["5. Forensics Capability<br/>(Visual Forensics & Signature Forensics Sub-Capability)"]
+    C3 --> C6["6. Correlation Capability<br/>(Multilingual Alignment & Contradiction Matrix)"]
+    C5 --> C6
+    C4 --> C7["7. Reasoning Capability<br/>(Contextual Rules & Grounded Narrative Synthesis)"]
+    C6 --> C7
+    C7 --> C8["8. Reporting Capability<br/>(Auditor Dossier, Signature Reports, Evidence Maps)"]
+
+    style C1 fill:#f8f9fa,stroke:#343a40,stroke-width:1px
+    style C2 fill:#e9ecef,stroke:#495057,stroke-width:1px
+    style C3 fill:#e8f4f8,stroke:#17a2b8,stroke-width:2px
+    style C4 fill:#fff3cd,stroke:#ffc107,stroke-width:1px
+    style C5 fill:#f8d7da,stroke:#dc3545,stroke-width:2px
+    style C6 fill:#d4edda,stroke:#28a745,stroke-width:2px
+    style C7 fill:#e2e3e5,stroke:#6c757d,stroke-width:1px
+    style C8 fill:#d1ecf1,stroke:#0c5460,stroke-width:2px
 ```
 
-1. **Multi-Document Ingestion & File Handling:** Support digital PDFs, scanned PDFs, PNGs, and JPEGs grouped into a single transactional investigation container.
-2. **Hybrid OCR & Layout Extraction:** Direct vector text and layout extraction via PyMuPDF for native digital PDFs, backed by image OCR (Tesseract / PaddleOCR) with word-level confidence and bounding box geometries.
-3. **Visual Forensic Analysis:**
-   * Error Level Analysis (ELA) to expose differential JPEG compression rates indicating spliced or altered regions.
-   * Font and baseline alignment variance detection to flag inserted or modified characters.
-   * Template and clone detection for duplicated signatures or replicated digital stamps.
-4. **Contextual Rule Verification:** Deterministic intra-document validation (e.g., math checksums, date chronology, format checks for PAN/Aadhaar/Tax IDs).
-5. **Cross-Document Entity & Fact Correlation:** Cross-referencing entities (names, entity types, dates of birth, addresses, monetary values, identifiers) across distinct documents in the investigation.
-6. **Pixel-Grounded Evidence Mapping:** Every finding retains a normalized coordinate bounding box `[ymin, xmin, ymax, xmax]`, page number, and document identifier.
-7. **Traceable AI Reasoning:** Using Groq LLMs strictly as forensic reasoning and synthesis engines, consuming structured findings and evidence references without generating ungrounded facts.
-8. **Automated Investigation Dossier Generation:** Real-time generation of a forensic report in structured JSON and downloadable PDF format, adhering to sections 7.1–7.6 of PS-2.
+1. **Ingestion:** Industrial document intake, multi-format validation (PDF, PNG, JPG, TIFF), cryptographic SHA-256 evidence hashing, immutable storage, batch intake queue, intake quality pre-check.
+2. **Classification:** Industrial document type recognition (Purchase Orders, Delivery Challans, Mill Test Certificates, Invoices, Bills of Lading, Identity, Tax), template recognition, language/script-aware classification.
+3. **Extraction:** PyMuPDF direct vector extraction, Multilingual OCR engine abstraction (PaddleOCR / Tesseract / specialized), layout understanding (reading order, tables, headers/footers via optional Docling adapter), signature region candidate extraction, structured field parsing, extraction provenance tracking.
+4. **Quality:** Multi-factor extraction quality evaluation, language-specific quality heuristics, OCR confidence distribution scoring, image degradation metrics (blur, skew, illumination), completeness & uncertainty propagation, human review triggers.
+5. **Forensics:** Pure deterministic visual forensics (ELA, font baseline regression, clone/stamp detection), PDF object & metadata inspection, Signature Forensics sub-capability (signature localization, offline stroke/curvature analysis, reference comparison via ONNX Runtime, tampering/copy-paste detection), pixel-anchored evidence crops.
+6. **Correlation:** Cross-document entity reconciliation (RapidFuzz), multilingual concept/field alignment (deterministic dictionary + optional Sentence Transformers), contradiction matrix, inter-document relationship mapping (e.g. PO $\leftrightarrow$ Challan $\leftrightarrow$ Invoice), organizational reference matching.
+7. **Reasoning:** Industrial contextual intelligence, deterministic rule-based checksums & chronological validation, evidence-grounded AI narrative synthesis (ChatGroq optional), offline deterministic template fallback, uncertainty-aware risk reasoning.
+8. **Reporting:** Industrial Investigation Dossier compilation (ReportLab PDF & structured JSON), PS-2 Sections 7.1–7.6 compliance, signature forensic reports, multilingual summary tables, immutable audit ledger.
 
 ---
 
-## 7. Scope Boundaries: Prototype vs. Production
-
-### 7.1 In-Scope for Hackathon Prototype (Mandatory Focus)
-* Ingestion of multi-page PDF, PNG, and JPEG documents into an active Investigation case.
-* Extraction of textual fields, tables, and key-value pairs with page-level coordinate references.
-* Visual forensic analysis pipeline:
-  * Error Level Analysis (ELA) generation and suspicious compression variance highlighting.
-  * Typography and alignment irregularity detection on financial and identification documents.
-  * Signature and stamp presence and boundary isolation.
-* Cross-document correlation engine:
-  * Entity normalization and fuzzy matching across documents (e.g., Name on ID vs. Name on Bank Statement).
-  * Direct conflict detection (e.g., mismatched addresses, conflicting income figures, conflicting dates).
-* Interactive Desktop Investigation Workstation (PySide6 + Qt Widgets):
-  * Native Windows drag-and-drop file import and local folder selection.
-  * Side-by-side document viewer with highlighted forensic bounding boxes and PyMuPDF rendering.
-  * Qt Graphics Scene / Table / Tree-based Document & Evidence Relationship Graph.
-  * Evidence Inspector drawer displaying visual crops, OCR confidence, and anomaly reasoning.
-* Automated Dossier generation conforming strictly to the 6 mandatory sections of PS-2.
-* Local SQLite persistence (%LOCALAPPDATA%/VeriTrace/) ensuring complete data isolation and stability.
-
-### 7.2 Advanced / Extension Scope (Time-Permitting / Stretch)
-* Automated document type classification via lightweight zero-shot vision models.
-* Handwritten text recognition (HTR) for handwritten declarations.
-* Multilingual OCR (Hindi + English bilingual government identity cards).
-* Deep copy-move forgery detection using SIFT/ORB feature matching.
-* Interactive audit trail replay slider in the desktop UI.
-
-### 7.3 Explicit Non-Goals (Out of Scope)
-* **Hosted Web Application or Cloud SaaS:** VeriTrace is strictly a local desktop software product; hosted web endpoints, browser-only deployments, and public SaaS infrastructure are explicitly out of scope.
-* **Cloud Storage & Multi-Tenant Infrastructure:** No user documents, processed images, or databases are sent to or stored on third-party cloud servers; everything resides in `%LOCALAPPDATA%/VeriTrace/`.
-* **Automated Conviction or Legal Adjudication:** VeriTrace is an investigative aid, not an autonomous judicial system. The system flags discrepancies and compiles evidence; human operators make final decisions.
-* **Industrial Compliance / Factory Permitting:** VeriTrace completely deprecates the industrial zoning, pollution categorization, and factory clearance scope of UdyogPermit AI.
-* **Live GIS Satellite Integration:** Bhuvan and Overpass OSM APIs are decoupled from the active VeriTrace pipeline.
-* **Unbounded Conversational Chatbot:** VeriTrace is not an open-domain chat assistant; LLM calls are strictly structured and bounded to factual forensic analysis.
-
----
-
-## 8. Core Engineering Principles
+## 6. Core Engineering & Forensic Principles
 
 1. **Deterministic-First Principle:** Where mathematical, geometric, or algorithmic logic can solve a problem (e.g., checksums, date comparisons, font alignment variance, coordinate mapping, fuzzy string matching), do not delegate to an LLM. Use LLMs for synthesis, semantic categorization, and contextual narrative reasoning.
 2. **Zero Ungrounded Claims:** An AI model is never permitted to report an anomaly without citing a specific `document_id`, `page_number`, and normalized bounding box coordinate. If evidence cannot be anchored, it cannot be reported as an anomaly.
-3. **Epistemic Humility (Three-Tier Classification):** The system must strictly distinguish between:
-   * *Confirmed Observation:* Factually verified measurement (e.g., "Compression variance of 38% observed at (x, y); font size differs by 4pt").
-   * *Detected Inconsistency:* Mathematical or textual conflict (e.g., "Monthly pay multiplied by 12 does not match annual gross salary").
-   * *Suspected Manipulation:* Potential fraud indicator requiring human review (e.g., "Potential clone stamp detected in signature block").
-4. **Resilient Degradation:** If an advanced CV filter fails on an unusual image format, the pipeline logs the failure gracefully and continues with OCR and contextual analysis rather than terminating the entire investigation.
-5. **Human-in-the-Loop Centricity:** The UI must provide immediate inspection tools allowing a human investigator to override, confirm, or dismiss any automated finding.
+3. **Forensic Neutrality & Epistemic Humility:** Findings record empirical discrepancies, baseline deviations, and mathematical mismatches. An anomaly does NOT prove fraud or deliberate manipulation:
+   * *Level 1 (Confirmed Observation):* Objective physical measurement (e.g., compression variance cluster at $(x, y)$; font size differs by 4pt).
+   * *Level 2 (Detected Inconsistency):* Mathematical or textual conflict (e.g., line item total does not match purchase order grand total).
+   * *Level 3 (Suspicious Indicator):* Visual or morphological anomaly requiring human review (e.g., potential cloned signature block or boundary masking artifact).
+4. **Signature Verification Guardrails:** Static scanned 2D images cannot measure dynamic writing speed, actual pen-lift sequencing, or 3D pen pressure. Visual similarity between a questioned signature and reference samples does NOT prove legal authorship. The system strictly distinguishes:
+   - `SIGNATURE_DETECTED` (localized bounding box)
+   - `VISUAL_ANOMALY_OBSERVED` (quality-dependent stroke width variance or boundary artifacts)
+   - `SIMILARITY_WITH_REFERENCE` (metric feature distance against enrolled profile)
+   - `POSSIBLE_MANIPULATION_INDICATOR` (cross-document clone keypoints or compression discontinuity)
+   - `INSUFFICIENT_EVIDENCE` (low scan resolution or missing reference)
+   - `HUMAN_EXAMINER_DECISION` (authoritative examiner review)
+   *Automated legal determinations of forgery or authenticity are strictly prohibited.*
+5. **AI Privacy Modes & Data Governance:** Raw industrial binaries, sensitive engineering schematics, and confidential vendor contracts reside strictly on local storage (`%LOCALAPPDATA%/VeriTrace/`). The platform enforces three AI privacy modes:
+   * *Mode A (Offline Deterministic - Default):* 100% local, guarantees zero external network or AI calls for document intake, extraction, analysis, forensics, and dossier generation; local template-driven.
+   * *Mode B (Privacy-Preserving AI - Opt-In):* Pre-calculated anonymized numerical metrics only; zero document text, pixels, or PII transmitted.
+   * *Mode C (Explicitly Authorized AI):* Requires organizational authorization and per-case consent; restricted to selected, redacted textual excerpts. Raw unredacted scans are never transmitted.
+6. **Human-in-the-Loop Centricity:** The workstation UI provides immediate inspection tools allowing an authorized human examiner to review visual crops, inspect ELA heatmaps, annotate findings, and make final sign-off decisions.
 
 ---
 
-## 9. Definition of a Successful Hackathon Prototype
+## 7. Scope Boundaries: Hackathon Prototype vs. Production
 
-A successful demonstration of VeriTrace to the hackathon judges requires:
-1. **Multi-Document Upload:** Uploading a sample loan/vendor verification package (e.g., National ID Card + Salary Slip + Bank Statement or Invoice + PO + Tax Certificate).
-2. **Instant Pipeline Execution:** Processing completes efficiently via native Python capability engines, QThreadPool execution, and optional Groq acceleration.
-3. **Live Visual Anomaly Demonstration:** Revealing an ELA heatmap or font-misalignment bounding box over an artificially altered number on a salary slip or invoice.
-4. **Live Cross-Document Conflict Detection:** Automatically identifying and displaying that the entity name or date on Document A contradicts Document B.
-5. **Interactive Evidence Inspection:** Clicking on a flagged anomaly in the desktop UI, which smoothly pans to the exact document page, highlights the bounding box, and displays the underlying visual crop and OCR metadata.
-6. **One-Click Dossier Export:** Generating a professional, structured PDF/JSON Investigation Dossier matching the PS-2 problem statement specifications.
+### 7.1 In-Scope for Hackathon Prototype (Mandatory Focus)
+* Ingestion of multi-page PDF, PNG, and JPEG industrial files into an active Investigation container.
+* High-DPI 300 DPI page rendering and interactive bounding box overlay canvas in PySide6.
+* Multilingual OCR extraction for English, Hindi, and Marathi documents with token bounding boxes.
+* Tabular extraction for industrial purchase orders, delivery challans, and commercial invoices.
+* Visual forensic analysis pipeline: Error Level Analysis (ELA) and font baseline misalignment.
+* Signature detection and localized evidence crop extraction.
+* Cross-document correlation and contradiction matrix across transaction bundles (PO vs. Challan vs. Invoice).
+* Interactive desktop Evidence Inspector displaying visual crops, OCR confidence, and examiner review actions.
+* One-click PS-2 Investigation Dossier generation in structured JSON and printable PDF format.
+* Local SQLite WAL persistence ensuring complete workstation isolation and reliability.
+
+### 7.2 Advanced / Extension Scope (Roadmap)
+* Offline signature reference verification prototype using Siamese CNN via ONNX Runtime.
+* Full 12-language Indian OCR evaluation benchmark harness.
+* Advanced layout parsing via Docling adapter for complex nested engineering tables.
+* Organizational workspaces, role-based access control, and encrypted local database storage.
+
+### 7.3 Explicit Non-Goals (Out of Scope)
+* **Hosted Web Application or Cloud SaaS:** VeriTrace is strictly a local desktop product; browser-only web deployments and multi-tenant SaaS are explicitly out of scope.
+* **Automatic Legal Conviction / Accusation:** The system produces empirical forensic observations; human examiners make authoritative determinations.
+* **Legacy Factory Environmental Permitting:** VeriTrace completely deprecates the municipal environmental zoning and pollution categorization scope of UdyogPermit AI.
+* **Live GIS Satellite Integration:** Bhuvan and Overpass OSM APIs are decoupled from the active pipeline.
+* **Unbounded Conversational Chatbot:** LLM calls are strictly structured, JSON schema-enforced, and bounded to factual forensic analysis.

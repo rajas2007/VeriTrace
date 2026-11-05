@@ -5,14 +5,15 @@
 
 ## 1. Executive Status Dashboard
 
-* **Current Active Phase:** **Phase 0 (Initialization & Planning)**
-* **Phase 0 Status:** **COMPLETED**
-* **Implementation Status:** **READY FOR EXECUTION (Milestone 0 Pending Baseline Commit)**
-* **Last Verified Timestamp:** 2026-11-05T00:30:00+05:30
+* **Current Active Phase:** **Milestone 1 (Native Desktop Foundation and Document Processing Engine)**
+* **Phase Status:** **IN PROGRESS (Milestone 1.1 Shared Contract Freeze Completed)**
+* **Implementation Status:** **READY FOR IMPLEMENTATION (Milestone 1.2 Ready)**
+* **Last Verified Timestamp:** 2026-11-05T14:00:00+05:30
 
 ```mermaid
-pie title Phase 0 Milestone Completion
-    "Phase 0 Planning & Setup (Completed)" : 100
+pie title Milestone 1 Progress
+    "Milestone 1.1 Shared Contract Freeze (Completed)" : 15
+    "Milestone 1 Implementation (Pending)" : 85
 ```
 
 ---
@@ -60,48 +61,93 @@ pie title Phase 0 Milestone Completion
 | **P0-37** | Repository Cleanup & Permanent Reporting Policy | **COMPLETED** | Removed redundant `TASK_XX_...md` reports from repository root, established three-tier documentation hierarchy in `CONTRIBUTING.md` and `dev/26`, and instituted chat-only reporting policy. |
 | **P0-38** | Final Structural Simplification & Baseline Approval (Task 02.10) | **COMPLETED** | Consolidated duplicate capabilities (intake->ingestion, dossier->reporting, findings/evidence/validation), anchored `requirements.txt` to `pyproject.toml` (`-e .[all]`), pruned 37 redundant `.gitkeep` placeholders, and validated all 6 architectural layers. |
 | **P0-39** | Final Capability Ownership Verification (Task 02.11) | **COMPLETED** | Verified architectural ownership of Validation (Domain Rules + Capabilities), Findings (Domain Entity + App Workflow decoupled from AI narratives), and Evidence (independently addressable Domain Entity + Forensics cropper); created `.github/workflows/ci.yml`, `.github/CODEOWNERS`, and aligned all test directories (`tests/benchmarks/`, `tests/packaging/`); authored ADR-034. |
+| **P0-40** | Milestone 1.0: Development Environment & CI Readiness | **COMPLETED** | Python 3.11.9 runtime configured, `.venv` verified, GitHub Actions CI verified passing (`603254c`). |
+| **M1-01** | Milestone 1.1: Shared Contract Freeze | **COMPLETED** | Frozen shared data contracts, protocols, ownership matrix, 9-stage workflow, canonical test fixtures in `dev/27_MILESTONE_1_SHARED_CONTRACTS.md`; recorded ADR-035. |
+| **M1-02** | Milestone 1.2: Industrial Architecture Evolution & Governance | **COMPLETED** | Evolved product charter for 7 industries, 12-language Indian OCR roadmap, signature forensics sub-capability, 14-entity ER schema, dependency governance (ADR-036 to ADR-040). |
 
 ---
 
-## 3. Implementation Milestones Progress (Milestones 0 – 6)
+## 3. Implementation Milestones Progress (Milestones 1 – 12)
 
-> **STRICT COMPLIANCE NOTE:** In accordance with task constraints, zero implementation code has been introduced during Phase 0 / Tasks 01–02.8. All downstream milestones are currently marked as **PENDING / PLANNED**. No implementation milestone has been prematurely marked complete.
+> **STRICT COMPLIANCE NOTE:** In accordance with task constraints, zero implementation code has been introduced during Phase 0 / Architecture tasks. Milestones 1 and 2 (Foundation & Contracts) are complete. Downstream implementation milestones are scheduled for sequential execution.
 
-### Milestone 0: PySide6 Desktop Prototype (Technical Feasibility Gate)
+### Milestone 1: Industrial Product Foundation
+* [x] Formulate Industrial Product Charter (`dev/00_PROJECT_CHARTER.md`).
+* [x] PS-2 Problem Analysis & 7 Target Industries (`dev/01_PROBLEM_STATEMENT_ANALYSIS.md`).
+* [x] Python 3.11.9 Runtime Configuration & GitHub Actions CI Verification (`603254c`).
+* [x] Team Collaboration Governance & Git Workflow (`dev/26_TEAM_DEVELOPMENT_AND_GITHUB_WORKFLOW.md`).
+
+### Milestone 2: Shared Contracts & Domain Updates
+* [x] Shared Data Contracts Freeze (`dev/27_MILESTONE_1_SHARED_CONTRACTS.md`, ADR-035).
+* [x] 15 Core Entities + 1 Assoc Table Relational Schema (`dev/07`, `dev/19`, ADR-041).
+* [x] Multilingual Data Representation & Qualified Acceptance Criteria (`dev/09`, `dev/27`, ADR-041).
+* [x] Signature Forensic Scientific Delineation & Reference Governance (`dev/09`, `dev/27`, ADR-042).
+* [x] Three-Tier AI Privacy Modes (A: Offline, B: Anonymized Metrics, C: Redacted Excerpts) (`dev/09`, `dev/20`, ADR-042).
+* [x] Ownership Boundaries & Protocols (`InvestigationServiceProtocol`, `DocumentIngestionServiceProtocol`, etc.).
+* [x] Architectural Decision Records ADR-036 through ADR-042 (`dev/12_DECISION_LOG.md`).
+
+### Milestone 3: Desktop Shell, Persistence & Ingestion Foundation
 * [ ] Initialize PySide6 native desktop application shell (`src/veritrace/main.py`, `src/veritrace/gui/app.py`).
 * [ ] Implement QSS forensic dark theme stylesheet (`src/veritrace/gui/styles/dark_theme.qss`).
 * [ ] Implement 4-pane workstation layout in Qt Widgets (`src/veritrace/gui/views/main_window.py`).
-* [ ] Wire direct in-process Python application services (`src/veritrace/gui/controllers/` -> `src/veritrace/application/services/`).
-* [ ] Initialize local SQLite database at `%LOCALAPPDATA%/VeriTrace/database/veritrace.sqlite`.
+* [ ] Initialize local SQLite WAL database at `%LOCALAPPDATA%/VeriTrace/database/veritrace.sqlite`.
+* [ ] Implement local document ingestion pipeline (`InvestigationService`, `DocumentService`) with SHA-256 evidence hashing.
+* [ ] Build desktop drag-and-drop file import dropzone and asynchronous `investigation_jobs` queue runner.
 
-### Milestone 1: Application Foundation, Database & Case Ingestion
-* [ ] Initialize SQLite WAL schema (12 Core Entities + 1 Assoc Table) via SQLAlchemy 2.0.
-* [ ] Implement local document ingestion pipeline (`InvestigationService`, `DocumentService`).
-* [ ] Implement SQLite `investigation_jobs` queue and background worker execution via QThreadPool with stage checkpoints.
-* [ ] Build desktop drag-and-drop file import UI with SHA-256 calculation.
-
-### Milestone 2: Document Processing and Multi-Factor OCR
-* [ ] Implement PyMuPDF 300 DPI page rasterization.
+### Milestone 4: Multilingual OCR Benchmarking & Engine Integration
+* [ ] Implement PyMuPDF 300 DPI page rasterization engine (`infrastructure/pdf/`).
 * [ ] Implement `TextExtractorProtocol` abstraction in `src/veritrace/capabilities/extraction/`.
-* [ ] Execute multi-dimensional OCR benchmark suite (CER, WER, Exact Field Match, IoU $\ge 0.70$) across CAT-01 to CAT-07.
-* [ ] Integrate bundled Tesseract OCR fallback for scanned pages and image regions.
-* [ ] Extract token bounding boxes with normalized coordinates `[ymin, xmin, ymax, xmax] \in [0.0, 1.0]`.
-* [ ] Implement QGraphicsView document viewer with coordinate overlays.
+* [ ] Execute multi-dimensional OCR benchmark suite (CER, WER, Exact Field Match, IoU $\ge 0.70$) across English, Hindi, and Marathi.
+* [ ] Integrate bundled Tesseract OCR fallback and evaluate lightweight PaddleOCR models for Devanagari.
+* [ ] Implement Unicode NFC and script-aware numeral normalization to Hindu-Arabic digits.
 
-### Milestone 3: Visual Forensics Suite & Threshold Calibration
+### Milestone 5: Advanced Document Layout & Structure Understanding
+* [ ] Evaluate Docling (IBM Docling) as optional layout adapter for complex industrial tables.
+* [ ] Implement table grid reconstruction for purchase orders, delivery challans, and commercial invoices.
+* [ ] Parse multi-column technical specifications and mill test certificate schedules.
+* [ ] Preserve coordinate linkage from extracted cells to 300 DPI canvas.
+
+### Milestone 6: Signature Detection & Localization
+* [ ] Implement contour and stroke density heuristics isolating signatures from form lines and stamps.
+* [ ] Extract normalized signature bounding boxes $[ymin, xmin, ymax, xmax]$ linked to `Evidence` records.
+* [ ] Display localized signature candidate boxes with zoom-inspection overlays in PySide6 viewer.
+
+### Milestone 7: Signature Reference Comparison Prototype
+* [ ] Implement `AuthorizedSubject` and `SignatureReferenceProfile` management in desktop UI.
+* [ ] Build offline reference signature enrollment workflow with chain-of-custody metadata.
+* [ ] Implement quantized Siamese CNN inference module using local ONNX Runtime (`onnxruntime`) on CPU.
+* [ ] Compute metric embedding distance ($d \in [0.0, 1.0]$) between questioned signatures and reference samples.
+* [ ] Enforce 6-level forensic assessment guardrails (visual similarity $\ne$ legal authorship).
+
+### Milestone 8: Visual Forensic Analysis Suite
 * [ ] Implement Error Level Analysis (ELA) engine computing compression differential heatmaps.
 * [ ] Implement font baseline regression engine detecting spliced or elevated numerals ($>2.5\sigma$).
-* [ ] Implement duplicate signature/stamp clone detection using ORB feature matching.
+* [ ] Implement multi-scale ORB feature matching detecting duplicated signature/stamp images.
 * [ ] Extract visual evidence crops (20px context padding) and calibrate forensic thresholds.
 
-### Milestone 4: Contextual and Cross-Document Intelligence
-* [ ] Implement RapidFuzz entity reconciliation aligning names, DOBs, and identifiers across files.
-* [ ] Implement arithmetic checksum validator (gross/net pay, invoice sums) and temporal rules.
-* [ ] Build cross-document conflict matrix detecting contradictions between separate files.
-* [ ] Implement `LLMProviderProtocol` abstraction with configurable provider/model (`VERITRACE_AI_MODEL`).
-* [ ] Implement deterministic template narrative fallback for air-gapped / offline operation.
+### Milestone 9: Cross-Language Entity & Concept Correlation
+* [ ] Implement RapidFuzz entity reconciliation aligning vendor names, consignees, dates, and amounts across files.
+* [ ] Build multilingual concept dictionary mapping accounting terms across Indian languages.
+* [ ] Construct contradiction matrix detecting inter-document discrepancies (PO vs. Challan vs. Invoice).
+* [ ] Evaluate multilingual Sentence Transformers for unstructured clause comparisons.
 
-### Milestone 5: Evidence Mapping, Reviewer Gate & PDF Dossier
+### Milestone 10: Industrial Contextual Reasoning & Verification
+* [ ] Implement deterministic intra-document arithmetic rules for procurement (Quantity $\times$ Rate = Amount, taxes).
+* [ ] Implement logistical chronology rules (PO Date $\le$ Challan Date $\le$ Invoice Date).
+* [ ] Implement optional Groq ChatGroq LLM narrative synthesizer for clear explanations over verified metrics.
+* [ ] Implement 100% deterministic offline template fallback for air-gapped facilities.
+
+### Milestone 11: Investigation Dossier & Audit Workflows
+* [ ] Build desktop Evidence Inspector dock widget with review controls (`CONFIRM`, `DISMISS`, `ANNOTATE`).
+* [ ] Finalize immutable append-only `AuditEvent` audit logging in SQLite.
+* [ ] Build ReportLab PDF compiler generating 6-section PS-2 Investigation Dossiers with embedded crops.
+* [ ] Include dedicated Signature Forensic Verification Reports and multilingual extraction summaries.
+
+### Milestone 12: Desktop Packaging, Hardening & Final Release
+* [ ] Configure PyInstaller one-folder specification bundling Python runtime, PySide6, OpenCV, PyMuPDF, ONNX Runtime, and Tesseract.
+* [ ] Configure Inno Setup script compiling `VeriTrace-Setup.exe` with desktop shortcut and uninstaller.
+* [ ] Validate clean installation on fresh Windows 10/11 x64 test environment.
+* [ ] Rehearse 12-item Judges' Live Demonstration Checklist in under 5 minutes.
 * [ ] Build desktop Evidence Inspector dock widget displaying visual crops, ELA diffs, and review actions.
 * [ ] Implement Human-in-the-Loop review controls (`CONFIRM`, `DISMISS`, `ANNOTATE`) updating `ReviewDecision`.
 * [ ] Finalize immutable append-only `AuditEvent` audit logging.

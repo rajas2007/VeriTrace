@@ -69,34 +69,45 @@ The VeriTrace user interface is architected as an **Integrated Desktop Forensic 
 
 ---
 
-### Feature 4: Evidence Inspector Dock Widget
-* **User Purpose:** Provides deep-dive forensic inspection of a specific flagged region.
-* **Main Components:** `evidence_inspector.py`, `forensics_controller.py`.
+### Feature 4: Evidence Inspector & Signature Verification Dock Widget
+* **User Purpose:** Provides deep-dive forensic inspection of a specific flagged visual anomaly or questioned signature.
+* **Main Components:** `evidence_inspector.py`, `signature_inspector.py`, `forensics_controller.py`.
 * **Service Interactions:**
-  * `ForensicsService.record_review_decision(finding_id, decision, notes)` (Submits human decision).
+  * `ForensicsService.record_review_decision(finding_id, decision, notes)` (Submits human examiner decision).
 * **Required Data:**
-  * High-resolution cropped image patch of the original document.
-  * High-resolution cropped patch of the ELA heatmap.
-  * Exact OCR text and character confidence scores.
+  * High-resolution cropped image patch of the original document anomaly (20px padding).
+  * High-resolution cropped patch of the ELA differential heatmap.
+  * For signatures: Questioned signature crop, enrolled reference sample crops, Siamese CNN metric distance, uncertainty indicator, and 6-level forensic assessment tag (`SIGNATURE_DETECTED`, `VISUAL_ANOMALY_OBSERVED`, `SIMILARITY_WITH_REFERENCE`, `POSSIBLE_MANIPULATION_INDICATOR`, `INSUFFICIENT_EVIDENCE`, `HUMAN_EXAMINER_DECISION`).
+  * Exact OCR text, script metadata, and token confidence scores.
   * Mathematical rule discrepancy details (expected vs. actual).
-  * Optional Groq grounded narrative explanation.
+  * Optional Groq grounded narrative explanation or offline template text.
 * **User Actions:**
   * Compare Original Crop vs. ELA Heatmap side by side.
-  * Read forensic explanation.
+  * Compare Questioned Signature vs. Enrolled Authorized Reference Samples.
   * Human Review Actions: Click **"Confirm Finding"**, **"Dismiss as Artifact"**, or **"Add Investigator Note"**.
 
 ---
 
-### Feature 5: Cross-Document Relational Evidence View
+### Feature 5: Multilingual Document Viewer & Concept Alignment View
+* **User Purpose:** Allows the examiner to review multilingual Indian text extraction, inspect script detection confidence, and verify cross-language concept alignments.
+* **Main Components:** `multilingual_viewer.py`, `script_badge.py`.
+* **Data Visualized:**
+  * Original regional text (Devanagari, Bengali, Tamil, etc.) displayed verbatim alongside normalized numerical values.
+  * Script confidence badge and language selector (allowing manual override when detection confidence $<0.70$).
+  * Matched cross-language concept pills ("एकूण रक्कम" $\leftrightarrow$ "Total Amount").
+
+---
+
+### Feature 6: Cross-Document Relational Evidence View
 * **User Purpose:** Enables the analyst to visualize connections, common entities, and contradictory claims across distinct documents.
 * **Main Components:** `evidence_tree_model.py`, `workspace_layout.py`.
 * **Data Visualized:**
-  * Ingested documents (nodes) $\to$ Extracted entities (names, dates, accounts) $\to$ Flagged contradictions.
+  * Ingested documents (nodes) $\to$ Extracted entities (names, dates, accounts, quantities) $\to$ Flagged contradictions.
 * **User Actions:** Click any entity or conflict to focus the Document Viewer directly on the relevant page coordinates.
 
 ---
 
-### Feature 6: Automated Dossier Export
-* **User Purpose:** One-click export of an auditor-grade investigation report complying with PS-2 Sections 7.1–7.6.
+### Feature 7: Automated Dossier & Signature Report Export
+* **User Purpose:** One-click export of an auditor-grade investigation report complying with PS-2 Sections 7.1–7.6, including specialized signature verification reports.
 * **Main Components:** `export_dossier_dialog.py`, `dossier_service.py`.
 * **User Actions:** Select destination folder on Windows; click "Generate Dossier"; open compiled PDF directly in default OS PDF viewer.
