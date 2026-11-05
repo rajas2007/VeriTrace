@@ -392,3 +392,168 @@ This register documents all fundamental architectural decisions established for 
   5. **Retention of 8 Canonical Capabilities:**
      - The current 8 capabilities (`classification`, `correlation`, `extraction`, `forensics`, `ingestion`, `quality`, `reasoning`, `reporting`) provide clean, non-overlapping processing boundaries.
 * **Consequences:** Positive: Eliminates god-objects; preserves pure domain invariants in `domain/rules/`; prevents AI hallucination in finding creation; guarantees independent evidence addressability; eliminates structural clutter. Negative: Requires developers to understand the distinction between domain entity lifecycles and capability processing engines.
+
+---
+
+### ADR-035: Milestone 1 Shared Contract Freeze between Desktop Application and Document Processing Engine
+* **Status:** APPROVED & FROZEN
+* **Context:** Milestone 1 development is divided between two developers: Rajas (Desktop application, investigation management, persistence, orchestration, background processing, integration) and Shravan (Document ingestion, PDF/image processing, digital text extraction, OCR, extraction provenance, extraction quality). To proceed with parallel implementation without interface breakage, conflicting data representations, or architectural boundary leaks, all shared data structures, service interfaces, error models, and integration expectations must be formally frozen.
+* **Decision:**
+  1. **Codification of Shared Data Contracts:** Adopt the pure Python dataclasses and enums codified in `dev/27_MILESTONE_1_SHARED_CONTRACTS.md`: `NormalizedBoundingBox`, `PageDimensions`, `ExtractedToken`, `ExtractedField`, `ExtractionProvenance`, `ProcessingWarning`, `ProcessingError`, `PageExtractionResult`, `IngestionRequest`, `IngestionResult`, `InvestigationIdentity`, and `InvestigationDTO`.
+  2. **Coordinate & Provenance Standard:** Standardize on normalized bounding boxes $[ymin, xmin, ymax, xmax] \in [0.0, 1.0]$ with top-left origin $(0.0, 0.0)$, $x$ rightwards, $y$ downwards. Codify the epistemic invariant that OCR confidence measures character recognizer probability and must never be treated as legal or factual correctness.
+  3. **Decoupled Service Protocols:** Define five core service protocols using Python's `typing.Protocol` with `@runtime_checkable`:
+     - Shravan's engines: `DocumentIngestionServiceProtocol`, `DocumentExtractionServiceProtocol`, `ExtractionQualityEvaluatorProtocol`.
+     - Rajas's orchestration: `InvestigationServiceProtocol`, `ProcessingWorkflowProtocol`.
+     - Telemetry: `ProgressCallback` and `CancellationToken`.
+     - The desktop GUI must interact with processing capabilities strictly via application workflows and protocols, never importing PDF or OCR libraries directly.
+  4. **Granular Ownership & Dual-Approval Rules:**
+     - Rajas exclusively owns `gui/`, investigation services, job services, workflows, SQLite persistence, and worker threads.
+     - Shravan exclusively owns `capabilities/ingestion/`, `capabilities/extraction/`, `capabilities/quality/`, `infrastructure/pdf/`, and `infrastructure/ocr/`.
+     - Shared directories (`domain/`, `application/dto/`, root build files) require formal RFC and dual-developer approval for any modification.
+  5. **Resilient 9-Stage Integration & Shared Fixtures:**
+     - Formalize the 9-stage intake-to-render workflow.
+     - Enforce per-document error containment so that a single corrupted or unsupported file does not abort the processing of valid documents in a batch.
+     - Define 7 canonical test fixtures in `tests/fixtures/` covering digital PDF, scanned raster, ID card PNG, salary slip JPEG, corrupted PDF, unsupported DOCX, and multi-page statements.
+* **Consequences:** Positive: Enables fully independent parallel feature development with zero interface ambiguity; prevents GUI-capability coupling; establishes rock-solid error containment; guarantees reproducible testing against canonical fixtures. Negative: Requires both developers to coordinate through the formal RFC change procedure if contract modifications are needed during implementation.
+
+---
+
+### ADR-036: Evolution to Industrial Document Intelligence, Forensics & Authenticity Verification Platform
+* **Status:** APPROVED & STABLE
+* **Context:** VeriTrace is evolving from a general-purpose document forensics prototype into an industrial-grade document intelligence, forensics, and authenticity verification platform. Industrial documentation (manufacturing purchase orders, delivery challans, mill test certificates, commercial invoices, bills of lading, compliance affidavits) presents distinct forensic challenges including spliced quantities, altered metallurgical specifications, forged authorization signatures, and multi-document supply-chain contradictions.
+* **Decision:**
+  1. **New Product Positioning:** Formally position VeriTrace as an **Industrial Document Intelligence, Forensics & Authenticity Verification Platform** across seven target industries:
+     - 1. Manufacturing *(Initial Demonstration Domain)*
+     - 2. Logistics and Supply Chain *(Initial Demonstration Domain)*
+     - 3. Banking and Financial Services (BFSI)
+     - 4. Insurance
+     - 5. Government and Public Administration
+     - 6. Construction and Infrastructure
+     - 7. Human Resources and Enterprise Administration
+  2. **Cross-Industry Extensibility:** While manufacturing and supply-chain documents serve as the initial demonstration domain, the core architecture, data contracts, and verification engines remain strictly modular, extensible, and non-domain-locked.
+  3. **Architectural Continuity:** Retain the native PySide6 Windows desktop monolith, in-process Python application services, local SQLite WAL persistence, exactly eight canonical capabilities, and six architectural layers. No web frameworks, microservices, or external supervisor processes are introduced.
+* **Consequences:** Positive: Expands product market value and enterprise relevance; aligns with complex industrial document inspection workflows; provides rich demonstration scenarios (PO vs. Challan vs. Test Certificate). Negative: Broadens test dataset scope and requires handling complex industrial table layouts.
+
+---
+
+### ADR-037: Multilingual Indian Document Intelligence & OCR Engine Abstraction
+* **Status:** APPROVED & STABLE
+* **Context:** Indian enterprise and industrial workflows routinely process documents containing regional scripts (Devanagari, Bengali, Gurmukhi, Dravidian scripts) alongside English. A single-engine, English-only approach is insufficient for real-world Indian document intelligence.
+* **Decision:**
+  1. **Twelve-Language Roadmap (Ten-Language Target):** Establish an architectural roadmap covering 12 Indian languages across three operational readiness stages:
+     - *Stage 3 (Validated for Release):* English, Hindi, Marathi (Priority 1: Core Latin & Devanagari extraction, normalization, and field matching).
+     - *Stage 2 (Experimental / Benchmarking):* Bengali, Gujarati, Punjabi, Tamil, Telugu (Priority 2: Regional script OCR evaluation).
+     - *Stage 1 (Planned Roadmap):* Kannada, Malayalam, Odia, Urdu (Priority 3: Complex conjuncts and RTL layout support).
+  2. **Engine Abstraction via `TextExtractorProtocol`:** Implement an extensible OCR engine abstraction capable of routing between PyMuPDF (native vector text), bundled Tesseract 5.x (baseline OCR fallback), and PaddleOCR (primary multilingual benchmarking candidate for Indian scripts).
+  3. **Language & Script Detection Pre-Filter:** Utilize Unicode block analysis and lightweight script classifiers to detect page-level and region-level scripts, routing mixed-language pages to appropriate recognition models, with manual examiner override in the UI when confidence is low ($<0.70$).
+  4. **Multilingual Normalization Standard:** Implement Unicode NFC normalization, script-aware numeral normalization (converting Devanagari/regional digits to Hindu-Arabic for arithmetic rules), and punctuation normalization.
+  5. **Verbatim Source Text Preservation Invariant:** The system must NEVER replace source-language text with machine translation. Original extracted text is preserved verbatim with full spatial and provenance metadata.
+  6. **Deterministic Concept Mapping:** Utilize standardized multilingual concept dictionaries for critical financial and legal terms ("Total Amount" $\leftrightarrow$ "एकूण रक्कम" $\leftrightarrow$ "कुल रकम"). Sentence Transformers may be evaluated for unstructured clauses, but embeddings alone must never be used for financial, legal, or identity-critical fields.
+* **Consequences:** Positive: Native support for Indian enterprise documentation; robust handling of bilingual invoices and challans; clean multi-engine routing. Negative: Increases OCR evaluation complexity and requires managing language-specific model weights.
+
+---
+
+### ADR-038: Signature Forensics & Reference Verification Sub-Capability
+* **Status:** APPROVED & STABLE
+* **Context:** Forged authorization signatures, cloned digital signature images, and unauthorized approvals represent major fraud vectors in industrial procurement and quality assurance.
+* **Decision:**
+  1. **Sub-Capability Integration:** Integrate Signature Forensics as a major specialized sub-capability inside `src/veritrace/capabilities/forensics/`. Do NOT create a ninth top-level capability.
+  2. **Functional Scope:**
+     - *Localization:* Isolate signature candidate regions on 300 DPI pages, distinguishing handwritten strokes from printed form lines and rubber stamps.
+     - *Offline Visual Forensics:* Inspect stroke continuity, curvature, proportions, alignment, and tracing indicators (hesitation marks, uniform line thickness).
+     - *Reference Comparison:* Compare questioned signatures against enrolled reference samples of authorized subjects using metric embedding distance via a quantized Siamese CNN model.
+     - *Tampering & Clone Detection:* Detect pixel-identical cut-and-paste signature patches across documents via ORB matching, and detect boundary clipping masks and ELA compression spikes.
+  3. **Local ONNX Runtime Inference:** Model training is conducted offline in PyTorch; inference in the desktop application executes exclusively via **ONNX Runtime (`onnxruntime`) on the local CPU**, ensuring zero cloud latency, zero GPU hardware dependency, and complete privacy.
+  4. **Strict Forensic Guardrails (Six-Level Scale):** Visual similarity does NOT prove legal authorship or fraud. The system strictly classifies signature findings into:
+     - 1. `SIGNATURE_DETECTED`
+     - 2. `VISUAL_ANOMALY_OBSERVED`
+     - 3. `SIMILARITY_WITH_REFERENCE`
+     - 4. `POSSIBLE_MANIPULATION_INDICATOR`
+     - 5. `INSUFFICIENT_EVIDENCE`
+     - 6. `HUMAN_EXAMINER_DECISION`
+     *The system must never automatically declare a person guilty of forgery.*
+* **Consequences:** Positive: Provides industry-leading forensic depth for document authentication; operates 100% offline; prevents false accusations through rigorous epistemic guardrails. Negative: Requires maintaining an authorized reference signature registry and calibrating similarity thresholds on diverse ground-truth datasets.
+
+---
+
+### ADR-039: Technology Stack Evaluation, Dependency Governance & Offline Local Inference
+* **Status:** APPROVED & STABLE
+* **Context:** The evolution to industrial document intelligence introduces candidates for multilingual OCR (PaddleOCR), layout analysis (Docling), local model inference (ONNX Runtime), model training (PyTorch), and semantic matching (Sentence Transformers). Uncontrolled dependency expansion would cause package bloat, Windows compilation failures, and fragile installer builds.
+* **Decision:**
+  1. **Five-Tier Dependency Governance:** Classify all technologies into:
+     - *Adopted:* Python 3.11, PySide6, SQLite, SQLAlchemy 2.0, Alembic, Pydantic, PyMuPDF, OpenCV, Pillow, NumPy, RapidFuzz, Tesseract 5.x, Groq API (optional), ReportLab, Pytest, pytest-qt, Ruff, Mypy, PyInstaller, Inno Setup.
+     - *Evaluate / Benchmark:* PaddleOCR, Docling, Language/script detection libraries, ONNX Runtime, scikit-image, Sentence Transformers.
+     - *Optional:* Groq ChatGroq (cloud AI narrative synthesis, strictly user-controlled with offline template fallback).
+     - *Deferred:* Docker, PostgreSQL, multi-tenant cloud IAM.
+     - *Rejected:* FastAPI, Uvicorn, React, Vite, Tauri 2, microservices.
+  2. **Strict PyTorch Isolation:** PyTorch is strictly permitted for offline model development and research on developer workstations. It is **NEVER** added to runtime dependencies or packaged into the desktop distribution.
+  3. **Lightweight Local Inference via ONNX Runtime:** All neural models (signature verification, layout classification) must be exported to quantized `.onnx` models and executed locally via `onnxruntime` on CPU.
+  4. **Authoritative Manifest Guardrail:** Do NOT install heavy packages (`paddlepaddle`, `torch`, `docling`) or add them to `pyproject.toml` during architecture tasks. Only adopted, empirically justified dependencies enter the active project manifest.
+* **Consequences:** Positive: Prevents dependency bloat; ensures 100% reproducible CI and local development; keeps desktop installer lightweight and reliable. Negative: Requires benchmarking candidates under protocol abstractions before official adoption.
+
+---
+
+### ADR-040: Industrial Security, Multi-Tenant Workspaces & Data Governance Architecture
+* **Status:** APPROVED & STABLE
+* **Context:** Industrial document intelligence requires organizational workspace isolation, role-based access control, secure local storage, reference sample chain-of-custody, and strict governance over cloud AI data sharing.
+* **Decision:**
+  1. **Relational Entity Expansion:** Extend the core domain model to include:
+     - `Organization` (`organizations` table): Multi-tenant workspace aggregate.
+     - `AuthorizedSubject` (`authorized_subjects` table): Enterprise personnel authorized to endorse documents.
+     - `SignatureReferenceProfile` (`signature_references` table): Enrolled reference signature samples with crop paths, SHA-256 hashes, and feature embeddings.
+  2. **Workstation Storage Security:** Clarify that local `%LOCALAPPDATA%` storage does not automatically provide disk encryption. Establish a security architecture roadmap supporting Windows DPAPI for API key protection and recommending BitLocker / SQLCipher for at-rest encryption in regulated enterprise environments.
+  3. **Cloud AI Privacy & Data Minimization Guardrails:**
+     - Cloud AI (Groq API) is strictly optional, disabled by default, and user-controlled via settings.
+     - Confidential industrial documents (drawings, contracts, financial sheets) are **NEVER** transmitted to external cloud APIs.
+     - When enabled, only anonymized numerical metrics and pre-calculated discrepancy summaries are sent for narrative synthesis.
+     - 100% offline deterministic template fallback is maintained for air-gapped industrial facilities.
+  4. **Human Examiner Oversight:** All consequential findings (especially signature discrepancies and financial contradictions) require human-in-the-loop review (`CONFIRM`, `DISMISS`, `ANNOTATE`) before inclusion in the final legal dossier.
+* **Consequences:** Positive: Satisfies enterprise compliance, ISO/IEC 27037 chain-of-custody, and data sovereignty requirements; protects proprietary industrial IP. Negative: Requires managing workspace contexts and reference sample enrollment workflows.
+
+---
+
+### ADR-041: Domain Model Count Reconciliation, Multilingual Data Representation & Forensic Signal Calibration
+* **Status:** APPROVED & STABLE
+* **Context:** An architectural audit of the data model and capability specifications revealed four critical inconsistencies:
+  1. An off-by-one arithmetic error in documentation that claimed "14 Core Entities + 1 Association Table", whereas the actual schema contains 15 distinct entities (`Investigation`, `InvestigationJob`, `Document`, `DocumentPage`, `ExtractedField`, `Entity`, `Finding`, `Evidence`, `CrossDocumentRelation`, `ReviewDecision`, `Dossier`, `AuditEvent`, `Organization`, `AuthorizedSubject`, `SignatureReferenceProfile`) plus 1 association table (`FindingEvidenceMap`), totaling 16 database tables in SQLite WAL.
+  2. The `primary_language: str` column on `Document` was inadequate for bilingual or multi-script industrial documents (e.g. English-Hindi procurement challans).
+  3. Visual forensic anomaly thresholds (ELA 90% quality $>3.0\sigma$, font baseline regression offset $>2.5\sigma$, ORB feature match count) were documented as hardcoded production rules rather than candidate signals requiring labelled dataset calibration.
+  4. Language operational readiness was prematurely described as "Validated for Release" without supporting empirical benchmark evidence.
+* **Decision:**
+  1. **Reconcile Relational Model Count:** Formally codify the schema across all documentation and models as exactly **15 Core Relational Entities + 1 Association Table (16 SQLite Tables Total)**.
+  2. **Multilingual Value Object Representation:** Support multi-script, mixed-language documents without relational table proliferation:
+     - Embed `LanguageDetectionProfile` structured value objects as JSON columns on `Document` (`languages_json`) and `DocumentPage` (`languages_json`), capturing language distribution lists, script families, detection confidences, and detection engine provenance.
+     - Retain indexed summary columns (`primary_language`, `primary_script`) for fast query filtering.
+     - Persist token/region-level attributes (`language`, `script`, `lang_confidence`, `ocr_engine`, `ocr_model_version`) on `ExtractedField`.
+     - Strictly enforce verbatim source preservation in `ExtractedField.raw_text` and normalized coordinates $[ymin, xmin, ymax, xmax] \in [0.0, 1.0]$.
+  3. **Forensic Signal Calibration & Multi-Signal Corroboration:**
+     - Classify ELA, font baseline offset, ORB matching, and compression anomalies as **candidate forensic signals requiring empirical calibration against labelled domain datasets**.
+     - Gate visual forensic signals using `ExtractionQualityReport` (downgrading confidence on degraded/blurred documents).
+     - Prohibit elevating single, isolated visual anomalies to high-severity findings; require multi-signal corroboration across independent measurements (e.g. ELA anomaly corroborated by font baseline misalignment or cross-document contradiction).
+  4. **Correct Language Operational Readiness:** Reclassify Priority 1 languages (English, Hindi, Marathi) from "Validated for Release" to "Stage 2: Initial Implementation and Benchmarking", and establish explicit empirical acceptance criteria (CER, WER, conjunct/matra accuracy, Indic numeral normalization).
+* **Consequences:** Positive: Eliminates schema ambiguity; provides flexible multi-script support without table explosion; aligns forensic claims with SWGDOC/ASTM scientific standards. Negative: Requires calibration against labelled ground-truth datasets during testing milestones.
+
+---
+
+### ADR-042: Signature Forensic Boundaries, Evidence Governance & Three-Tier AI Privacy Modes
+* **Status:** APPROVED & STABLE
+* **Context:** Preliminary documentation contained scientifically unsupported claims regarding static 2D scanned signature analysis (e.g. pen pressure reconstruction, writing velocity, pen-lift sequences). Additionally, enterprise industrial IP protection required clear operational definitions for AI data sharing.
+* **Decision:**
+  1. **Strict Scientific Delineation of Static 2D Signature Analysis:**
+     - *Directly Measurable:* 2D geometry, bounding box, apparent pixel stroke width variance, binarized stroke density/topology, duplicate clone keypoints (ORB), digital manipulation boundary masks, and ELA compression discontinuity.
+     - *Estimated:* Metric embedding feature distance via local ONNX Runtime CPU inference, apparent stroke line smoothness heuristics.
+     - *Strictly Excluded / Unsupported:* True 3D pen pressure (indentation force), dynamic writing velocity/acceleration, chronological pen-lift sequencing, and physiological motor tremor. Stroke width, curvature, and continuity must be treated as quality-dependent visual features.
+  2. **Signature Reference Governance & Cryptographic Precision:** Enrolling and matching reference signature samples requires:
+     - Authorized legal enrollment from verified instruments (board resolutions, witnessed specimen cards).
+     - Explicit written signatory consent/mandate (`consent_mandate_ref`).
+     - Role-based access control (RBAC restricted to `FORENSIC_INVESTIGATOR` or `LEAD_AUDITOR`).
+     - **Cryptographic Storage Architecture (Planned Security Specification):** Windows DPAPI (`CryptProtectData`) protects the Data Encryption Key (DEK), NOT arbitrary image files or SQLite database pages directly. Sensitive reference signature crops and embedding BLOBs are designated to be encrypted using symmetric AES-256-GCM under the DEK unsealed in-memory via DPAPI within the active authenticated Windows session. Key lifecycle and recovery must be explicitly governed. If a Windows user account is deleted or password-reset without domain recovery keys, encrypted biometric reference assets fail secure.
+     - **Database Page Encryption Status:** The SQLite WAL database itself is NOT encrypted by DPAPI. Full database encryption via SQLCipher versus OS-level disk protection (BitLocker) remains an open implementation decision for Milestone 11.
+     - **Cryptographic Erasure & Retention Lifecycle Design:** Retention expiry or mandate revocation triggers cryptographic erasure (cryptographic key destruction) -- destroying the relevant encryption key and all recoverable in-memory or persisted key copies, followed by deletion of encrypted artifacts and temporary copies. Physical block erasure must NOT be guaranteed by ordinary application-level overwrite operations, as SSD wear-leveling algorithms, flash translation layers (FTL), and OS file buffering prevent predictable block overwriting. Backups, snapshots, SQLite WAL files, exports, and recovery mechanisms must be comprehensively included in the retention lifecycle design to ensure residual ciphertext cannot be decrypted. (Note: This cryptographic storage and erasure design is an architectural specification for subsequent milestones and is not claimed as already implemented in application code).
+     - Mandatory Human Examiner Review: Machine similarity does NOT prove legal authorship; visual difference does NOT prove forgery. Zero automated legal determinations of authenticity or forgery are permitted.
+  3. **Three-Tier AI Privacy Modes:**
+     - *Mode A: Offline Deterministic (Default):* Guarantees zero external network or AI calls for document intake, extraction, analysis, forensics, and dossier explanation. All explanations are synthesized locally using deterministic rules, mathematical checksums, and Jinja2 text templates.
+     - *Mode B: Privacy-Preserving AI (Opt-In Statistical Synthesis):* Investigator-enabled. Sends strictly pre-calculated anonymized numerical metrics, classification tags, and summary statistics. Zero raw document text, zero page pixel crops, zero personal names, and zero proprietary formulas are transmitted.
+     - *Mode C: Explicitly Authorized AI (Selected Redacted Excerpts):* Requires dual-key authorization (organizational policy + per-case investigator consent). Transmits short, explicitly selected textual excerpts strictly after automated and manual PII/IP redaction. Full unredacted page scans and raw PDF binaries are NEVER transmitted.
+     - *Audit Logging:* Every Mode C invocation generates an immutable record in `audit_events` with timestamp, user ID, API endpoint, and SHA-256 hash of the exact redacted payload transmitted.
+* **Consequences:** Positive: Establishes legally defensible, scientifically grounded signature forensic capabilities; prevents false accusations; provides complete data sovereignty and trade-secret protection for industrial enterprises. Negative: Limits automated signature decisions to investigative triage; requires managing reference consent lifecycles.

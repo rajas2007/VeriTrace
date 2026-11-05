@@ -110,28 +110,53 @@ A 10-document test set serves solely as an initial smoke-test and must **not** b
 
 | Category ID | Category Description | Target Document Samples | Key Forensic & Extraction Challenges |
 | :--- | :--- | :--- | :--- |
-| **CAT-01** | **Clean Digital PDFs** | Born-digital paystubs, computer-generated invoices | Vector font stream vs. raster comparison, zero scan noise. |
-| **CAT-02** | **High-Resolution Scans** | 300 DPI flatbed scans of printed forms, tax IDs | Sharp contrast, standard printed fonts (Calibri, Times, Arial). |
-| **CAT-03** | **Low-Resolution / Degraded** | 150 DPI scans, multi-generation photocopies | Salt-and-pepper noise, broken character stems, low contrast. |
+| **CAT-01** | **Clean Digital PDFs** | Born-digital paystubs, computer-generated invoices, industrial purchase orders | Vector font stream vs. raster comparison, zero scan noise. |
+| **CAT-02** | **High-Resolution Scans** | 300 DPI flatbed scans of printed forms, delivery challans, tax IDs | Sharp contrast, standard printed fonts (Calibri, Times, Arial, Mangal). |
+| **CAT-03** | **Low-Resolution / Degraded** | 150 DPI scans, multi-generation photocopies, factory floor receipts | Salt-and-pepper noise, broken character stems, low contrast. |
 | **CAT-04** | **Skewed & Distorted** | Mobile camera photos, angled scans ($\pm 5^\circ$ to $\pm 15^\circ$) | Perspective distortion, non-linear text baselines, shadow gradients. |
-| **CAT-05** | **Complex Tables** | Borderless multi-column salary earnings/deductions | Horizontal and vertical coordinate alignment, multi-line cells. |
-| **CAT-06** | **Structured Financial Fields**| Currency notations (`₹`, `Rs.`), commas (`1,85,000.00`) | Number/letter confusion (e.g., `8` vs `B`, `0` vs `O`, `1` vs `l`). |
-| **CAT-07** | **Mixed Typography & Stamps** | Identity cards with official seal overlays | Text partially obscured by rubber stamps, signatures, watermarks. |
+| **CAT-05** | **Complex Industrial Tables** | Multi-column PO schedules, chemical composition grids in Mill Test Certs | Multi-line headers, missing cell borders, merged cells, numeric alignments. |
+| **CAT-06** | **Multilingual & Indic Scripts** | Bilingual Hindi-English tax invoices, Marathi delivery challans, Tamil receipts | Shirorekha continuity, complex conjuncts, regional numerals (`१, २, ३`). |
+| **CAT-07** | **Signatures & Mixed Typography**| Inspection reports with rubber stamps, handwritten endorsements, and seals | Overlapping strokes, signature localization, clone patch detection. |
 
 ---
 
-## 3. Curated Hackathon Demonstration Dataset (`fixtures/`)
+### 2.7 Signature Forensics Test Framework
+
+* **Offline Signature Detection & Localization:**
+  * Asserts signature contour proposal achieves $\text{IoU} \ge 0.75$ against ground-truth signature bounding boxes on scanned forms.
+  * Asserts printed form lines and circular rubber stamps are successfully filtered out from candidate signature regions.
+* **Tampering & Clone Detection Test:**
+  * Injects identical signature image patch onto two distinct invoice PDFs; asserts ORB feature matching detects cut-and-paste clone (candidate threshold calibrated on labelled test pairs).
+  * Evaluates ELA around signature bounding box; asserts rectangular insertion masks flag with elevated boundary variance (calibrated against compression baseline).
+* **Reference Comparison & Evaluation Dataset Requirements:**
+  * Evaluated on standard benchmark sets containing **genuine signatures, skilled forgeries, and random forgeries** across different writing instruments and scanning resolutions.
+  * Measures **False Acceptance Rate (FAR)**, **False Rejection Rate (FRR)**, and **Equal Error Rate (EER)**.
+  * Asserts local CPU inference via **ONNX Runtime (`onnxruntime`)** completes in $<250\text{ms}$ per signature without GPU requirements.
+  * Asserts the 6-level assessment scale is strictly enforced; a low similarity score never outputs an autonomous accusation of forgery, and static 2D scans are never used to claim pen pressure or writing speed.
+
+---
+
+## 3. Curated Hackathon Demonstration Datasets (`fixtures/`)
 
 To guarantee a flawless live evaluation against the **PS-2 Judges' Live Demonstration Checklist**, VeriTrace includes two pre-packaged demonstration datasets:
 
-### Demonstration Package: "Loan Application Bundle – CASE-2026-0891"
-Contains three realistic sample documents representing a complete financial verification package:
+### Demonstration Package 1: "Industrial Manufacturing Procurement – CASE-2026-IND-01"
+Demonstrates the primary industrial evaluation domain across manufacturing and supply chain documents:
+
+| Document Role | Mock File Name | Nature | Engineered Characteristics / Ground Truth |
+| :--- | :--- | :---: | :--- |
+| **Doc 1: Purchase Order** | `PO_SteelTubes_AutoCorp.pdf` | **Genuine** | Clean digital PO for 500 units of Seamless Steel Tubes (Grade SS-304) at ₹1,200/unit. Total: ₹6,00,000 + 18% GST (₹1,08,000) = **₹7,08,000**. Authorized Signer: *"Amitabh Sen (Procurement Lead)"*. |
+| **Doc 2: Delivery Challan** | `DeliveryChallan_SteelTubes_Tampered.pdf` | **Artificially Manipulated** | Scanned delivery challan from supplier. The delivered quantity field has been digitally altered from 450 units to **500 units** to match the PO. Elevated JPEG compression noise and font baseline misalignment ($+3.8\text{px}$) are present on the digit '5'. |
+| **Doc 3: Mill Test Certificate** | `MillTestCert_Grade_ForgedSig.pdf` | **Signature Anomaly** | Metallurgical test sheet certifying chemical composition (Cr 18.2%, Ni 8.1%). Features a cloned cut-and-paste signature of *"Dr. R. K. Deshmukh (Chief Metallurgist)"* identical down to the pixel level with a previous shipment's certificate, accompanied by an ELA boundary mask anomaly. |
+
+### Demonstration Package 2: "Financial Loan Application Bundle – CASE-2026-0891"
+Contains three realistic sample documents representing a consumer banking package:
 
 | Document Role | Mock File Name | Nature | Engineered Characteristics / Ground Truth |
 | :--- | :--- | :---: | :--- |
 | **Doc 1: Identity Proof** | `National_ID_RajeshSharma.pdf` | **Genuine** | Clean, authentic identity card. Name: *"Rajesh Kumar Sharma"*, DOB: *12/04/1988*, PAN: *ABCDE1234F*. |
-| **Doc 2: Income Proof** | `SalarySlip_Nov2023_Tampered.pdf` | **Artificially Manipulated** | Digitally spliced salary slip. The net pay field has been altered from ₹85,000 to **₹1,85,000** by inserting a prefix digit '1' in a different font (Arial inside Calibri) with elevated JPEG compression noise. Internal arithmetic violation: Basic (₹50,000) + HRA (₹25,000) + Allowances (₹10,000) = ₹85,000 $\ne$ stated ₹1,85,000. |
-| **Doc 3: Bank Statement** | `BankStatement_Nov2023_Conflicting.pdf` | **Cross-Doc Conflict** | Clean transaction statement from HDFC Bank. Shows genuine monthly salary credit of **₹85,000** from *"Apex Solutions Ltd"*, contradicting Doc 2's stated ₹1,85,000. Additionally, account holder name is spelled *"Rakesh K. Sharma"*, creating a cross-document identity discrepancy. |
+| **Doc 2: Income Proof** | `SalarySlip_Nov2023_Tampered.pdf` | **Artificially Manipulated** | Digitally spliced salary slip. Net pay altered from ₹85,000 to **₹1,85,000** with font baseline misalignment and ELA noise spike. Math failure: Basic + HRA + Allowances = ₹85,000 $\ne$ stated ₹1,85,000. |
+| **Doc 3: Bank Statement** | `BankStatement_Nov2023_Conflicting.pdf` | **Cross-Doc Conflict** | Clean transaction statement from HDFC Bank showing genuine credit of **₹85,000** from *"Apex Solutions Ltd"*, contradicting Doc 2's stated ₹1,85,000. Name spelled *"Rakesh K. Sharma"*. |
 
 ---
 

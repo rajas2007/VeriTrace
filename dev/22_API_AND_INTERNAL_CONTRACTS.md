@@ -45,12 +45,13 @@ In VeriTrace Desktop, the previous local HTTP REST loopback gateway (`127.0.0.1:
 * **Methods:**
   * `get_findings(investigation_id: str, tier: Optional[str] = None) -> list[FindingDTO]`: Retrieves 3-tier findings.
   * `get_evidence_anchor(evidence_id: str) -> EvidenceAnchorDTO`: Retrieves high-res crop path, ELA heatmap path, and normalized coordinates `[ymin, xmin, ymax, xmax]`.
+  * `verify_signature(investigation_id: str, document_id: str, page_number: int, bbox: list[float], subject_id: Optional[str] = None) -> SignatureVerificationDTO`: Extracts signature features via local ONNX Runtime CPU inference and evaluates against reference profile using the 6-level forensic assessment scale.
   * `record_review_decision(finding_id: str, decision: str, notes: str) -> ReviewDecisionDTO`: Persists human investigator decision (`CONFIRMED`, `DISMISSED`).
 
 ### 2.5 `DossierService`
 * **File:** `src/veritrace/application/services/dossier_service.py`
 * **Methods:**
-  * `generate_dossier(investigation_id: str) -> DossierExportDTO`: Compiles the PS-2 Section 7.1–7.6 report via ReportLab and serializes structured JSON.
+  * `generate_dossier(investigation_id: str) -> DossierExportDTO`: Compiles the PS-2 Section 7.1–7.6 report via ReportLab and serializes structured JSON, including specialized Signature Verification Reports.
   * `get_dossier(investigation_id: str) -> Optional[DossierExportDTO]`: Retrieves existing compiled report paths and SHA-256 hashes.
 
 ---
@@ -58,19 +59,29 @@ In VeriTrace Desktop, the previous local HTTP REST loopback gateway (`127.0.0.1:
 ## 3. Internal Capability Protocols (Pure Python Interfaces)
 
 ```python
-from typing import Protocol, List
+from typing import Protocol, List, Optional
 from pathlib import Path
-from veritrace.domain.models import ExtractedToken, ELAResult, BaselineAnomaly, GroundedFinding
+from veritrace.domain.models import (
+    ExtractedToken,
+    ELAResult,
+    BaselineAnomaly,
+    GroundedFinding,
+    SignatureResult,
+)
 
 class DocumentRasterizerProtocol(Protocol):
     def render_pages(self, pdf_path: Path, output_dir: Path, dpi: int = 300) -> list[Path]: ...
 
 class TextExtractorProtocol(Protocol):
-    def extract_tokens(self, pdf_path: Path, page_num: int, raster_path: Path) -> list[ExtractedToken]: ...
+    def extract_tokens(self, pdf_path: Path, page_num: int, raster_path: Path, lang: str = "eng") -> list[ExtractedToken]: ...
 
 class VisualForensicsProtocol(Protocol):
     def compute_ela(self, image_path: Path, quality: int = 90) -> ELAResult: ...
     def detect_baseline_misalignments(self, tokens: list[ExtractedToken]) -> list[BaselineAnomaly]: ...
+
+class SignatureForensicsProtocol(Protocol):
+    def detect_signatures(self, page_image_path: Path) -> list[dict]: ...
+    def verify_against_reference(self, signature_crop_path: Path, reference_id: str) -> SignatureResult: ...
 
 class DossierCompilerProtocol(Protocol):
     def compile_pdf_dossier(self, investigation_id: str, findings: list[GroundedFinding], output_path: Path) -> Path: ...

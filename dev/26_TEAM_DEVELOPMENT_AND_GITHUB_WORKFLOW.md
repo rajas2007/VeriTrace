@@ -10,43 +10,45 @@
 
 ## 1. Project Overview & Product Vision
 
-**VeriTrace Desktop** is an AI-powered document forensics and contextual intelligence system designed as standalone native desktop software for Windows 10/11 x64, developed for the **DataOps Innovation Hackathon (Problem Statement 2 — PS-2)**.
+**VeriTrace** is an **Industrial Document Intelligence, Forensics & Authenticity Verification Platform** designed as standalone native desktop software for Windows 10/11 x64, developed for the **DataOps Innovation Hackathon (Problem Statement 2 — PS-2)**.
 
 ### The Problem
-Traditional document processing pipelines use Optical Character Recognition (OCR) merely to convert raster images into text strings. However, OCR cannot verify whether extracted information is authentic, internally consistent, or contextually valid. Digital manipulation tools allow malicious actors to splice numbers, overwrite dates, and alter names. Furthermore, discrepancies frequently span across multiple documents (e.g., salary slip earnings conflicting with bank deposit statements), remaining completely invisible when files are audited in isolation.
+Traditional document processing pipelines use Optical Character Recognition (OCR) merely to convert raster images into text strings. However, OCR cannot verify whether extracted information is authentic, internally consistent, or contextually valid. Digital manipulation tools allow malicious actors to splice numbers, overwrite quantities and rates, alter dates, and forge authorization signatures. Furthermore, discrepancies frequently span across multiple industrial documents (e.g., purchase order line items conflicting with delivery challans and mill test certificates), remaining completely invisible when files are audited in isolation.
 
 ### The Solution
-VeriTrace Desktop transforms document review from passive OCR into an active, forensic investigation workstation:
-1. **Multi-Document Ingestion & Cryptographic Proof:** Ingests PDFs, PNGs, and JPEGs with SHA-256 evidence hashing.
-2. **Multi-Factor Text Quality & Hybrid Extraction:** PyMuPDF direct vector extraction combined with bundled Tesseract OCR fallback for scanned pages.
-3. **Deterministic Computer Vision Forensics:** Error Level Analysis (ELA) for JPEG compression anomalies, font baseline regression for spliced figures, and ORB feature matching for duplicate signatures/stamps.
-4. **Contextual Cross-Document Reconciliation:** Deterministic arithmetic checksum validation and RapidFuzz entity alignment.
-5. **Human-in-the-Loop Review & PS-2 Dossier:** Interactive PySide6 4-pane workstation with high-resolution bounding box inspection and one-click auditor-grade PDF dossier generation via ReportLab.
+VeriTrace Desktop transforms industrial document review from passive OCR into an active, multilingual, contextual forensic investigation platform:
+1. **Multi-Document Industrial Ingestion & Cryptographic Proof:** Ingests PDFs, PNGs, and JPEGs with SHA-256 evidence hashing across manufacturing, logistics, BFSI, and government packages.
+2. **Multilingual Text Quality & Hybrid Extraction:** PyMuPDF direct vector extraction combined with an extensible multilingual OCR engine abstraction (PaddleOCR / Tesseract) covering 12 Indian languages (English, Hindi, Marathi priority).
+3. **Computer Vision & Signature Forensics:** Error Level Analysis (ELA) for compression anomalies, font baseline regression, stamp clone detection, and a dedicated Signature Forensics sub-capability (stroke curvature, tracing indicators, reference sample verification via ONNX Runtime).
+4. **Contextual Cross-Document Reconciliation:** Deterministic industrial arithmetic checksum validation (quantity $\times$ rate, tax totals) and RapidFuzz multilingual concept alignment.
+5. **Human-in-the-Loop Review & PS-2 Dossier:** Interactive PySide6 4-pane workstation with High-DPI bounding box inspection and one-click auditor-grade PDF dossier generation via ReportLab.
 
 ---
 
 ## 2. Approved Technology Stack
 
-| Layer | Approved Technology | Key Constraints |
-| :--- | :--- | :--- |
-| **Operating System** | Windows 10 / Windows 11 (x64) | Core target platform; must run without administrative rights. |
-| **Language Runtime** | **Python 3.11 (64-bit)** | Approved baseline. *Do not use Python 3.12+ (MinGW lacking pip) or Python 3.14 (missing binary wheels).* |
-| **Desktop Framework** | **PySide6 (Qt 6.7+)** | Native Qt Widgets, custom QSS styling, `QGraphicsView` document canvas. No web frameworks. |
-| **Application Layer** | In-Process Python Services | Direct strongly-typed method calls; FastAPI, Uvicorn, and loopback HTTP are completely eliminated. |
-| **Persistence** | SQLite 3 (WAL Mode) + SQLAlchemy 2.0 | Located in `%LOCALAPPDATA%/VeriTrace/database/veritrace.sqlite`. Migrations managed via Alembic. |
-| **PDF Processing** | PyMuPDF (`fitz` 1.24+) | Direct vector extraction and 300 DPI page rasterization. |
-| **OCR Engine** | **Tesseract OCR 5.x** (via `pytesseract`) | Initial default baseline candidate behind `TextExtractorProtocol`. Evaluated via 30-document benchmark suite. |
-| **Computer Vision** | OpenCV (`cv2`), Pillow (`PIL`), NumPy | Pure deterministic image forensics (ELA, font baseline regression, evidence crops). |
-| **String Alignment** | RapidFuzz (C++ Levenshtein) | Cross-document entity reconciliation and fuzzy matching. |
-| **Generative AI** | `LLMProviderProtocol` (Candidate: Groq) | Optional narrative synthesis; strictly non-decisional; 100% deterministic template fallback. |
-| **Reporting** | ReportLab | Programmatic compilation of 6-section PS-2 PDF investigation dossiers. |
-| **Packaging** | PyInstaller + Inno Setup | One-folder distribution compiled into `VeriTrace-Setup.exe`. |
+| Layer | Approved Technology | Adoption Status | Key Constraints |
+| :--- | :--- | :---: | :--- |
+| **Operating System** | Windows 10 / Windows 11 (x64) | **Adopted** | Core target platform; must run without administrative rights. |
+| **Language Runtime** | **Python 3.11 (64-bit)** | **Adopted** | Approved baseline. *Do not use Python 3.12+ (MinGW lacking pip) or Python 3.14 (missing binary wheels).* |
+| **Desktop Framework** | **PySide6 (Qt 6.7+)** | **Adopted** | Native Qt Widgets, custom QSS styling, `QGraphicsView` document canvas. No web frameworks. |
+| **Application Layer** | In-Process Python Services | **Adopted** | Direct strongly-typed method calls; FastAPI, Uvicorn, and loopback HTTP are completely eliminated. |
+| **Persistence** | SQLite 3 (WAL Mode) + SQLAlchemy 2.0 | **Adopted** | Located in `%LOCALAPPDATA%/VeriTrace/database/veritrace.sqlite`. Migrations managed via Alembic. |
+| **PDF Processing** | PyMuPDF (`fitz` 1.24+) | **Adopted** | Direct vector extraction and 300 DPI page rasterization. |
+| **OCR Engines** | **Tesseract 5.x** & **PaddleOCR** (Candidate) | **Adopted / Eval** | Tesseract initial default; PaddleOCR primary multilingual benchmarking candidate for Indian scripts. |
+| **Layout Parsing** | PyMuPDF + **Docling** (Optional Adapter) | **Adopted / Eval** | Docling evaluated as optional adapter for complex tables; PyMuPDF default vector baseline. |
+| **Computer Vision** | OpenCV (`cv2`), Pillow (`PIL`), NumPy | **Adopted** | Pure deterministic image forensics (ELA, font baseline regression, evidence crops). |
+| **Local Model Runtime**| **ONNX Runtime (`onnxruntime`)** | **Evaluate / Bench** | Local CPU inference for quantized Siamese signature verification models. Zero cloud dependency. |
+| **String Alignment** | RapidFuzz (C++ Levenshtein) | **Adopted** | Cross-document entity reconciliation and fuzzy matching. |
+| **Generative AI** | `LLMProviderProtocol` (Groq API) | **Optional / User-Gated** | Optional narrative synthesis; strictly non-decisional; 100% deterministic template fallback. |
+| **Reporting** | ReportLab | **Adopted** | Programmatic compilation of 6-section PS-2 PDF investigation dossiers and signature reports. |
+| **Packaging** | PyInstaller + Inno Setup | **Adopted** | One-folder distribution compiled into `VeriTrace-Setup.exe`. |
 
 ---
 
 ## 3. Repository Structure & Layered Monolith Architecture
 
-The repository adheres strictly to the canonical Python `src`-layout established in [ADR-030](file:///c:/Users/ghong/OneDrive/Attachments/Desktop/VeriTrace/dev/12_DECISION_LOG.md#adr-030-unified-python-src-layout-and-layered-monolith-architecture):
+The repository adheres strictly to the canonical Python `src`-layout established in [ADR-030](12_DECISION_LOG.md#adr-030-unified-python-src-layout-and-layered-monolith-architecture):
 
 ```text
 VeriTrace/
@@ -583,7 +585,7 @@ winget install Python.Python.3.11 --scope user
 py -3.11 --version
 
 # Step 3: Navigate to repository root and create virtual environment
-cd c:\Users\ghong\OneDrive\Attachments\Desktop\VeriTrace
+cd <repo-root>  # e.g., cd path/to/VeriTrace
 py -3.11 -m venv .venv
 
 # Step 4: Activate the virtual environment
@@ -610,7 +612,7 @@ python scripts/development/run_desktop.py
 
 1. **Importing Outside Your Layer:** Never import `infrastructure/` or `sqlalchemy` from inside `gui/`. All database queries must be coordinated through `application/services/`.
 2. **Hardcoding File Paths:** Never use absolute paths like `C:\Users\...`. Always resolve paths dynamically through `bootstrap.get_data_dir()` or `%LOCALAPPDATA%/VeriTrace/`.
-3. **Modifying the Foundation Repository:** Never touch or modify `C:\Users\ghong\OneDrive\Attachments\Desktop\Udyog-Permit-AI`. It must remain 100% pristine.
+3. **Modifying the Foundation Repository:** Never touch or modify the original foundation repository (`../Udyog-Permit-AI`). It must remain 100% pristine.
 4. **Committing Secrets:** Never commit `.env` files or API keys. Always use `.env.example`.
 5. **Directly Calling Long-Running Functions in GUI:** Never run OCR, ELA, or PDF rendering on the main thread. Always dispatch tasks to `QThreadPool` via `QRunnable`.
 6. **Premature Optimization of Thresholds:** Do not hardcode magic numbers for ELA quality or baseline sigma. Keep them exposed in configuration settings (`settings.py`).

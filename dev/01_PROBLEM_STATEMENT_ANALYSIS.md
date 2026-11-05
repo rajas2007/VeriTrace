@@ -5,23 +5,25 @@
 
 ## 1. Background & Context (From Official PS-2)
 
-Financial institutions and enterprises process vast volumes of critical documentation every day, including:
-* Loan and account opening application forms
-* Identity proofs (passports, national IDs, driver licenses)
-* Transaction requests and financial statements
-* Official declarations and tax filings
-* Commercial contracts, invoices, and supporting affidavits
+Modern industrial enterprises, supply-chain logistics providers, financial institutions, and government bodies process vast volumes of critical documentation every day, including:
+* Industrial purchase orders (PO), goods receipt notes (GRN), and delivery challans
+* Mill test certificates (MTC), quality inspection sheets, and material dispatch clearances
+* Commercial freight invoices, bills of lading (BOL), and customs declarations
+* Identity proofs (passports, national IDs, driver licenses) and tax filings
+* Transaction requests, banking statements, and corporate resolutions
+* Commercial contracts, warranty certificates, and supporting legal affidavits
 
 Traditional document-processing systems rely predominantly on Optical Character Recognition (OCR) to convert pixels into text strings, followed by hardcoded or regex-based field validation rules. However, **extracting information does not establish whether that information is authentic, internally consistent, or contextually reliable.**
 
-In modern digital environments, documents frequently contain:
-* Subtle digital alterations (e.g., modified numeric values, spliced text lines)
-* Overwritten fields or masked backgrounds
-* Inconsistent font geometry, line pitch, and character weight
-* Manipulated photographs, altered security watermarks, and copied/pasted signatures
-* Cross-document discrepancies that only manifest when related documents within a single submission package are examined collectively.
+In modern digital and industrial operating environments, documents frequently contain:
+* Subtle digital alterations (e.g., modified numeric quantities, altered unit rates, spliced text lines)
+* Overwritten fields, masked backgrounds, or spliced signatures across authorization blocks
+* Inconsistent font geometry, line pitch, and character weight indicating localized digital editing
+* Manipulated photographs, altered security watermarks, and copied/pasted organizational seals
+* Complex multilingual and multi-script Indian text (e.g., bilingual Hindi-English or Marathi-English invoices and tax challans)
+* Cross-document discrepancies that only manifest when related transaction files within an industrial shipment or audit package (e.g., PO vs. Delivery Challan vs. Tax Invoice) are examined collectively.
 
-Detecting such irregularities requires an **AI-powered document intelligence and forensic investigation system** capable of understanding layouts, analyzing visual characteristics, evaluating contextual consistency, and establishing relationships across multi-document submissions.
+Detecting such irregularities requires an **AI-powered industrial document intelligence and forensic investigation platform** capable of understanding multilingual layouts, analyzing visual characteristics, evaluating contextual consistency, investigating suspicious signatures, and establishing relationships across multi-document submissions.
 
 ---
 
@@ -77,23 +79,29 @@ flowchart TD
 * Maintain unique document identifiers (`doc_id`), hashes, and source references.
 
 ### 5.2 OCR and Information Extraction
-* Extract printed and handwritten information wherever applicable.
-* Identify relevant fields, sections, and tabular data.
+* Extract printed and handwritten information across native digital PDFs and scanned raster files.
+* Support multilingual Indian enterprise documentation (12-language roadmap; English, Hindi, and Marathi priority).
+* Identify relevant fields, sections, and tabular data (e.g., line item schedules, tax breakdowns, material grades).
 * Convert extracted information into a structured schema (JSON).
 * Maintain field-level confidence scores and precise page/coordinate references.
 
 ### 5.3 Document Structure Understanding
 * Recognize relationships between different fields, headers, and sections.
-* Interpret document layouts, reading orders, and information hierarchies.
+* Interpret document layouts, reading orders, and hierarchical information structures (evaluating optional Docling layout adapters alongside PyMuPDF).
 * Identify missing, duplicated, or misplaced fields.
 * Preserve the spatial relationship between extracted information and its original visual location.
 
-### 5.4 Visual Forensic Analysis
-* Identify suspicious alterations and overwritten fields.
+### 5.4 Visual & Signature Forensic Analysis
+* Identify suspicious alterations and overwritten fields via Error Level Analysis (ELA) and noise profiling.
 * Detect inconsistencies in fonts, character spacing, baseline alignment, and document grid structure.
-* Identify suspicious image insertions, replacements, or splicing (via Error Level Analysis and noise analysis).
-* Analyze signatures and organizational seals/stamps for placement consistency, digital clipping, or clone repetition.
-* Highlight potentially manipulated regions with bounding boxes for investigator inspection.
+* Identify suspicious image insertions, replacements, or digital splicing.
+* **Signature Forensics Sub-Capability:**
+  * Detect and localize signature regions, distinguishing signatures from nearby printed text.
+  * Conduct quality-dependent 2D stroke width, curvature, proportion, and boundary artifact analysis on questioned signatures; avoid ungrounded assumptions regarding writing speed, pen pressure, or pen-lift sequence.
+  * Compare questioned signatures against enrolled authorized reference sample profiles via local ONNX Runtime CPU inference with explicit uncertainty scoring.
+  * Detect cloned, copy-pasted, or reused signature images across multiple documents via ORB keypoint matching.
+  * Enforce strict forensic guardrails: machine similarity does not prove legal authorship or forgery; automated legal determinations are strictly prohibited.
+* Highlight potentially manipulated regions with normalized bounding boxes `[ymin, xmin, ymax, xmax]` for examiner inspection.
 
 ### 5.5 Contextual Information Verification
 * Identify internal inconsistencies between related fields within the same document (e.g., date logic, mathematical totals).
@@ -138,15 +146,16 @@ The PS-2 problem statement strictly distinguishes between **mandatory capabiliti
 
 | Category | Functional Capability | Prototype Status | VeriTrace Implementation Plan |
 | :--- | :--- | :---: | :--- |
-| **Mandatory** | Document ingestion and OCR-based information extraction | **MANDATORY** | Digital PDF parsing via PyMuPDF + scanned image OCR via Tesseract/PaddleOCR. |
-| **Mandatory** | Structured extraction of information from multiple documents | **MANDATORY** | Normalized Pydantic schemas capturing key-value pairs, tables, and metadata. |
+| **Mandatory** | Document ingestion and OCR-based information extraction | **MANDATORY** | Digital PDF parsing via PyMuPDF + multilingual OCR via Tesseract & PaddleOCR abstraction. |
+| **Mandatory** | Structured extraction of information from multiple documents | **MANDATORY** | Normalized schemas capturing key-value pairs, industrial tables (POs, challans, invoices), and metadata. |
 | **Mandatory** | Identification of suspicious document regions and visual inconsistencies | **MANDATORY** | Error Level Analysis (ELA) heatmap generation + font/baseline alignment detection. |
 | **Mandatory** | Identification of inconsistencies within and across documents | **MANDATORY** | Deterministic intra-document rule checks + RapidFuzz cross-document entity reconciliation. |
 | **Mandatory** | Evidence mapping with references to original document locations | **MANDATORY** | Normalized coordinate system `[ymin, xmin, ymax, xmax]` linking findings to high-res page crops. |
 | **Mandatory** | Generation of a structured investigation dossier | **MANDATORY** | Automated PDF and JSON report generation complying with PS-2 Sections 7.1–7.6. |
 | **Mandatory** | Interface for reviewing extracted information and findings | **MANDATORY** | Native PySide6 (Qt) interactive canvas, side-by-side page viewer, and Evidence Inspector dock widget. |
-| *Advanced* | Advanced document classification and layout understanding | *Advanced / Bonus* | Zero-shot layout detection and visual document header classification. |
-| *Advanced* | Handwritten text recognition and multilingual document processing | *Advanced / Bonus* | Tesseract Hindi/English multilingual pack integration. |
+| *Advanced* | Advanced document classification and layout understanding | *Advanced / Bonus* | Industrial document classifier + layout understanding via optional Docling adapter. |
+| *Advanced* | Multilingual Indian document processing & script detection | *Advanced / Bonus* | 12-language Indian OCR roadmap (English, Hindi, Marathi priority) with script-aware normalization. |
+| *Advanced* | Signature forensics & reference sample verification | *Advanced / Bonus* | Offline signature analysis, stroke/curvature inspection, reference sample comparison via ONNX Runtime. |
 | *Advanced* | Advanced image forensics and manipulation localization | *Advanced / Bonus* | Clone-detection (SIFT/ORB feature matching) for repeated signatures and stamps. |
 | *Advanced* | Intelligent cross-document relationship discovery | *Advanced / Bonus* | Native PySide6 (QGraphicsView / QTreeView) interactive entity-relationship visualizer linking related document nodes. |
 | *Advanced* | Advanced contextual reasoning and anomaly correlation | *Advanced / Bonus* | Groq-powered contextual reasoning synthesis anchored to extracted evidence. |
@@ -284,11 +293,11 @@ The solution must adhere strictly to forensic and ethical guidelines:
 
 | PS-2 Section | Requirement Description | VeriTrace System Module / Architectural Component |
 | :--- | :--- | :--- |
-| **5.1** | Ingestion & Document ID | `src/veritrace/capabilities/ingestion/`, `src/veritrace/application/services/document.py` |
-| **5.2** | OCR & Structured Extraction | `src/veritrace/capabilities/extraction/` (`TextExtractorProtocol` + Tesseract) |
-| **5.3** | Layout Understanding & Quality | `src/veritrace/capabilities/quality/` (Confidence scoring, normalized BBoxes) |
-| **5.4** | Visual Forensics (ELA & CV) | `src/veritrace/capabilities/forensics/` (OpenCV, Pillow ELA, font baselines) |
-| **5.5** | Contextual Field Verification | `src/veritrace/domain/rules/` (Intra-doc arithmetic & checksums) |
+| **5.1** | Ingestion & Document ID | `src/veritrace/capabilities/ingestion/`, `src/veritrace/application/services/document_service.py` |
+| **5.2** | Multilingual OCR & Extraction | `src/veritrace/capabilities/extraction/` (`TextExtractorProtocol`, PaddleOCR & Tesseract adapters) |
+| **5.3** | Layout Understanding & Quality | `src/veritrace/capabilities/quality/`, `src/veritrace/capabilities/extraction/layout/` |
+| **5.4** | Visual Forensics & Signatures | `src/veritrace/capabilities/forensics/` (ELA, font baselines, signature sub-capability) |
+| **5.5** | Contextual Field Verification | `src/veritrace/domain/rules/` (Intra-doc arithmetic & industrial PO/challan checksums) |
 | **5.6** | Cross-Document Correlation | `src/veritrace/capabilities/correlation/` (RapidFuzz entity match & contradiction matrix) |
 | **5.7** | Evidence Mapping & BBoxes | `src/veritrace/domain/entities/evidence.py`, `src/veritrace/gui/components/` (Evidence dock) |
 | **5.8** | Investigation Dossier | `src/veritrace/capabilities/reporting/` (ReportLab PDF + JSON export) |

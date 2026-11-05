@@ -153,46 +153,50 @@ flowchart TD
 
 ---
 
-### Stage 9: Visual Forensic Analysis
+### Stage 9: Visual Forensic & Signature Analysis
 * **Trigger:** 300 DPI page PNG available.
-* **Input:** Rendered page image file.
-* **Processing Component:** `capabilities/visual_forensics/`.
+* **Input:** Rendered page image file and optional signatory reference profiles.
+* **Processing Component:** `src/veritrace/capabilities/forensics/`.
 * **Internal Logic:**
   1. `ela_engine.py`: Re-compresses image at 90% JPEG quality; computes difference matrix; detects local variance clusters exceeding background noise by $>3.0\sigma$.
   2. `baseline_engine.py`: Performs linear regression along horizontal text lines; flags characters with baseline residual $>2.5\sigma$.
-  3. `clone_engine.py`: Uses ORB descriptors to detect duplicated signatures or seals.
-* **Output:** Anomaly bounding boxes, anomaly scores `[0.0 - 1.0]`, ELA heatmap image PNGs.
+  3. `clone_engine.py`: Uses ORB descriptors to detect duplicated signatures or seals across documents.
+  4. `signatures/`: Signature Forensics Sub-Capability executes:
+     - `detector.py`: Localizes handwritten signatures on document pages.
+     - `stroke_analyzer.py`: Evaluates offline stroke density, curvature continuity, and digital cut-and-paste halos.
+     - `verifier.py`: Extracts vector feature embeddings via local **ONNX Runtime CPU inference** and calculates Euclidean/cosine distance against `SignatureReferenceProfile`. Emits a standardized 6-level assessment (`SIGNATURE_DETECTED`, `VISUAL_ANOMALY_OBSERVED`, `SIMILARITY_WITH_REFERENCE`, `POSSIBLE_MANIPULATION_INDICATOR`, `INSUFFICIENT_EVIDENCE`, `HUMAN_EXAMINER_DECISION`).
+* **Output:** Anomaly bounding boxes, anomaly scores `[0.0 - 1.0]`, ELA heatmap image PNGs, signature crop anchors, and reference similarity metrics.
 * **Failure Conditions:** Non-fatal; logs warning and continues if an image algorithm fails on a specific page.
-* **Persistence:** Heatmap PNGs written to `storage/.../forensics/`; raw anomalies held in LangGraph state.
-* **Provenance:** Heatmap pixel coordinates directly map to the 300 DPI rendered page.
+* **Persistence:** Heatmap & crop PNGs written to `%LOCALAPPDATA%/VeriTrace/.../forensics/`; findings recorded in SQLite.
+* **Provenance:** Heatmap pixel coordinates and signature crops directly map to the 300 DPI rendered page.
 
 ---
 
 ### Stage 10: Contextual Field Verification
 * **Trigger:** Structured key-values and tables extracted (Stage 8).
 * **Input:** Structured field dictionary.
-* **Processing Component:** `capabilities/contextual_rules/`.
+* **Processing Component:** `src/veritrace/domain/rules/`.
 * **Internal Logic:**
-  1. `math_rules.py`: Computes arithmetic checksums (e.g. `Gross - Deductions == Net`).
-  2. `temporal_rules.py`: Asserts date sequence (Issue Date $\le$ Expiry Date).
-  3. `identifier_rules.py`: Asserts checksums and regex syntax for PAN, Aadhaar, Passport.
+  1. `math_rules.py`: Computes arithmetic checksums (e.g. `Quantity * Unit Rate == Amount`, `Subtotal + GST == Total`, `Gross - Tare == Net Weight`).
+  2. `temporal_rules.py`: Asserts date sequence (PO Date $\le$ Challan Date $\le$ Invoice Date; Issue Date $\le$ Expiry Date).
+  3. `identifier_rules.py`: Asserts checksums and regex syntax for GSTIN, PAN, Heat/Batch Numbers.
 * **Output:** List of intra-document rule discrepancies.
 * **Failure Conditions:** Missing mandatory fields flagged as `MISSING_FIELD_VIOLATION`.
-* **Persistence:** Held in LangGraph state.
+* **Persistence:** Evaluated in memory and queued for finding generation.
 * **Provenance:** Points to source `field_id` and document page.
 
 ---
 
 ### Stage 11: Cross-Document Correlation & Validation
 * **Trigger:** Completion of Stages 9 and 10 across all documents in the investigation.
-* **Input:** Extracted entities and fields across all documents in the investigation case.
+* **Input:** Extracted entities and fields across all documents in the investigation case (e.g., PO, Delivery Challan, MTC, Invoice).
 * **Processing Components:**
-  * `src/veritrace/capabilities/correlation/entity_aligner.py` (Entity resolution & pairing via RapidFuzz)
+  * `src/veritrace/capabilities/correlation/entity_aligner.py` (Entity resolution & pairing via RapidFuzz & concept dictionaries)
   * `src/veritrace/domain/rules/cross_document.py` (Deterministic domain comparison rules)
   * `src/veritrace/capabilities/correlation/conflict_matrix.py` (Discrepancy graph aggregation)
 * **Internal Logic:**
-  1. `entity_aligner.py`: Reconciles person names, employer names, and IDs using RapidFuzz token sort matching, generating candidate aligned entity pairs.
-  2. `domain/rules/cross_document.py`: Evaluates deterministic comparison invariants across aligned pairs (e.g. *Does the employer name match? Does deposit match net pay within tolerance? Does chronology hold?*).
+  1. `entity_aligner.py`: Reconciles supplier names, items, quantities, and serial/heat numbers across documents using RapidFuzz token matching and multilingual concept mappings, generating candidate aligned entity pairs.
+  2. `domain/rules/cross_document.py`: Evaluates deterministic comparison invariants across aligned pairs (e.g. *Does Challan delivered quantity match PO scheduled quantity? Does MTC chemical grade match PO specifications? Does invoice pricing match PO rate?*).
   3. `conflict_matrix.py`: Assembles rule failures into a structured contradiction matrix.
 * **Output:** Cross-document conflict list, entity alignment graph.
 * **Failure Conditions:** Non-fatal; unresolved entity matches flagged for investigator review.

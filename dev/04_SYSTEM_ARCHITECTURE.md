@@ -5,13 +5,16 @@
 
 ## 1. Architectural Overview & Vision
 
-**VeriTrace Desktop** is engineered as a standalone Windows desktop application (targeting Windows 10/11 x64) combining a native **PySide6 (Qt for Python)** user interface, an in-process **Python Application Service Layer**, high-performance **Forensic Capability Engines**, and an asynchronous **Background Processing System** backed by local SQLite persistence.
+**VeriTrace** is engineered as a standalone Windows desktop application (targeting Windows 10/11 x64) combining a native **PySide6 (Qt for Python)** user interface, an in-process **Python Application Service Layer**, eight specialized **Capability Engines**, and an asynchronous **Background Processing System** backed by local SQLite persistence.
 
 The system adheres to non-negotiable architectural mandates:
 1. **Native Desktop Monolith:** Built with Python 3.11 and PySide6. The UI communicates directly with application services without local HTTP loopback gateways, web browsers, or external supervisor processes.
-2. **Local-First & Offline Resilience:** All core document processing (PDF parsing, 300 DPI rasterization, Tesseract OCR, OpenCV visual forensics, arithmetic rules, RapidFuzz entity correlation, and ReportLab PDF dossier generation) executes 100% locally on the host machine without requiring network connectivity.
+2. **Local-First & Offline Resilience:** All core document processing (PDF parsing, 300 DPI rasterization, multilingual OCR, OpenCV visual forensics, offline signature analysis, arithmetic rules, RapidFuzz entity correlation, and ReportLab PDF dossier generation) executes 100% locally on the host machine without requiring network connectivity.
 3. **Deterministic-First Processing:** Forensic measurements (pixel compression variance, font baseline deviations, duplicate image patches, math checksums, date chronology) are computed algorithmically rather than guessed by a generative model.
-4. **Optional Grounded AI Reasoning:** Large Language Models (Groq ChatGroq) operate exclusively downstream of deterministic measurements as an optional, user-controlled enhancement to synthesize narratives and explain context—strictly referencing verified document coordinates. No original documents or raw images are transmitted to external clouds.
+4. **Multilingual Indian Document Intelligence:** Extensible OCR engine abstraction supporting up to 12 Indian languages (English, Hindi, and Marathi priority) with script-aware normalization and multilingual field matching.
+5. **Signature Forensics Sub-Capability:** Integrated within `capabilities/forensics/`, providing signature localization, stroke/curvature analysis, reference sample comparison via local ONNX Runtime inference, and clone/tamper detection, governed by strict forensic guardrails.
+6. **Optional Grounded AI Reasoning & Privacy Modes:** Large Language Models (Groq ChatGroq) operate strictly downstream under three defined privacy modes: Mode A (Offline deterministic explanations, guaranteeing zero external network or AI calls for document intake, extraction, analysis, forensics, and dossier generation); Mode B (Privacy-preserving AI transmitting pre-calculated anonymized numerical metrics only); and Mode C (Explicitly authorized AI processing on selected, redacted textual excerpts). Raw document files, full unredacted page scans, and proprietary engineering designs are NEVER transmitted to external APIs.
+7. **Industrial Security & Governance:** Support for organizational workspaces, user roles, authorized signature registries, audit ledgers, and data export controls.
 
 ---
 
@@ -40,14 +43,15 @@ graph TD
             Qt_Signals["Qt Signals & Slots (Progress, Batch Updates)"]
         end
 
-        subgraph CapabilityEngines ["Deterministic Forensic & Processing Engines (src/veritrace/capabilities)"]
-            Engine_PyMuPDF["PyMuPDF: Native Vector Text & 300 DPI Render"]
-            Engine_Tesseract["Bundled Tesseract OCR: Scanned Page Extraction"]
-            Engine_Quality["Quality Engine: OCR Confidence Gating & Degradation Scoring"]
-            Engine_OpenCV["OpenCV & Pillow: ELA, Font Alignment, Clone Matching"]
-            Engine_Rules["Contextual Rule & Checksum Validator"]
-            Engine_Fuzz["RapidFuzz: Cross-Document Entity Alignment"]
-            Engine_Dossier["ReportLab: Auditor-Grade PDF Dossier Generator"]
+        subgraph CapabilityEngines ["Eight Canonical Capability Engines (src/veritrace/capabilities)"]
+            Engine_Ingest["1. Ingestion: File Intake, SHA-256 Hashing, Multi-Format"]
+            Engine_Class["2. Classification: Industrial Document Type & Script ID"]
+            Engine_Extract["3. Extraction: PyMuPDF Vector + Multilingual OCR (PaddleOCR/Tesseract) + Docling"]
+            Engine_Quality["4. Quality: OCR Confidence Gating & Degradation Scoring"]
+            Engine_Forensic["5. Forensics: OpenCV ELA, Font Alignment + Signature Forensics (ONNX Runtime)"]
+            Engine_Corr["6. Correlation: Multilingual Alignment & Contradiction Matrix"]
+            Engine_Reason["7. Reasoning: Industrial Contextual Rules & Grounded Narrative"]
+            Engine_Report["8. Reporting: ReportLab PDF Dossier & Signature Reports"]
         end
     end
 
@@ -56,11 +60,11 @@ graph TD
     end
 
     subgraph OptionalCloudAI ["Optional Cloud Reasoning (User-Controlled)"]
-        Groq_LLM["ChatGroq: LLaMA 3.3 70B (JSON Schema Enforced)<br/>*Operates only on anonymized, pre-calculated metrics*"]
+        Groq_LLM["ChatGroq: LLaMA 3.3 70B (JSON Schema Enforced)<br/>*Operates under Privacy Modes B & C (Metrics/Redacted)*"]
     end
 
     subgraph LocalStorage ["Workstation Local Storage (%LOCALAPPDATA%/VeriTrace/)"]
-        DB_SQLite[("SQLite WAL Database (veritrace.sqlite)<br/>12 Core Entities + 1 Assoc Table")]
+        DB_SQLite[("SQLite WAL Database (veritrace.sqlite)<br/>15 Core Entities + 1 Assoc Table")]
         FS_Storage["Investigation Filesystem Storage<br/>originals/, processed/, evidence/, reports/"]
         App_Logs["Structured Application & Audit Logs"]
     end
@@ -156,19 +160,20 @@ sequenceDiagram
   * `use_cases/`: Specialized command/query handlers.
   * `dtos/`: Strongly typed data transfer objects.
 
-### 4.3 Capability Engines (`src/veritrace/capabilities/`)
+### 4.3 Eight Capability Engines (`src/veritrace/capabilities/`)
 * **Independent Python Modules:** Pure forensic and document processing logic completely decoupled from PySide6:
-  * `ingestion/`: Ingests files, computes SHA-256 hashes, validates MIME types, partitions storage.
-  * `extraction/`: Hybrid OCR routing (PyMuPDF vector text + Tesseract scanned fallback) and layout parsing.
-  * `quality/`: Extraction quality scoring, OCR character/word confidence gating, degradation assessment.
-  * `forensics/`: OpenCV + Pillow implementation of ELA, baseline regression, and clone stamp detection.
-  * `correlation/`: Cross-document entity matching and contradiction identification via RapidFuzz.
-  * `reasoning/`: Structured, grounded narrative synthesis from deterministic findings.
-  * `reporting/`: PS-2 Sections 7.1–7.6 report compilation via ReportLab.
+  * `ingestion/`: Ingests files, computes SHA-256 hashes, validates MIME types, partitions storage, manages batch intake.
+  * `classification/`: Identifies industrial document types (POs, challans, MTCs, invoices, identity) and detects document scripts/languages.
+  * `extraction/`: Vector text extraction (PyMuPDF), multilingual OCR engine abstraction (PaddleOCR / Tesseract / specialized), layout understanding (optional Docling adapter), signature region candidate extraction, and token parsing.
+  * `quality/`: Extraction quality scoring, OCR character/word confidence gating, degradation assessment (blur, skew, illumination).
+  * `forensics/`: Visual manipulation analysis (ELA, font baseline regression, clone stamp detection) and **Signature Forensics Sub-Capability** (signature localization, offline stroke/curvature analysis, reference sample comparison via ONNX Runtime, tampering indicators).
+  * `correlation/`: Cross-document entity matching (RapidFuzz), multilingual concept/field alignment, and contradiction matrix.
+  * `reasoning/`: Industrial contextual intelligence, deterministic rule-based checksums, and grounded narrative synthesis.
+  * `reporting/`: Industrial Investigation Dossier compilation (ReportLab PDF + JSON), signature reports, and audit ledgers.
 
 ### 4.4 Domain & Infrastructure Layers (`src/veritrace/domain/`, `src/veritrace/infrastructure/`)
 * **Domain Layer (`src/veritrace/domain/`):** Pure models (Investigation, Document, Finding, Evidence), validation rules, enums, events, and repository interfaces without external dependencies.
-* **Infrastructure Layer (`src/veritrace/infrastructure/`):** Technical adapters implementing persistence (SQLite in WAL mode via SQLAlchemy 2.0 with Alembic migrations), PDF rasterization (PyMuPDF), OCR engines, OpenCV vision adapters, and secure storage in `%LOCALAPPDATA%/VeriTrace/`.
+* **Infrastructure Layer (`src/veritrace/infrastructure/`):** Technical adapters implementing persistence (SQLite in WAL mode via SQLAlchemy 2.0 with Alembic migrations), PDF rasterization (PyMuPDF), OCR engines, OpenCV vision adapters, and secure storage in `%LOCALAPPDATA%/VeriTrace/` (where the planned security architecture specifies Windows DPAPI protecting the symmetric Data Encryption Key (DEK) used to encrypt sensitive biometric reference assets via AES-256-GCM, with cryptographic erasure upon retention expiry; full SQLite WAL database encryption via SQLCipher vs BitLocker remains an open decision for Milestone 11; not claimed as already implemented in application code).
 
 ---
 
@@ -178,15 +183,18 @@ sequenceDiagram
 | :--- | :--- | :---: | :--- |
 | **File Integrity & Hashing** | Python `hashlib` | **Deterministic** | Cryptographic SHA-256 hash ensures evidence chain-of-custody. |
 | **PDF Page Rasterization** | PyMuPDF (`fitz`) | **Deterministic** | Precise pixel rendering at 300 DPI without interpolation distortion. |
-| **OCR Text & Coordinate Extraction** | PyMuPDF / Tesseract | **Deterministic** | Extracted character/word coordinates directly from document stream. |
+| **Multilingual OCR & Text Extraction** | PaddleOCR / Tesseract | **Deterministic** | Multilingual token and coordinate extraction direct from raster/vector streams. |
+| **Layout & Table Understanding** | PyMuPDF / Docling (eval) | **Deterministic / ML** | Hierarchical reading order, table structure, and bounding box layout parsing. |
 | **Error Level Analysis (ELA)** | OpenCV / Pillow | **Deterministic** | Mathematical pixel subtraction: `\|Original - Resaved_JPEG\| * Scale`. |
 | **Font Baseline Alignment** | OpenCV Contours | **Deterministic** | Geometric calculation of bounding box variance on horizontal lines. |
-| **Math & Date Chronology Rules** | Python Rule Matrix | **Deterministic** | Exact arithmetic and calendar date comparisons. |
-| **Entity Name Alignment** | RapidFuzz Token Match | **Deterministic** | Levenshtein distance metrics with deterministic similarity thresholds. |
-| **Document Classification** | Hybrid / Groq LLM | *AI-Assisted* | Layout structure and header keyword evaluation. |
-| **Contextual Forensic Reasoning** | Groq ChatGroq | *AI-Assisted* | Synthesizing disparate visual and contextual findings into clear prose (*optional*). |
-| **Dossier Executive Summary** | Groq ChatGroq | *AI-Assisted* | Summarizing investigation outcomes grounded strictly in recorded evidence (*optional*). |
-| **PDF Dossier Compilation** | ReportLab | **Deterministic** | Programmatic document layout with exact coordinate image crops. |
+| **Signature Detection & Localization** | OpenCV / Contour Filter | **Deterministic / ML** | Bounding box proposal isolating signature blocks from nearby text. |
+| **Signature Reference Verification** | ONNX Runtime (Siamese CNN) | **Deterministic ML** | Local CPU inference computing metric embedding distance against enrolled reference samples. |
+| **Math & Date Chronology Rules** | Python Rule Matrix | **Deterministic** | Exact arithmetic (PO line sums, tax rates) and calendar date comparisons. |
+| **Entity & Field Alignment** | RapidFuzz + Multilingual Dict | **Deterministic** | Levenshtein distance metrics with multilingual concept mapping across scripts. |
+| **Document Classification** | Hybrid Rule + Keyword | **Deterministic** | Layout structure, industrial header, and script evaluation. |
+| **Contextual Forensic Reasoning** | Groq ChatGroq (optional) | *AI-Assisted* | Synthesizing disparate visual and contextual findings into clear prose (*optional*). |
+| **Dossier Executive Summary** | Groq ChatGroq (optional) | *AI-Assisted* | Summarizing investigation outcomes grounded strictly in recorded evidence (*optional*). |
+| **PDF Dossier & Signature Reports** | ReportLab | **Deterministic** | Programmatic document layout with exact coordinate image crops and verification metrics. |
 
 ---
 

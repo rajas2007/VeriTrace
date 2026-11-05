@@ -27,6 +27,10 @@ Forensic document analysis involves significant complexities spanning low-level 
 | **TR-16** | Installer Size & Bundled OCR Assets | **MEDIUM** | **LOW** | Strip unused PySide6 modules; bundle single language (`eng.traineddata`); Inno Setup ultra-compression (LZMA2). |
 | **TR-17** | SQLite Multi-Process Locking in WAL Mode | **MEDIUM** | **LOW** | `PRAGMA journal_mode=WAL;`, short write transactions, `BEGIN IMMEDIATE;` atomic row claims. |
 | **TR-18** | Complete Offline Operation & Cloud AI Loss | **HIGH** | **LOW** | 100% of core pipeline runs offline; deterministic template fallback when Groq is unreachable. |
+| **TR-19** | Multilingual Indic OCR Degraded Accuracy | **HIGH** | **MEDIUM** | Multi-engine abstraction (PaddleOCR / Tesseract); Unicode NFC & numeral normalization; confidence gating. |
+| **TR-20** | Signature Comparison False Accusations | **CRITICAL**| **MEDIUM** | 6-level assessment scale; visual similarity does not prove authorship; local ONNX Runtime CPU inference; HITL review. |
+| **TR-21** | Industrial Storage Physical Access Exposure | **HIGH** | **LOW** | Clear disclosure that `%LOCALAPPDATA%` lacks auto-encryption; DPAPI API key protection; enterprise BitLocker/SQLCipher roadmap. |
+| **TR-22** | Cloud AI Exposure of Confidential Industrial IP | **HIGH** | **LOW** | Cloud AI is strictly optional and user-gated; raw documents never sent to cloud; only anonymized pre-calculated metrics transmitted. |
 
 ---
 
@@ -180,3 +184,46 @@ Forensic document analysis involves significant complexities spanning low-level 
 * **Engineering Mitigations:**
   1. **100% Offline Core Capabilities:** Ingestion, PDF parsing, 300 DPI rendering, Tesseract OCR, visual forensics (ELA, font baseline regressions), arithmetic checks, cross-document correlation, and ReportLab PDF dossier generation execute purely locally with zero network calls.
   2. **Deterministic Template Fallback:** If `GROQ_API_KEY` is missing or Groq returns a network error, the pipeline immediately falls back to local rule-based Jinja2 templates, outputting complete, high-quality investigation dossiers without interruption.
+
+---
+
+### TR-19: Multilingual Indic OCR Degraded Accuracy (Complex Conjuncts & Matras)
+* **Risk Description:** Devanagari (Hindi, Marathi) and regional Indian scripts feature complex conjuncts (युक्ताक्षर), top hanging shirorekha lines, and vowel matras above/below consonants. Standard OCR engines often fail on degraded scans, dropping diacritics or fracturing conjunct glyphs.
+* **Failure Impact:** Inaccurate field extraction, garbled vendor names, and false numerical contradictions on bilingual invoices and challans.
+* **Engineering Mitigations:**
+  1. **Multi-Engine Abstraction (`TextExtractorProtocol`):** Route Devanagari text to PaddleOCR models optimized for Indic scripts, using Tesseract as robust fallback.
+  2. **Unicode NFC Normalization:** Apply Unicode NFC normalization to canonicalize disparate matra encoding sequences before string matching.
+  3. **Script-Aware Numeral Normalization:** Deterministically normalize Devanagari digits (`०-९`) to standard Hindu-Arabic digits (`0-9`) for math validation while preserving original strings in provenance.
+  4. **Confidence Gating & Manual Override:** Flag extractions with confidence $<0.65$; provide UI manual script override when language detection is ambiguous.
+
+---
+
+### TR-20: Signature Comparison False Accusations & Intra-Writer Variability
+* **Risk Description:** Machine learning signature verification models compute visual feature distances. Authentic signatures naturally vary across sessions, writing surfaces, instruments, or author fatigue. Treating visual dissimilarity as proof of forgery creates severe legal liability and assessment harm.
+* **Failure Impact:** False accusation of fraud against authorized industrial personnel (e.g. Quality Inspectors or Plant Managers).
+* **Engineering Mitigations:**
+  1. **Six-Level Assessment Scale:** The system strictly outputs neutral forensic categories (`SIGNATURE_DETECTED`, `VISUAL_ANOMALY_OBSERVED`, `SIMILARITY_WITH_REFERENCE`, `POSSIBLE_MANIPULATION_INDICATOR`, `INSUFFICIENT_EVIDENCE`, `HUMAN_EXAMINER_DECISION`).
+  2. **Zero Autonomous Accusations:** Machine output is strictly prohibited from declaring "Forged" or "Guilty."
+  3. **Multiple Enrolled Reference Samples:** Organizations enroll multiple verified reference samples per subject to capture natural intra-writer variance.
+  4. **Human Examiner Gate:** Every consequential signature finding requires review, annotation, and authoritative sign-off by a qualified human examiner.
+
+---
+
+### TR-21: Industrial Storage Physical Access & Encryption Exposure
+* **Risk Description:** Desktop applications storing document originals, 300 DPI page renders, visual evidence crops, and SQLite databases in `%LOCALAPPDATA%/VeriTrace/` are vulnerable to physical workstation compromise or malware inspection if the host drive is unencrypted.
+* **Failure Impact:** Exposure of proprietary industrial schematics, vendor pricing schedules, or employee credentials.
+* **Engineering Mitigations:**
+  1. **Transparent Security Documentation:** Explicitly document that `%LOCALAPPDATA%` does NOT provide automatic encryption; strongly recommend enterprise BitLocker drive encryption.
+  2. **API Key Security via Windows DPAPI:** Store cloud API credentials using Windows Data Protection API (DPAPI) rather than plain text `.env` files in production builds.
+  3. **Post-Hackathon SQLCipher Roadmap:** Architecture specifies a migration path to SQLCipher for transparent AES-256 database encryption at rest.
+
+---
+
+### TR-22: Cloud AI Data Leakage of Confidential Industrial IP
+* **Risk Description:** Transmitting proprietary manufacturing drawings, chemical formulas on mill test certificates, or confidential vendor contracts to cloud LLM APIs violates enterprise non-disclosure agreements and data sovereignty laws.
+* **Failure Impact:** Critical industrial IP theft; breach of enterprise compliance.
+* **Engineering Mitigations:**
+  1. **Cloud AI is Strictly Opt-In:** Groq LLM integration is disabled by default and requires explicit user enablement in desktop settings.
+  2. **Zero Raw Document Transmission:** Raw document binaries, high-resolution scans, or unredacted files are NEVER sent to cloud APIs.
+  3. **Strict Data Minimization:** When cloud AI is enabled, only anonymized numerical metrics (e.g., "Math delta: ₹5,000") and pre-calculated discrepancy summaries are sent for narrative synthesis.
+  4. **100% Offline Capability:** The application remains 100% functional with offline deterministic template narratives when internet access is disabled or forbidden.
