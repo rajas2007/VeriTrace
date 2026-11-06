@@ -43,8 +43,16 @@ class RelationshipConstraintError(DomainError):
     """Raised when an entity relationship or foreign-key boundary is violated."""
 
 
+class EntityNotFoundError(DomainError):
+    """Raised when a domain entity is not found in the persistence store."""
+
+
 class UnauthorizedActionError(DomainError):
     """Raised when an operation violates role-based access or signatory governance."""
+
+
+class TenantIsolationError(UnauthorizedActionError):
+    """Raised when an operation violates workspace or cross-tenant organization boundaries."""
 
 
 class AiModificationForbiddenError(DomainError):
@@ -57,6 +65,18 @@ class AiModificationForbiddenError(DomainError):
 
 class DocumentIngestionError(VeriTraceError):
     """Raised when document ingestion fails at file intake."""
+
+
+class DuplicateDocumentError(DocumentIngestionError):
+    """Raised when duplicate file content is ingested within tenant boundary."""
+
+    def __init__(self, message: str, existing_document_id: str | None = None) -> None:
+        super().__init__(message)
+        self.existing_document_id = existing_document_id
+
+
+class StorageError(VeriTraceError):
+    """Raised when file storage operations (write, read, path resolution) fail."""
 
 
 class UnsupportedFormatError(DocumentIngestionError):

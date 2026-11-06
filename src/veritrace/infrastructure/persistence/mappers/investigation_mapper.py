@@ -58,3 +58,5 @@ class InvestigationMapper:
             risk_classification=RiskClassification(model.risk_classification),
             organization_id=model.organization_id,
         )
+
+    to_domain = to_entity

@@ -68,3 +68,5 @@ class DocumentMapper:
             metadata_json=model.metadata_json,
             status=DocumentStatus(model.status),
         )
+
+    to_domain = to_entity

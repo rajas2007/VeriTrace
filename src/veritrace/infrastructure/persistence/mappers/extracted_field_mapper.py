@@ -57,3 +57,5 @@ class ExtractedFieldMapper:
             ocr_engine=model.ocr_engine,
             ocr_model_version=model.ocr_model_version,
         )
+
+    to_domain = to_entity

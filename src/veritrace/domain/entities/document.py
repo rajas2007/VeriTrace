@@ -32,6 +32,7 @@ _SUPPORTED_MIME_TYPES = {
     "application/pdf",
     "image/png",
     "image/jpeg",
+    "image/tiff",
 }
 
 

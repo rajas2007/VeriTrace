@@ -38,3 +38,5 @@ class AuditEventMapper:
             timestamp=timestamp,
             event_payload=model.event_payload,
         )
+
+    to_domain = to_entity

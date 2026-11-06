@@ -53,3 +53,5 @@ class DocumentPageMapper:
             primary_script=model.primary_script,
             language_profile=dict_to_language_profile(model.languages_json),
         )
+
+    to_domain = to_entity

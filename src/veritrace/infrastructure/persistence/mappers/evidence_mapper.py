@@ -46,3 +46,5 @@ class EvidenceMapper:
             heatmap_image_path=model.heatmap_image_path,
             grounding_explanation=model.grounding_explanation,
         )
+
+    to_domain = to_entity

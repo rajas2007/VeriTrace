@@ -69,3 +69,5 @@ class FindingMapper:
             signature_reference_id=model.signature_reference_id,
             _evidence_ids=ev_set,
         )
+
+    to_domain = to_entity

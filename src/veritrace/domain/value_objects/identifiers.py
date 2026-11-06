@@ -30,6 +30,23 @@ REV_PREFIX = "rev_"
 DOS_PREFIX = "dos_"
 AUD_PREFIX = "aud_"
 
+# Strongly-typed identifier type aliases
+OrganizationId = str
+AuthorizedSubjectId = str
+SignatureReferenceId = str
+InvestigationId = str
+InvestigationJobId = str
+DocumentId = str
+DocumentPageId = str
+ExtractedFieldId = str
+EntityId = str
+FindingId = str
+EvidenceId = str
+CrossDocumentRelationId = str
+ReviewDecisionId = str
+DossierId = str
+AuditEventId = str
+
 _HEX_32_PATTERN = re.compile(r"^[0-9a-f]{32}$")
 _UUID_HYPHEN_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
 
