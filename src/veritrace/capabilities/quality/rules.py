@@ -78,6 +78,7 @@ class ScoringConfig:
         "PDF_UNUSUAL_DIMENSIONS": 10.0,
         "PDF_MIXED_ORIENTATIONS": 8.0,
         # Image issues
+        "IMG_CORRUPT": 100.0,
         "IMG_BLUR_CRITICAL": 35.0,
         "IMG_BLUR_WARNING": 15.0,
         "IMG_LOW_RESOLUTION": 25.0,

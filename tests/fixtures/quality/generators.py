@@ -18,6 +18,7 @@ Generates controlled, deterministic synthetic images and PDFs for testing:
 """
 
 from pathlib import Path
+from typing import cast
 
 import cv2
 import numpy as np
@@ -87,14 +88,14 @@ def create_low_contrast_image(base_img: np.ndarray) -> np.ndarray:
     # Map [0, 255] to [185, 215] (30 gray levels, low contrast range)
     scaled = (gray.astype(np.float32) / 255.0) * 30.0 + 185.0
     res = np.clip(scaled, 0, 255).astype(np.uint8)
-    return cv2.cvtColor(res, cv2.COLOR_GRAY2BGR)
+    return cast(np.ndarray, cv2.cvtColor(res, cv2.COLOR_GRAY2BGR))
 
 
 def create_noisy_image(base_img: np.ndarray, sigma: float = 40.0) -> np.ndarray:
     """Add Gaussian noise."""
     noise = np.random.normal(0, sigma, base_img.shape).astype(np.float32)
     noisy = np.clip(base_img.astype(np.float32) + noise, 0, 255).astype(np.uint8)
-    return noisy
+    return cast(np.ndarray, noisy)
 
 
 def create_uneven_illumination_image(base_img: np.ndarray) -> np.ndarray:

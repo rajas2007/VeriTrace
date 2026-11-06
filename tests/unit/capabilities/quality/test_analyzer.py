@@ -11,6 +11,7 @@ Tests:
 
 import time
 from pathlib import Path
+from unittest.mock import patch
 
 import cv2
 import pytest
@@ -140,3 +141,45 @@ def test_processing_performance(analyzer: DocumentQualityAnalyzer, tmp_path: Pat
     assert elapsed < 1.0, f"Analysis took {elapsed:.3f}s, expected < 1.0s"
     assert result.overall_score > 0.0
     assert "elapsed_seconds" in result.metadata
+
+
+def test_corrupted_image_file(analyzer: DocumentQualityAnalyzer, tmp_path: Path):
+    """Verify corrupted image file returns structured result instead of unhandled crash."""
+    corrupt_img = tmp_path / "broken.png"
+    corrupt_img.write_bytes(b"NOT_A_PNG_FILE_HEADER")
+
+    result = analyzer.analyze_document(corrupt_img)
+
+    assert result.overall_score == 0.0
+    assert result.is_processable is False
+    assert result.category == QualityCategory.UNUSABLE
+    assert result.recommendation == ProcessingRecommendation.UNSUITABLE_FOR_AUTOMATED_PROCESSING
+    assert any(i.code == "IMG_CORRUPT" for i in result.issues)
+
+
+def test_zero_byte_image_file(analyzer: DocumentQualityAnalyzer, tmp_path: Path):
+    """Verify zero-byte image file returns structured IMG_CORRUPT result."""
+    empty_img = tmp_path / "empty.png"
+    empty_img.write_bytes(b"")
+
+    result = analyzer.analyze_document(empty_img)
+
+    assert result.overall_score == 0.0
+    assert result.is_processable is False
+    assert result.category == QualityCategory.UNUSABLE
+    assert result.recommendation == ProcessingRecommendation.UNSUITABLE_FOR_AUTOMATED_PROCESSING
+    assert any(i.code == "IMG_CORRUPT" for i in result.issues)
+
+
+def test_unexpected_programming_error_propagates(analyzer: DocumentQualityAnalyzer, tmp_path: Path):
+    """Verify unexpected programming errors (e.g. TypeError) are not masked as image corruption."""
+    img_path = tmp_path / "test.png"
+    img_path.write_bytes(b"placeholder")
+
+    with (
+        patch.object(
+            analyzer.page_analyzer, "analyze_page", side_effect=TypeError("unexpected bug")
+        ),
+        pytest.raises(TypeError, match="unexpected bug"),
+    ):
+        analyzer.analyze_document(img_path)

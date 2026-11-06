@@ -1,2 +1,1 @@
 """Quality capability test fixtures."""
-

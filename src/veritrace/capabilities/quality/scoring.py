@@ -87,6 +87,7 @@ class QualityScorer:
             "PDF_UNREADABLE_PAGE",
             "IMG_CRITICAL_LOW_RES",
             "PDF_FILE_NOT_FOUND",
+            "IMG_CORRUPT",
         }
         has_fatal = any(i.code in fatal_codes for i in issues)
 
@@ -109,7 +110,13 @@ class QualityScorer:
     ) -> tuple[float, QualityCategory, ProcessingRecommendation]:
         """Aggregate per-page results into document-level score, category, and recommendation."""
         if not page_scores:
-            fatal_codes = {"PDF_CORRUPT", "PDF_ENCRYPTED", "PDF_EMPTY", "PDF_FILE_NOT_FOUND"}
+            fatal_codes = {
+                "PDF_CORRUPT",
+                "PDF_ENCRYPTED",
+                "PDF_EMPTY",
+                "PDF_FILE_NOT_FOUND",
+                "IMG_CORRUPT",
+            }
             if any(i.code in fatal_codes for i in all_issues):
                 return (
                     0.0,
@@ -136,7 +143,13 @@ class QualityScorer:
         category = self.determine_category(final_score)
         recommendation = self.determine_recommendation(final_score, all_issues)
 
-        fatal_codes = {"PDF_CORRUPT", "PDF_ENCRYPTED", "PDF_EMPTY", "PDF_FILE_NOT_FOUND"}
+        fatal_codes = {
+            "PDF_CORRUPT",
+            "PDF_ENCRYPTED",
+            "PDF_EMPTY",
+            "PDF_FILE_NOT_FOUND",
+            "IMG_CORRUPT",
+        }
         if any(i.code in fatal_codes for i in all_issues):
             recommendation = ProcessingRecommendation.UNSUITABLE_FOR_AUTOMATED_PROCESSING
 

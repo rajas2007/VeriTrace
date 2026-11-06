@@ -178,6 +178,8 @@ class ImageQualityAnalyzer:
             return gray, bgr, (image_input.width, image_input.height)
 
         if isinstance(image_input, np.ndarray):
+            if image_input.size == 0:
+                raise ValueError("Image array is empty (0 pixels)")
             if image_input.ndim == 2:
                 gray = image_input.astype(np.uint8)
                 bgr = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)

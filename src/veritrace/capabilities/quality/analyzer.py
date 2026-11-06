@@ -8,6 +8,7 @@ structural, and text dimensions with deterministic scoring and explanations.
 import time
 from pathlib import Path
 
+import cv2
 import numpy as np
 import pymupdf as fitz
 from PIL import Image
@@ -231,11 +232,35 @@ class DocumentQualityAnalyzer:
         suffix = image_path.suffix.upper().lstrip(".")
         p_text = page_texts[0] if (page_texts and len(page_texts) > 0) else None
 
-        page_result = self.page_analyzer.analyze_page(
-            image_input=image_path,
-            text_input=p_text,
-            page_number=1,
-        )
+        try:
+            page_result = self.page_analyzer.analyze_page(
+                image_input=image_path,
+                text_input=p_text,
+                page_number=1,
+            )
+        except (ValueError, cv2.error, OSError) as ex:
+            issue = QualityIssue(
+                code="IMG_CORRUPT",
+                title="Corrupted or Unreadable Image File",
+                message=f"Failed to decode or parse image file: {ex}",
+                dimension=QualityDimension.IMAGE,
+                severity=QualitySeverity.CRITICAL,
+                confidence=1.0,
+                details={"error": str(ex)},
+            )
+            return DocumentQualityResult(
+                document_id=document_id,
+                file_path=str(image_path),
+                file_type=suffix,
+                page_count=0,
+                overall_score=0.0,
+                category=QualityCategory.UNUSABLE,
+                recommendation=ProcessingRecommendation.UNSUITABLE_FOR_AUTOMATED_PROCESSING,
+                is_processable=False,
+                issues=[issue],
+                pages=[],
+                summary=f"Image quality assessment failed: file is corrupted or unreadable ({ex}).",
+            )
 
         overall_score = page_result.score
         category = page_result.category
