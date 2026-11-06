@@ -47,7 +47,11 @@ class SignatureDetector:
         img_bgr = self._load_image(image_or_path)
         img_h, img_w = img_bgr.shape[:2]
 
-        gray = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY) if len(img_bgr.shape) == 3 else img_bgr
+        gray = (
+            cv2.cvtColor(img_bgr, cv2.COLOR_BGR2GRAY)
+            if len(img_bgr.shape) == 3
+            else img_bgr
+        )
 
         # 1. Binarize using Otsu's thresholding (dark strokes on light background)
         _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
