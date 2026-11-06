@@ -92,7 +92,7 @@ def test_encrypted_pdf(pdf_analyzer: PdfQualityAnalyzer, tmp_path: Path):
     # Save with user and owner password
     doc.save(
         str(enc_path),
-        encryption=fitz.PDF_ENCRYPT_AES_256,
+        encryption=fitz.PDF_ENCRYPT_AES_256,  # type: ignore[attr-defined]
         user_pw="secret123",
         owner_pw="master123",
     )

@@ -26,4 +26,3 @@ __all__ = [
     "parse_date",
     "parse_numeric",
 ]
-

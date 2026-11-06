@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Protocol, runtime_checkable
 
 from veritrace.domain.entities.finding import Finding
+from veritrace.domain.entities.review_decision import ReviewDecision
 from veritrace.domain.value_objects.identifiers import (
     FindingId,
     InvestigationId,
@@ -50,4 +51,20 @@ class FindingRepository(Protocol):
         organization_id: OrganizationId,
     ) -> None:
         """Delete an unadjudicated finding, enforcing tenant ownership."""
+        ...
+
+    def add_review_decision(
+        self,
+        decision: ReviewDecision,
+        organization_id: OrganizationId,
+    ) -> None:
+        """Persist a human ReviewDecision adjudication, enforcing tenant ownership."""
+        ...
+
+    def list_review_decisions(
+        self,
+        finding_id: FindingId,
+        organization_id: OrganizationId,
+    ) -> list[ReviewDecision]:
+        """List all ReviewDecision adjudications for a finding, enforcing tenant ownership."""
         ...

@@ -42,4 +42,3 @@ def test_pdf_builder_generates_valid_pdf(tmp_path: Path):
     with open(result_path, "rb") as f:
         header = f.read(5)
     assert header == b"%PDF-"
-

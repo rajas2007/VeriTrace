@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable
 
+from veritrace.domain.entities.cross_document_relation import CrossDocumentRelation
 from veritrace.domain.entities.investigation import Investigation
 from veritrace.domain.value_objects.identifiers import InvestigationId, OrganizationId
 
@@ -62,4 +63,20 @@ class InvestigationRepository(Protocol):
         organization_id: OrganizationId,
     ) -> None:
         """Delete an investigation, enforcing tenant ownership."""
+        ...
+
+    def add_relation(
+        self,
+        relation: CrossDocumentRelation,
+        organization_id: OrganizationId,
+    ) -> None:
+        """Persist a CrossDocumentRelation, verifying tenant ownership."""
+        ...
+
+    def list_relations(
+        self,
+        investigation_id: InvestigationId,
+        organization_id: OrganizationId,
+    ) -> list[CrossDocumentRelation]:
+        """List all CrossDocumentRelation entities belonging to an investigation."""
         ...

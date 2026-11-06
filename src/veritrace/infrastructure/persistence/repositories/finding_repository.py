@@ -6,6 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from veritrace.domain.entities.finding import Finding
+from veritrace.domain.entities.review_decision import ReviewDecision
 from veritrace.domain.exceptions.base import (
     EntityNotFoundError,
     RelationshipConstraintError,
@@ -17,11 +18,15 @@ from veritrace.domain.value_objects.identifiers import (
     OrganizationId,
 )
 from veritrace.infrastructure.persistence.mappers.finding_mapper import FindingMapper
+from veritrace.infrastructure.persistence.mappers.review_decision_mapper import (
+    ReviewDecisionMapper,
+)
 from veritrace.infrastructure.persistence.models.document import DocumentModel
 from veritrace.infrastructure.persistence.models.document_page import DocumentPageModel
 from veritrace.infrastructure.persistence.models.evidence import EvidenceModel
 from veritrace.infrastructure.persistence.models.finding import FindingModel
 from veritrace.infrastructure.persistence.models.investigation import InvestigationModel
+from veritrace.infrastructure.persistence.models.review_decision import ReviewDecisionModel
 
 
 class SqliteFindingRepository:
@@ -234,3 +239,46 @@ class SqliteFindingRepository:
 
         self._session.delete(model)
         self._session.flush()
+
+    def add_review_decision(
+        self,
+        decision: ReviewDecision,
+        organization_id: OrganizationId,
+    ) -> None:
+        """Persist a human ReviewDecision adjudication, enforcing tenant ownership."""
+        stmt = (
+            select(FindingModel)
+            .join(InvestigationModel, FindingModel.investigation_id == InvestigationModel.id)
+            .where(
+                FindingModel.id == str(decision.finding_id),
+                InvestigationModel.organization_id == str(organization_id),
+            )
+        )
+        finding_model = self._session.execute(stmt).scalar_one_or_none()
+        if finding_model is None:
+            raise EntityNotFoundError(
+                f"Finding '{decision.finding_id}' not found in organization '{organization_id}'"
+            )
+
+        model = ReviewDecisionMapper.to_model(decision)
+        self._session.add(model)
+        self._session.flush()
+
+    def list_review_decisions(
+        self,
+        finding_id: FindingId,
+        organization_id: OrganizationId,
+    ) -> list[ReviewDecision]:
+        """List all ReviewDecision adjudications for a finding, enforcing tenant ownership."""
+        stmt = (
+            select(ReviewDecisionModel)
+            .join(FindingModel, ReviewDecisionModel.finding_id == FindingModel.id)
+            .join(InvestigationModel, FindingModel.investigation_id == InvestigationModel.id)
+            .where(
+                ReviewDecisionModel.finding_id == str(finding_id),
+                InvestigationModel.organization_id == str(organization_id),
+            )
+            .order_by(ReviewDecisionModel.timestamp.asc())
+        )
+        rows = self._session.execute(stmt).scalars().all()
+        return [ReviewDecisionMapper.to_entity(r) for r in rows]

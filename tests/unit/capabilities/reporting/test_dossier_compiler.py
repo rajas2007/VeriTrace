@@ -51,4 +51,3 @@ def test_dossier_compiler_end_to_end(tmp_path: Path):
     assert json_data["investigation_id"] == inv.id
     assert "section_1_document_overview" in json_data
     assert "section_6_investigation_summary" in json_data
-

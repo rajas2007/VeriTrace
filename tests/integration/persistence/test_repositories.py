@@ -15,6 +15,7 @@ from alembic import command
 from alembic.config import Config
 
 from veritrace.domain.entities.audit_event import AuditEvent
+from veritrace.domain.entities.cross_document_relation import CrossDocumentRelation
 from veritrace.domain.entities.document import Document
 from veritrace.domain.entities.evidence import Evidence
 from veritrace.domain.entities.finding import Finding
@@ -25,6 +26,7 @@ from veritrace.domain.enums.forensic import (
     EpistemicTier,
     FindingCategory,
     FindingSeverity,
+    RelationType,
     ReviewDecisionType,
 )
 from veritrace.domain.enums.investigation import InvestigationStatus, RiskClassification
@@ -666,5 +668,167 @@ def test_audit_event_repository_append_only_and_chronology(
         repo_instance = SqliteAuditEventRepository(session)
         assert not hasattr(repo_instance, "update")
         assert not hasattr(repo_instance, "delete")
+    finally:
+        engine.dispose()
+
+
+def test_investigation_repository_relation_persistence_and_isolation(
+    db_path: Path, alembic_config: Config
+) -> None:
+    """Verify CrossDocumentRelation persistence, retrieval, and strict tenant isolation."""
+    command.upgrade(alembic_config, "head")
+    engine = create_db_engine(f"sqlite:///{db_path.as_posix()}")
+    session_factory = create_session_factory(engine)
+    now = datetime(2026, 1, 1, 10, 0, 0, tzinfo=UTC)
+
+    org_a = "org_aaaaaaaaaaaaaaaaaaaaaaaaaaaa0001"
+    org_b = "org_bbbbbbbbbbbbbbbbbbbbbbbbbbbb0001"
+    inv_a = "inv_aaaaaaaaaaaaaaaaaaaaaaaaaaaa0001"
+    inv_b = "inv_bbbbbbbbbbbbbbbbbbbbbbbbbbbb0001"
+    doc_a1 = "doc_aaaaaaaaaaaaaaaaaaaaaaaaaaaa0001"
+    doc_a2 = "doc_aaaaaaaaaaaaaaaaaaaaaaaaaaaa0002"
+    doc_b1 = "doc_bbbbbbbbbbbbbbbbbbbbbbbbbbbb0001"
+
+    try:
+        with session_scope(session_factory) as session:
+            session.add_all(
+                [
+                    OrganizationModel(
+                        id=org_a, name="Org A", industry_sector="MFG", created_at=now
+                    ),
+                    OrganizationModel(
+                        id=org_b, name="Org B", industry_sector="LOG", created_at=now
+                    ),
+                ]
+            )
+
+        with session_scope(session_factory) as session:
+            inv_repo = SqliteInvestigationRepository(session)
+            inv_repo.add(
+                Investigation(
+                    id=inv_a,
+                    organization_id=org_a,
+                    title="Case A",
+                    reference_code="INV-A-01",
+                    status=InvestigationStatus.DRAFT,
+                    created_at=now,
+                    updated_at=now,
+                )
+            )
+            inv_repo.add(
+                Investigation(
+                    id=inv_b,
+                    organization_id=org_b,
+                    title="Case B",
+                    reference_code="INV-B-01",
+                    status=InvestigationStatus.DRAFT,
+                    created_at=now,
+                    updated_at=now,
+                )
+            )
+
+        with session_scope(session_factory) as session:
+            doc_repo = SqliteDocumentRepository(session)
+            doc_repo.add(
+                Document(
+                    id=doc_a1,
+                    investigation_id=inv_a,
+                    original_filename="a1.pdf",
+                    file_hash_sha256="a" * 64,
+                    mime_type="application/pdf",
+                    created_at=now,
+                ),
+                org_a,
+            )
+            doc_repo.add(
+                Document(
+                    id=doc_a2,
+                    investigation_id=inv_a,
+                    original_filename="a2.pdf",
+                    file_hash_sha256="b" * 64,
+                    mime_type="application/pdf",
+                    created_at=now,
+                ),
+                org_a,
+            )
+            doc_repo.add(
+                Document(
+                    id=doc_b1,
+                    investigation_id=inv_b,
+                    original_filename="b1.pdf",
+                    file_hash_sha256="c" * 64,
+                    mime_type="application/pdf",
+                    created_at=now,
+                ),
+                org_b,
+            )
+
+        # 1. Successful add and list in Org A
+        with session_scope(session_factory) as session:
+            repo = SqliteInvestigationRepository(session)
+            rel = CrossDocumentRelation.create(
+                investigation_id=inv_a,
+                source_document_id=doc_a1,
+                target_document_id=doc_a2,
+                relation_type=RelationType.CONFLICTS_WITH,
+                description="Contradiction in quantity between PO and Invoice",
+                similarity_score=0.95,
+            )
+            repo.add_relation(rel, org_a)
+
+        with session_scope(session_factory) as session:
+            repo = SqliteInvestigationRepository(session)
+            relations = repo.list_relations(inv_a, org_a)
+            assert len(relations) == 1
+            assert relations[0].id == rel.id
+            assert relations[0].relation_type == RelationType.CONFLICTS_WITH
+            assert relations[0].similarity_score == 0.95
+            assert relations[0].source_document_id == doc_a1
+            assert relations[0].target_document_id == doc_a2
+
+        # 2. Tenant isolation on list_relations
+        with session_scope(session_factory) as session:
+            repo = SqliteInvestigationRepository(session)
+            with pytest.raises(TenantIsolationError):
+                repo.list_relations(inv_a, org_b)
+
+        # 3. Tenant isolation on add_relation (investigation belongs to another org)
+        with session_scope(session_factory) as session:
+            repo = SqliteInvestigationRepository(session)
+            rel_other_inv = CrossDocumentRelation.create(
+                investigation_id=inv_a,
+                source_document_id=doc_a1,
+                target_document_id=doc_a2,
+                relation_type=RelationType.CONFLICTS_WITH,
+                description="Cross tenant attempt",
+            )
+            with pytest.raises(TenantIsolationError):
+                repo.add_relation(rel_other_inv, org_b)
+
+        # 4. Tenant isolation on add_relation (target document belongs to another tenant)
+        with session_scope(session_factory) as session:
+            repo = SqliteInvestigationRepository(session)
+            rel_cross_doc = CrossDocumentRelation.create(
+                investigation_id=inv_a,
+                source_document_id=doc_a1,
+                target_document_id=doc_b1,
+                relation_type=RelationType.CONFLICTS_WITH,
+                description="Cross tenant document link attempt",
+            )
+            with pytest.raises(TenantIsolationError):
+                repo.add_relation(rel_cross_doc, org_a)
+
+        # 5. EntityNotFoundError on non-existent investigation
+        with session_scope(session_factory) as session:
+            repo = SqliteInvestigationRepository(session)
+            rel_nonexistent = CrossDocumentRelation.create(
+                investigation_id="inv_99999999999999999999999999999999",
+                source_document_id=doc_a1,
+                target_document_id=doc_a2,
+                relation_type=RelationType.CONFLICTS_WITH,
+                description="Non-existent case",
+            )
+            with pytest.raises(EntityNotFoundError):
+                repo.add_relation(rel_nonexistent, org_a)
     finally:
         engine.dispose()

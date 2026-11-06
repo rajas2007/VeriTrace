@@ -113,4 +113,3 @@ class InvestigationDossierPayload:
     def to_json(self, indent: int = 2) -> str:
         """Serialize dossier payload into JSON string."""
         return json.dumps(self.to_dict(), indent=indent, default=str)
-

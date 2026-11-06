@@ -5,12 +5,20 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from veritrace.domain.entities.cross_document_relation import CrossDocumentRelation
 from veritrace.domain.entities.investigation import Investigation
 from veritrace.domain.exceptions.base import EntityNotFoundError, TenantIsolationError
 from veritrace.domain.value_objects.identifiers import InvestigationId, OrganizationId
+from veritrace.infrastructure.persistence.mappers.cross_document_relation_mapper import (
+    CrossDocumentRelationMapper,
+)
 from veritrace.infrastructure.persistence.mappers.investigation_mapper import (
     InvestigationMapper,
 )
+from veritrace.infrastructure.persistence.models.cross_document_relation import (
+    CrossDocumentRelationModel,
+)
+from veritrace.infrastructure.persistence.models.document import DocumentModel
 from veritrace.infrastructure.persistence.models.investigation import InvestigationModel
 
 
@@ -137,3 +145,84 @@ class SqliteInvestigationRepository:
             )
         self._session.delete(model)
         self._session.flush()
+
+    def add_relation(
+        self,
+        relation: CrossDocumentRelation,
+        organization_id: OrganizationId,
+    ) -> None:
+        """Persist a CrossDocumentRelation, verifying tenant ownership."""
+        inv_stmt = select(InvestigationModel).where(
+            InvestigationModel.id == str(relation.investigation_id),
+            InvestigationModel.organization_id == str(organization_id),
+        )
+        inv = self._session.execute(inv_stmt).scalar_one_or_none()
+        if inv is None:
+            any_inv = self._session.get(InvestigationModel, str(relation.investigation_id))
+            if any_inv is not None:
+                raise TenantIsolationError(
+                    f"Cross-organization violation: Investigation '{relation.investigation_id}' "
+                    f"belongs to organization '{any_inv.organization_id}', not '{organization_id}'"
+                )
+            raise EntityNotFoundError(
+                f"Investigation '{relation.investigation_id}' not found "
+                f"in organization '{organization_id}'"
+            )
+
+        for doc_id, label in [
+            (relation.source_document_id, "Source document"),
+            (relation.target_document_id, "Target document"),
+        ]:
+            doc_stmt = (
+                select(DocumentModel)
+                .join(InvestigationModel, DocumentModel.investigation_id == InvestigationModel.id)
+                .where(
+                    DocumentModel.id == str(doc_id),
+                    InvestigationModel.organization_id == str(organization_id),
+                )
+            )
+            doc_model = self._session.execute(doc_stmt).scalar_one_or_none()
+            if doc_model is None:
+                any_doc = self._session.get(DocumentModel, str(doc_id))
+                if any_doc is not None:
+                    doc_inv = self._session.get(InvestigationModel, any_doc.investigation_id)
+                    if doc_inv is not None and doc_inv.organization_id != str(organization_id):
+                        raise TenantIsolationError(
+                            f"Cross-organization violation: {label} '{doc_id}' belongs to "
+                            f"organization '{doc_inv.organization_id}', not '{organization_id}'"
+                        )
+                raise EntityNotFoundError(
+                    f"{label} '{doc_id}' not found in organization '{organization_id}'"
+                )
+
+        model = CrossDocumentRelationMapper.to_model(relation)
+        self._session.add(model)
+        self._session.flush()
+
+    def list_relations(
+        self,
+        investigation_id: InvestigationId,
+        organization_id: OrganizationId,
+    ) -> list[CrossDocumentRelation]:
+        """List all CrossDocumentRelation entities belonging to an investigation."""
+        inv_stmt = select(InvestigationModel).where(
+            InvestigationModel.id == str(investigation_id),
+            InvestigationModel.organization_id == str(organization_id),
+        )
+        inv = self._session.execute(inv_stmt).scalar_one_or_none()
+        if inv is None:
+            any_inv = self._session.get(InvestigationModel, str(investigation_id))
+            if any_inv is not None:
+                raise TenantIsolationError(
+                    f"Cross-organization violation: Investigation '{investigation_id}' "
+                    f"belongs to organization '{any_inv.organization_id}', not '{organization_id}'"
+                )
+            raise EntityNotFoundError(
+                f"Investigation '{investigation_id}' not found in organization '{organization_id}'"
+            )
+
+        stmt = select(CrossDocumentRelationModel).where(
+            CrossDocumentRelationModel.investigation_id == str(investigation_id)
+        )
+        rows = self._session.execute(stmt).scalars().all()
+        return [CrossDocumentRelationMapper.to_entity(r) for r in rows]
