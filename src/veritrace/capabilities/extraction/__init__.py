@@ -1,4 +1,4 @@
-"""Extraction capability package for digital vector text, raster OCR, and normalizers."""
+"""Extraction capability package for digital vector text, raster OCR, normalizers, and tables."""
 
 from veritrace.capabilities.extraction.hybrid_extractor import (
     HybridDocumentExtractor,
@@ -16,15 +16,23 @@ from veritrace.capabilities.extraction.pdf_text_extractor import (
     PageDigitalExtraction,
     PdfDigitalTextExtractor,
 )
+from veritrace.capabilities.extraction.table_extractor import (
+    ExtractedTable,
+    TableCell,
+    TableExtractor,
+)
 
 __all__ = [
     "DocumentDigitalExtraction",
     "ExtractedBlockData",
+    "ExtractedTable",
     "HybridDocumentExtractor",
     "OcrEngineProtocol",
     "OcrPageResult",
     "PageDigitalExtraction",
     "PdfDigitalTextExtractor",
+    "TableCell",
+    "TableExtractor",
     "TesseractOcrEngine",
     "TextExtractorProtocol",
     "TextNormalizer",
