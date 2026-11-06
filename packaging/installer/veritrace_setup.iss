@@ -21,8 +21,10 @@ DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 LicenseFile=..\..\LICENSE
+SetupIconFile=..\resources\veritrace.ico
+UninstallDisplayIcon={app}\{#MyAppExeName}
 PrivilegesRequired=lowest
-OutputDir=..\Output
+OutputDir=..\..\dist\installer
 OutputBaseFilename=VeriTrace-Setup
 Compression=lzma2/ultra64
 SolidCompression=yes
@@ -38,8 +40,6 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 Source: "..\..\dist\VeriTrace\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-; Bundled Tesseract OCR binaries and tessdata
-; Source: "..\..\dist\tesseract\*"; DestDir: "{app}\resources\tesseract"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -51,5 +51,5 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 
 [UninstallDelete]
 ; Preserve user investigation databases and evidence in %LOCALAPPDATA%/VeriTrace/
-; Only clean up temporary installation caches if explicitly requested.
+; Only clean up application log files and cached artifacts
 Type: files; Name: "{app}\*.log"

@@ -144,8 +144,10 @@ pie title Milestone 1 Progress
 * [ ] Include dedicated Signature Forensic Verification Reports and multilingual extraction summaries.
 
 ### Milestone 12: Desktop Packaging, Hardening & Final Release
-* [ ] Configure PyInstaller one-folder specification bundling Python runtime, PySide6, OpenCV, PyMuPDF, ONNX Runtime, and Tesseract.
-* [ ] Configure Inno Setup script compiling `VeriTrace-Setup.exe` with desktop shortcut and uninstaller.
+* [x] Configure PyInstaller one-folder specification bundling Python runtime, PySide6, OpenCV, PyMuPDF, ReportLab, and Tesseract (`packaging/pyinstaller/veritrace.spec`).
+* [x] Configure Inno Setup script compiling `VeriTrace-Setup.exe` with desktop shortcut and uninstaller (`packaging/installer/veritrace_setup.iss`).
+* [x] Implement desktop packaging and pre-flight automation script with `--check-only` and `--clean` modes (`scripts/packaging/build_desktop.py`).
+* [x] Author packaging configuration test suite validating spec syntax, directives, assets, and QSS styles (`tests/packaging/test_packaging_config.py`).
 * [ ] Validate clean installation on fresh Windows 10/11 x64 test environment.
 * [ ] Rehearse 12-item Judges' Live Demonstration Checklist in under 5 minutes.
 * [ ] Build desktop Evidence Inspector dock widget displaying visual crops, ELA diffs, and review actions.

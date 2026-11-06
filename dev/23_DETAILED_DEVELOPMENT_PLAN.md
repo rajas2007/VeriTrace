@@ -157,13 +157,17 @@ flowchart TD
 * **Acceptance Criteria:** Submitting a review decision updates risk scores; exporting compiles an auditor-grade PDF dossier in $<3$ seconds.
 
 ### Milestone 12: Desktop Packaging, Hardening & Final Release
-* **Status:** **PLANNED**
+* **Status:** **IN PROGRESS (Core Packaging & Automation Completed)**
 * **Responsible:** Rajas & Shravan
 * **Modules Affected:**
   * `packaging/pyinstaller/veritrace.spec`, `packaging/installer/veritrace_setup.iss`
-  * `scripts/build/`, `scripts/packaging/`
+  * `packaging/resources/veritrace.ico`, `src/veritrace/gui/styles/dark_theme.qss`
+  * `scripts/packaging/build_desktop.py`, `tests/packaging/test_packaging_config.py`
 * **Deliverables:**
-  * PyInstaller one-folder specification bundling Python runtime, PySide6, OpenCV, PyMuPDF, ONNX Runtime, and Tesseract.
-  * Inno Setup script compiling `VeriTrace-Setup.exe` with desktop shortcut and clean uninstaller.
-  * Clean virtual machine validation on Windows 10/11 x64.
+  * PyInstaller one-folder specification bundling Python runtime, PySide6, OpenCV, PyMuPDF, ReportLab, and Tesseract (`packaging/pyinstaller/veritrace.spec`).
+  * Inno Setup script compiling `VeriTrace-Setup.exe` with desktop shortcut and clean uninstaller (`packaging/installer/veritrace_setup.iss`).
+  * Desktop build automation script with pre-flight environment checks (`scripts/packaging/build_desktop.py`).
+  * Forensic dark theme QSS stylesheet (`src/veritrace/gui/styles/dark_theme.qss`) and theme manager (`theme_manager.py`).
+  * Windows application multi-resolution icon bundle (`packaging/resources/veritrace.ico`).
+  * Automated packaging configuration test suite (`tests/packaging/test_packaging_config.py`).
 * **Acceptance Criteria:** End-to-end `DOWNLOAD → INSTALL → OPEN → ANALYSE → EXPORT DOSSIER` workflow executes successfully on a pristine Windows system.

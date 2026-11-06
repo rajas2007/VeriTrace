@@ -22,7 +22,7 @@ from veritrace.application.services.document_ingestion_service import (
 from veritrace.application.services.investigation_service import (
     InvestigationService,
 )
-from veritrace.gui.styles.theme_manager import ThemeManager
+from veritrace.gui.styles.theme_manager import load_stylesheet
 from veritrace.gui.views.main_window import MainWindow
 
 logger = logging.getLogger("veritrace.gui.app")
@@ -42,6 +42,9 @@ class VeriTraceApp:
         headless: bool = False,
     ) -> None:
         self.argv = argv or sys.argv
+        if "--headless" in self.argv:
+            headless = True
+
         self._investigation_service = investigation_service
         self._correlation_service = correlation_service
         self._ingestion_service = ingestion_service
@@ -49,28 +52,64 @@ class VeriTraceApp:
         self._organization_id = organization_id
         self._headless = headless
 
-        self.qapp: QApplication | None = None
+        self._theme_stylesheet = load_stylesheet("dark_theme")
+        self._qapp: QApplication | None = None
         self.main_window: MainWindow | None = None
-        logger.info("VeriTraceApp instance created.")
+        logger.info("VeriTraceApp instance created with %d arguments.", len(self.argv))
+
+    @property
+    def qapp(self) -> QApplication | None:
+        """Return the underlying QApplication instance."""
+        return self._qapp
+
+    @qapp.setter
+    def qapp(self, value: QApplication | None) -> None:
+        self._qapp = value
+
+    @property
+    def theme_stylesheet(self) -> str:
+        """Return the active dark theme QSS stylesheet."""
+        return self._theme_stylesheet
+
+    def configure_qt(self) -> None:
+        """Configure High-DPI attributes and instantiate QApplication if PySide6 is installed."""
+        try:
+            from PySide6.QtCore import Qt
+
+            # Enable High-DPI pixmaps
+            if hasattr(Qt.ApplicationAttribute, "AA_UseHighDpiPixmaps"):
+                QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
+
+            existing = QApplication.instance()
+            if existing is None:
+                self._qapp = QApplication(self.argv)
+            elif isinstance(existing, QApplication):
+                self._qapp = existing
+            else:
+                self._qapp = None
+
+            if self._qapp is not None:
+                self._qapp.setApplicationName("VeriTrace")
+                self._qapp.setOrganizationName("VeriTrace")
+
+                if self._theme_stylesheet:
+                    self._qapp.setStyleSheet(self._theme_stylesheet)
+                    logger.info("Applied forensic dark theme stylesheet to QApplication.")
+
+        except ImportError:
+            logger.warning("PySide6 not available in current environment; running headless.")
+            self._qapp = None
 
     def run(self) -> int:
-        """Start the Qt event loop and present workstation interface."""
-        logger.info("Initializing PySide6 application lifecycle...")
-        existing = QApplication.instance()
-        if isinstance(existing, QApplication):
-            self.qapp = existing
-        else:
-            self.qapp = QApplication(self.argv)
+        """Start the Qt event loop, or return 0 if headless."""
+        logger.info("Initializing VeriTrace desktop application runtime...")
+        if self._qapp is None:
+            self.configure_qt()
 
-        self.qapp.setApplicationName("VeriTrace")
-        self.qapp.setOrganizationName("VeriTrace")
+        if self._qapp is None:
+            return 0
 
-        # Apply dark theme stylesheet
-        stylesheet = ThemeManager.get_stylesheet()
-        if stylesheet:
-            self.qapp.setStyleSheet(stylesheet)
-
-        # Ensure services are present
+        # Ensure services are present for interactive workstation presentation
         inv_service = self._investigation_service
         corr_service = self._correlation_service
 
@@ -92,4 +131,4 @@ class VeriTraceApp:
             return 0
 
         logger.info("Entering Qt main event loop...")
-        return self.qapp.exec()
+        return int(self._qapp.exec())
