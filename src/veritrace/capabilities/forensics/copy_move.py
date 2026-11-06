@@ -68,8 +68,12 @@ class CopyMoveDetector:
             return None
 
         # Verify geometric consistency using RANSAC Homography
-        src_pts = np.array([kp1[m.queryIdx].pt for m in good_matches], dtype=np.float32).reshape(-1, 1, 2)
-        dst_pts = np.array([kp2[m.trainIdx].pt for m in good_matches], dtype=np.float32).reshape(-1, 1, 2)
+        src_pts = np.array([kp1[m.queryIdx].pt for m in good_matches], dtype=np.float32).reshape(
+            -1, 1, 2
+        )
+        dst_pts = np.array([kp2[m.trainIdx].pt for m in good_matches], dtype=np.float32).reshape(
+            -1, 1, 2
+        )
 
         try:
             _, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
@@ -124,8 +128,12 @@ class CopyMoveDetector:
         if len(good_matches) < self._min_inlier_matches:
             return []
 
-        src_pts = np.array([kp1[m.queryIdx].pt for m in good_matches], dtype=np.float32).reshape(-1, 1, 2)
-        dst_pts = np.array([kp2[m.trainIdx].pt for m in good_matches], dtype=np.float32).reshape(-1, 1, 2)
+        src_pts = np.array([kp1[m.queryIdx].pt for m in good_matches], dtype=np.float32).reshape(
+            -1, 1, 2
+        )
+        dst_pts = np.array([kp2[m.trainIdx].pt for m in good_matches], dtype=np.float32).reshape(
+            -1, 1, 2
+        )
 
         try:
             _, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)

@@ -14,6 +14,12 @@ from veritrace.capabilities.forensics.models import (
     ELAResult,
     ForensicProposal,
 )
+from veritrace.capabilities.forensics.signatures import (
+    SignatureDetector,
+    SignatureForensicsProtocol,
+    SignatureStrokeAnalyzer,
+    SignatureVerifier,
+)
 
 __all__ = [
     "BaselineAnomaly",
@@ -23,6 +29,10 @@ __all__ = [
     "EvidenceCropper",
     "FontBaselineAnalyzer",
     "ForensicProposal",
+    "SignatureDetector",
+    "SignatureForensicsProtocol",
+    "SignatureStrokeAnalyzer",
+    "SignatureVerifier",
     "VisualForensicsAnalyzer",
     "VisualForensicsProtocol",
     "CopyMoveDetector",
