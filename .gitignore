@@ -54,6 +54,7 @@ packaging/dist/
 *.tmp
 /logs/
 *.log
+/exports/
 
 # Investigation Artifacts (Protecting User PII & Confidential Scans)
 *.png

@@ -148,6 +148,8 @@ pie title Milestone 1 Progress
 * [x] Configure Inno Setup script compiling `VeriTrace-Setup.exe` with desktop shortcut and uninstaller (`packaging/installer/veritrace_setup.iss`).
 * [x] Implement desktop packaging and pre-flight automation script with `--check-only` and `--clean` modes (`scripts/packaging/build_desktop.py`).
 * [x] Author packaging configuration test suite validating spec syntax, directives, assets, and QSS styles (`tests/packaging/test_packaging_config.py`).
+* [x] Cyber-Forensic Workstation UI Overhaul: Deep Slate Cyberpunk Matrix QSS, 4-Tab interactive workspace, side-by-side pixel crops in Evidence Inspector dock, ELA compression differential canvas layer toggle, dedicated ✍️ Signature Forensics Workbench (Hu moments & ASTM E3079 scale), dedicated 🧮 Contextual Arithmetic & Chronology Audit workbench, and 1-click court-admissible PS-2 PDF/JSON dossier export.
+* [x] Auto-seeding on fresh launch: Instantly populates rich 4-document industrial alloy case with automated correlation findings so examiners never see a blank screen.
 * [ ] Validate clean installation on fresh Windows 10/11 x64 test environment.
 * [ ] Rehearse 12-item Judges' Live Demonstration Checklist in under 5 minutes.
 
@@ -163,4 +165,4 @@ pie title Milestone 1 Progress
 | **4. Inconsistencies Within & Across Documents** | `correlation/`, `domain/rules/` (Arithmetic, Chronology, Cross-Doc) | **VERIFIED & IMPLEMENTED (100%)** |
 | **5. Evidence Mapping with Source References** | `gui/components/` (`DocumentViewer`, `EvidenceInspector`, `FindingTable`) | **VERIFIED & IMPLEMENTED (100%)** |
 | **6. Structured Investigation Dossier** | `reporting/` (ReportLab 6-Section PDF & JSON Dossier Compiler) | **VERIFIED & IMPLEMENTED (100%)** |
-| **7. Review Interface for Findings** | `gui/views/main_window.py` (PySide6 4-Pane Workstation) | Architecture Ready (Milestone 0 & 5) |
+| **7. Review Interface for Findings** | `gui/views/main_window.py` (PySide6 4-Tab Cyber-Forensic Workstation) | **VERIFIED & IMPLEMENTED (100%)** |
