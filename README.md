@@ -5,7 +5,7 @@
 
 **Target Competition:** DataOps Innovation Hackathon – Problem Statement 2 (PS-2)
 **Product Form Factor:** Standalone Industrial Desktop Software (Windows 10/11 x64)
-**Development Status:** Industrial Architecture & Shared Contracts Baseline Approved (Milestones 1 & 2 Completed)
+**Development Status:** All 12 Industrial Milestones Completed (100% Core Scope, 331 Automated Tests Passing)
 
 ---
 
@@ -252,19 +252,55 @@ The distribution package will feature:
 
 ---
 
-## 9. Current Development Status & Phased Roadmap
+## 9. Current Development Status & Milestone Execution
 
-* **Phase 0 (Initialization, Architecture & Restructuring):** **COMPLETED**
-  * Source code migrated and verified from foundation repository.
-  * Standalone Windows desktop product direction formalized ([ADR-019](dev/12_DECISION_LOG.md#adr-019-standalone-desktop-product-direction-target-windows-1011-x64)).
-  * PySide6 native desktop architecture approved ([ADR-025](dev/12_DECISION_LOG.md#adr-025-native-pyside6-qt-desktop-application-framework)).
-  * FastAPI loopback eliminated in favor of direct in-process Python services ([ADR-026](dev/12_DECISION_LOG.md#adr-026-direct-in-process-python-application-services-fastapi-removal)).
-  * Unified Python `src`-layout and layered monolith architecture consolidated ([ADR-030](dev/12_DECISION_LOG.md#adr-030-unified-python-src-layout-and-layered-monolith-architecture)).
-  * Root build configurations established (`pyproject.toml`, `requirements.txt`, `alembic.ini`).
-  * 27 comprehensive technical architecture documents updated in [`dev/`](dev/).
-* **Milestone 0 (PySide6 Desktop Prototype):** **PLANNED (Next Step)**
-  * Technical feasibility gate: PySide6 application lifecycle, High-DPI support, QSS forensic dark stylesheet, 4-pane docking layout, and SQLite database connection in `%LOCALAPPDATA%`.
-* **Milestones 1 – 12:** Detailed in [23_DETAILED_DEVELOPMENT_PLAN.md](dev/23_DETAILED_DEVELOPMENT_PLAN.md).
+All **12 Industrial Milestones** are fully implemented, verified with **331 automated unit, integration, and architecture tests**, and committed to `main`:
+
+* **Milestone 1: Industrial Product Foundation:** Charter across 7 sectors, PS-2 analysis, green GitHub CI.
+* **Milestone 2: Shared Contracts & Domain:** 15 Core Entities, Enums, Value Objects, SQLite UnitOfWork, Alembic migrations.
+* **Milestone 3: Native Desktop Workstation GUI:** 4-pane docking layout (`MainWindow`), High-DPI `DocumentViewer` with sub-millimeter overlays, `EvidenceInspector` with ELA crops, and `InvestigationSidebar`.
+* **Milestone 4: Multilingual OCR Engine:** PyMuPDF 300 DPI rasterizer, Tesseract 5.x abstraction, Indic numeral and Unicode NFC normalization, quantitative multi-metric benchmark suite.
+* **Milestone 5: Table & Grid Extraction:** Borderless table grid reconstruction (`TableExtractor`) parsing POs, challans, and invoices into row/column coordinates.
+* **Milestone 6: Signature Detection & Localization:** Cursive handwriting isolation, line morphology filter ($\ge 60$ px), and circular rubber stamp filter ($>0.72$).
+* **Milestone 7: Signature Reference Verification:** Stroke morphology analyzer, 11D feature distance (inverse log Hu moments + topological metrics), 6-level epistemic scale, reference profile governance.
+* **Milestone 8: Visual Forensic Analysis Suite:** Error Level Analysis (ELA) compression differential heatmaps, font baseline regression ($>2.5\sigma$), ORB copy-move clone detection, localized visual evidence cropper.
+* **Milestone 9: Cross-Document Intelligence:** RapidFuzz entity reconciliation, multilingual accounting dictionary, and inter-document contradiction matrix.
+* **Milestone 10: Industrial Contextual Reasoning:** Intra-doc arithmetic rules, chronology verification, and deterministic offline narrative synthesizer with pluggable LLM provider.
+* **Milestone 11: PS-2 Investigation Dossier:** ReportLab 6-section PDF compiler with dynamic two-pass canvas (`Page X of Y`), embedded crops, examiner attestation, and structured JSON exporter.
+* **Milestone 12: Desktop Packaging & Hardening:** PyInstaller one-folder specification (`packaging/pyinstaller/veritrace.spec`), Inno Setup installer (`packaging/installer/veritrace_setup.iss`), dark theme QSS, and automated build script (`scripts/packaging/build_desktop.py`).
+
+---
+
+## 10. Developer & Evaluator Quick Start Guide
+
+### 1. Run Automated Test Suite
+```powershell
+python -m pytest
+```
+Executes all 331 tests across architecture, benchmarks, desktop GUI, persistence, forensics, and rules in ~30 seconds.
+
+### 2. Generate Curated Hackathon Demo Bundles
+```powershell
+python scripts/development/generate_demo_bundles.py
+```
+Compiles both official test packages into `samples/`:
+- `samples/CASE-2026-IND-01/`: Industrial procurement bundle (`PO_SteelTubes_AutoCorp.pdf`, `DeliveryChallan_SteelTubes_Tampered.pdf`, `MillTestCert_Grade_ForgedSig.pdf`).
+- `samples/CASE-2026-0891/`: Financial banking bundle (`National_ID_RajeshSharma.pdf`, `SalarySlip_Nov2023_Tampered.pdf`, `BankStatement_Nov2023_Conflicting.pdf`).
+
+### 3. Launch Native Desktop Workstation
+```powershell
+python scripts/development/run_desktop.py
+```
+Launches the PySide6 forensic desktop workstation styled with the custom forensic dark theme. Drop any generated sample bundle into the intake dropzone to start investigation.
+
+### 4. Build Standalone Desktop Installer
+```powershell
+# Pre-flight environment check
+python scripts/packaging/build_desktop.py --check-only
+
+# Build PyInstaller standalone bundle
+python scripts/packaging/build_desktop.py --skip-installer
+```
 
 ---
 
