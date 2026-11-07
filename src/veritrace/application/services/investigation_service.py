@@ -40,7 +40,10 @@ from veritrace.capabilities.forensics.signatures.verifier import SignatureVerifi
 from veritrace.capabilities.quality.analyzer import DocumentQualityAnalyzer
 from veritrace.capabilities.quality.models import DocumentQualityResult
 from veritrace.capabilities.reasoning.contextual_engine import ContextualReasoningEngine
-from veritrace.capabilities.reasoning.synthesizer import NarrativeSynthesizer
+from veritrace.capabilities.reasoning.synthesizer import (
+    LLMProviderProtocol,
+    NarrativeSynthesizer,
+)
 from veritrace.capabilities.reporting.dossier_compiler import DossierCompiler
 from veritrace.capabilities.reporting.models import InvestigationDossierPayload
 from veritrace.domain.entities.audit_event import AuditEvent
@@ -79,11 +82,95 @@ logger = logging.getLogger("veritrace.application.services.investigation_service
 class InvestigationService:
     """Coordinates lifecycle, retrieval, and updates for Investigation cases."""
 
-    def __init__(self, uow_factory: Callable[[], UnitOfWork] | UnitOfWork) -> None:
+    def __init__(
+        self,
+        uow_factory: Callable[[], UnitOfWork] | UnitOfWork,
+        llm_provider: LLMProviderProtocol | None = None,
+    ) -> None:
         if callable(uow_factory):
             self._uow_factory = uow_factory
         else:
             self._uow_factory = lambda: uow_factory
+        self._llm_provider = llm_provider
+
+    def get_llm_provider(self) -> LLMProviderProtocol | None:
+        """Return configured large language model provider or None."""
+        return self._llm_provider
+
+    def set_llm_provider(self, provider: LLMProviderProtocol | None) -> None:
+        """Update or configure active large language model provider."""
+        self._llm_provider = provider
+
+    def configure_ai_provider(
+        self,
+        privacy_mode: Any = "MODE_A_OFFLINE",
+        api_key: str | None = None,
+        model_name: str = "llama-3.3-70b-versatile",
+        persist_key: bool = True,
+    ) -> None:
+        """Configure AI reasoning provider, privacy boundaries, and DPAPI key persistence."""
+        from veritrace.domain.enums.investigation import PrivacyMode
+        from veritrace.infrastructure.ai.groq_client import GroqLLMProvider
+        from veritrace.infrastructure.security.dpapi_store import DpapiDataEncryptionKey
+
+        if isinstance(privacy_mode, str):
+            try:
+                mode_enum = PrivacyMode(privacy_mode)
+            except ValueError:
+                mode_enum = PrivacyMode.MODE_A_OFFLINE
+        else:
+            mode_enum = privacy_mode
+
+        key_mgr = DpapiDataEncryptionKey()
+
+        if mode_enum == PrivacyMode.MODE_A_OFFLINE:
+            # Mode A guarantees zero data egress; delete any persisted API key
+            key_mgr.delete_secret_string("groq_api_key")
+            resolved_key = None
+        else:
+            resolved_key = api_key or key_mgr.load_secret_string("groq_api_key")
+            if persist_key and resolved_key:
+                key_mgr.save_secret_string("groq_api_key", resolved_key)
+
+        provider = GroqLLMProvider(
+            api_key=resolved_key,
+            model_name=model_name,
+            privacy_mode=mode_enum,
+        )
+        self.set_llm_provider(provider)
+
+    def test_ai_connection(
+        self,
+        api_key: str | None = None,
+        model_name: str = "llama-3.3-70b-versatile",
+    ) -> tuple[bool, str]:
+        """Test Groq API connection and credential validity via minimal probe."""
+        from veritrace.domain.enums.investigation import PrivacyMode
+        from veritrace.infrastructure.ai.groq_client import GroqLLMProvider
+        from veritrace.infrastructure.security.dpapi_store import DpapiDataEncryptionKey
+
+        resolved_key = api_key or DpapiDataEncryptionKey().load_secret_string("groq_api_key")
+        if not resolved_key:
+            return False, "No API key provided. Please enter a valid Groq API key."
+
+        probe_provider = GroqLLMProvider(
+            api_key=resolved_key,
+            model_name=model_name,
+            privacy_mode=PrivacyMode.MODE_B_STATISTICAL,
+        )
+        return probe_provider.test_connection()
+
+    def get_persisted_ai_key(self) -> str | None:
+        """Retrieve DPAPI-sealed Groq API key if available."""
+        from veritrace.infrastructure.security.dpapi_store import DpapiDataEncryptionKey
+
+        return DpapiDataEncryptionKey().load_secret_string("groq_api_key")
+
+    def clear_persisted_ai_key(self) -> bool:
+        """Eradicate DPAPI-sealed Groq API key."""
+        from veritrace.infrastructure.security.dpapi_store import DpapiDataEncryptionKey
+
+        return DpapiDataEncryptionKey().delete_secret_string("groq_api_key")
 
     def _get_uow(self) -> UnitOfWork:
         return self._uow_factory()
@@ -651,7 +738,7 @@ class InvestigationService:
             reasoning_engine = ContextualReasoningEngine()
             evals, _ = reasoning_engine.evaluate_document(all_fields)
 
-            synthesizer = NarrativeSynthesizer()
+            synthesizer = NarrativeSynthesizer(llm_provider=self._llm_provider)
             executive_narrative = synthesizer.synthesize_executive_summary(findings)
 
             if output_dir:

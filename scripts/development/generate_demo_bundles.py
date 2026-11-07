@@ -103,17 +103,19 @@ def build_po_pdf(dest_path: Path) -> None:
     ]
     t = Table(data, colWidths=[0.8 * inch, 3.4 * inch, 0.8 * inch, 1.1 * inch, 1.4 * inch])
     t.setStyle(
-        TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, 0), 9),
-            ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
-            ("ALIGN", (2, 0), (-1, -1), "RIGHT"),
-            ("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#f8fafc")),
-            ("FONTNAME", (0, 2), (-1, -1), "Helvetica-Bold"),
-        ])
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 9),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("ALIGN", (2, 0), (-1, -1), "RIGHT"),
+                ("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#f8fafc")),
+                ("FONTNAME", (0, 2), (-1, -1), "Helvetica-Bold"),
+            ]
+        )
     )
     elements.append(t)
     elements.append(Spacer(1, 40))
@@ -178,15 +180,17 @@ def build_challan_pdf(dest_path: Path) -> None:
     ]
     t = Table(data, colWidths=[0.8 * inch, 3.2 * inch, 1.1 * inch, 1.1 * inch, 1.3 * inch])
     t.setStyle(
-        TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, 0), 9),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
-            ("ALIGN", (2, 0), (2, -1), "RIGHT"),
-            ("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#fff1f2")),
-        ])
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 9),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("ALIGN", (2, 0), (2, -1), "RIGHT"),
+                ("BACKGROUND", (0, 1), (-1, 1), colors.HexColor("#fff1f2")),
+            ]
+        )
     )
     elements.append(t)
     elements.append(Spacer(1, 40))
@@ -246,14 +250,16 @@ def build_test_cert_pdf(dest_path: Path) -> None:
     ]
     t = Table(data, colWidths=[1.4 * inch] + [0.85 * inch] * 7)
     t.setStyle(
-        TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, 0), 9),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
-            ("ALIGN", (1, 0), (-1, -1), "CENTER"),
-        ])
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 9),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("ALIGN", (1, 0), (-1, -1), "CENTER"),
+            ]
+        )
     )
     elements.append(t)
     elements.append(Spacer(1, 50))
@@ -362,17 +368,19 @@ def build_salary_slip_pdf(dest_path: Path) -> None:
     ]
     t = Table(data, colWidths=[2.2 * inch, 1.5 * inch, 2.2 * inch, 1.5 * inch])
     t.setStyle(
-        TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
-            ("ALIGN", (1, 0), (1, -1), "RIGHT"),
-            ("ALIGN", (3, 0), (3, -1), "RIGHT"),
-            ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#fee2e2")),
-            ("TEXTCOLOR", (0, -1), (-1, -1), colors.HexColor("#b91c1c")),
-            ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
-        ])
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+                ("ALIGN", (3, 0), (3, -1), "RIGHT"),
+                ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#fee2e2")),
+                ("TEXTCOLOR", (0, -1), (-1, -1), colors.HexColor("#b91c1c")),
+                ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
+            ]
+        )
     )
     elements.append(t)
     elements.append(Spacer(1, 30))
@@ -438,16 +446,18 @@ def build_bank_statement_pdf(dest_path: Path) -> None:
     col_w = [1.0 * inch, 2.7 * inch, 1.0 * inch, 1.0 * inch, 1.0 * inch, 1.0 * inch]
     t = Table(data, colWidths=col_w)
     t.setStyle(
-        TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, 0), 8.5),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
-            ("ALIGN", (3, 0), (-1, -1), "RIGHT"),
-            ("BACKGROUND", (0, 2), (-1, 2), colors.HexColor("#dbeafe")),
-            ("FONTNAME", (0, 2), (-1, 2), "Helvetica-Bold"),
-        ])
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#1e293b")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 8.5),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#cbd5e1")),
+                ("ALIGN", (3, 0), (-1, -1), "RIGHT"),
+                ("BACKGROUND", (0, 2), (-1, 2), colors.HexColor("#dbeafe")),
+                ("FONTNAME", (0, 2), (-1, 2), "Helvetica-Bold"),
+            ]
+        )
     )
     elements.append(t)
     elements.append(Spacer(1, 30))

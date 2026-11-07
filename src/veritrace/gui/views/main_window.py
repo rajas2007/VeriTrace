@@ -205,7 +205,13 @@ class MainWindow(QMainWindow):
         act_run_audit.triggered.connect(self._on_run_contextual_audit)
         forensics_menu.addAction(act_run_audit)
 
-        # 4. Demo Bundles Menu
+        # 4. Settings Menu
+        settings_menu = menubar.addMenu("&Settings")
+        act_ai_settings = QAction("🤖 AI Reasoning & &Privacy Mode...", self)
+        act_ai_settings.triggered.connect(self._on_ai_settings)
+        settings_menu.addAction(act_ai_settings)
+
+        # 5. Demo Bundles Menu
         demos_menu = menubar.addMenu("&Demo Cases")
 
         act_demo_ind = QAction("🏭 Load Case 1: Industrial Alloy Fraud (PO/DC/MTC/Invoice)", self)
@@ -1018,6 +1024,13 @@ class MainWindow(QMainWindow):
         self._status_bar.finish_progress(
             f"Contextual audit complete: {len(items)} rules evaluated."
         )
+
+    def _on_ai_settings(self) -> None:
+        """Open AI reasoning and privacy configuration dialog."""
+        from veritrace.gui.dialogs.ai_settings_dialog import AiSettingsDialog
+
+        dialog = AiSettingsDialog(self._investigation_service, self)
+        dialog.exec()
 
     def _on_about(self) -> None:
         """Show About dialog."""

@@ -25,6 +25,7 @@ from veritrace.domain.enums.forensic import (
 from veritrace.domain.enums.investigation import (
     InvestigationStatus,
     JobStatus,
+    PrivacyMode,
     ProcessingStatus,
     RiskClassification,
 )
@@ -42,6 +43,7 @@ __all__ = [
     "IndustrySector",
     "InvestigationStatus",
     "JobStatus",
+    "PrivacyMode",
     "ProcessingStatus",
     "QualityStatus",
     "RelationType",

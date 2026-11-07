@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import math
 from pathlib import Path
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 import cv2
 import numpy as np
@@ -13,6 +14,7 @@ import numpy as np
 from veritrace.capabilities.forensics.models import ForensicProposal
 from veritrace.capabilities.forensics.signatures.crop_quality import SignatureCropQualityAssessor
 from veritrace.capabilities.forensics.signatures.detector import SignatureDetector
+from veritrace.capabilities.forensics.signatures.onnx_engine import SiameseOnnxSignatureEngine
 from veritrace.capabilities.forensics.signatures.stroke_analyzer import SignatureStrokeAnalyzer
 from veritrace.domain.entities.signature_reference import SignatureReferenceProfile
 from veritrace.domain.enums.forensic import (
@@ -29,6 +31,8 @@ from veritrace.domain.value_objects.forensic import (
 )
 from veritrace.domain.value_objects.geometry import NormalizedBoundingBox
 from veritrace.domain.value_objects.identifiers import generate_id
+
+logger = logging.getLogger("veritrace.capabilities.forensics.signatures.verifier")
 
 
 @runtime_checkable
@@ -81,12 +85,14 @@ class SignatureVerifier:
         detector: SignatureDetector | None = None,
         stroke_analyzer: SignatureStrokeAnalyzer | None = None,
         quality_assessor: SignatureCropQualityAssessor | None = None,
+        onnx_engine: SiameseOnnxSignatureEngine | None = None,
         distance_threshold_match: float = 0.25,
         distance_threshold_anomaly: float = 0.55,
     ) -> None:
         self._detector = detector or SignatureDetector()
         self._stroke_analyzer = stroke_analyzer or SignatureStrokeAnalyzer()
         self._quality_assessor = quality_assessor or SignatureCropQualityAssessor()
+        self._onnx_engine = onnx_engine or SiameseOnnxSignatureEngine()
         self._distance_threshold_match = distance_threshold_match
         self._distance_threshold_anomaly = distance_threshold_anomaly
 
@@ -505,6 +511,21 @@ class SignatureVerifier:
         reference_profile_or_crop: SignatureReferenceProfile | np.ndarray | Path | bytes,
     ) -> tuple[float, float]:
         """Compute normalized metric embedding distance in [0.0, 1.0]."""
+        # If neural ONNX Siamese model is configured and available, use deep metric distance
+        if self._onnx_engine is not None and self._onnx_engine.is_available():
+            try:
+                ref_input: Any = reference_profile_or_crop
+                if isinstance(reference_profile_or_crop, SignatureReferenceProfile):
+                    ref_input = Path(reference_profile_or_crop.crop_image_path)
+                neural_dist = self._onnx_engine.compute_metric_distance(questioned_crop, ref_input)
+                orb_sim = self._match_orb(questioned_crop, ref_input)
+                return neural_dist, orb_sim
+            except Exception as exc:
+                logger.warning(
+                    "Neural ONNX verification failed (%s); falling back to classical heuristics.",
+                    exc,
+                )
+
         q_features = self._extract_feature_vector(questioned_crop)
 
         ref_features: np.ndarray

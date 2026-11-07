@@ -1,0 +1,36 @@
+# ==============================================================================
+# VeriTrace — Advanced Neural OCR & Layout Parsing Isolated Environment
+# ==============================================================================
+# CAUTION: Do NOT install these packages into the primary VeriTrace virtual
+# environment (.venv). PaddlePaddle 2.6.x and PaddleOCR require NumPy < 2.0 and
+# OpenCV 4.x, which conflict with VeriTrace's primary workstation stack (NumPy 2.4+).
+#
+# Install this file into a dedicated sidecar environment:
+#   python -m venv .venv-advanced-engines
+#   .venv-advanced-engines\Scripts\pip install -r scripts\environments\requirements-advanced-engines.txt
+# ==============================================================================
+
+# Core Numerical & Image Primitives (Pinned to avoid conflicting with primary .venv)
+numpy>=1.24.4,<2.0.0
+opencv-contrib-python>=4.8.0,<=4.10.0.84
+pillow>=10.2.0
+
+# Baidu PaddleOCR Stack (CPU-only build for Windows x64)
+# Model Licenses: Apache 2.0 (PP-OCRv4 detection, direction, and recognition)
+paddlepaddle==2.6.2; sys_platform == 'win32'
+paddleocr>=2.8.1
+
+# IBM Docling Document Parsing Stack (CPU inference)
+# Model Licenses: MIT License / HuggingFace open weights
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.2.0,<2.5.0+cpu
+torchvision>=0.17.0+cpu
+transformers>=4.40.0
+docling>=2.15.0
+docling-core>=2.8.0
+
+# Utility & Parsing Helpers
+shapely>=2.0.0
+pyclipper>=1.3.0
+pypdfium2>=4.20.0
+pydantic>=2.6.0

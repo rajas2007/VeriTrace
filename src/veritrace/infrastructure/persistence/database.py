@@ -23,7 +23,9 @@ def get_default_database_url() -> str:
     """Resolve the default SQLite database connection URL.
 
     Checks VERITRACE_DATABASE_URL environment variable first.
-    If not specified, places the database at %LOCALAPPDATA%/VeriTrace/database/veritrace.sqlite
+    If VERITRACE_ENCRYPTION_ENABLED is set and SQLCipher is available,
+    resolves DPAPI-encrypted SQLCipher connection URL.
+    Otherwise, places the database at %LOCALAPPDATA%/VeriTrace/database/veritrace.sqlite
     (outside the repository and isolated from cloud sync paths).
     """
     env_url = os.environ.get("VERITRACE_DATABASE_URL")
@@ -33,16 +35,28 @@ def get_default_database_url() -> str:
     data_dir = resolve_data_directory()
     db_dir = data_dir / "database"
     db_path = db_dir / "veritrace.sqlite"
+
+    if os.environ.get("VERITRACE_ENCRYPTION_ENABLED", "").lower() in ("1", "true", "yes"):
+        from veritrace.infrastructure.persistence.encrypted_database import EncryptedDatabaseManager
+
+        if EncryptedDatabaseManager.is_sqlcipher_available():
+            mgr = EncryptedDatabaseManager(prefer_encryption=True)
+            return mgr.get_connection_url(db_path)
+
     # Normalize forward slashes for SQLite URL compatibility on Windows
     return f"sqlite:///{db_path.as_posix()}"
 
 
 def _ensure_sqlite_directory(database_url: str) -> None:
     """Ensure parent directory exists for file-based SQLite database URLs."""
-    if database_url.startswith("sqlite:///") and not database_url.startswith("sqlite:///:memory:"):
+    if ":memory:" in database_url:
+        return
+    if "@/" in database_url:
+        raw_path = database_url.split("@/")[-1]
+        Path(raw_path).parent.mkdir(parents=True, exist_ok=True)
+    elif database_url.startswith("sqlite:///"):
         raw_path = database_url.replace("sqlite:///", "")
-        db_file = Path(raw_path)
-        db_file.parent.mkdir(parents=True, exist_ok=True)
+        Path(raw_path).parent.mkdir(parents=True, exist_ok=True)
 
 
 def _configure_sqlite_pragmas(dbapi_connection: Any, connection_record: Any) -> None:

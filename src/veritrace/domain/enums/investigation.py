@@ -44,3 +44,11 @@ class RiskClassification(StrEnum):
     LOW_RISK = "LOW_RISK"
     FLAGGED_INCONSISTENCY = "FLAGGED_INCONSISTENCY"
     SUSPECTED_MANIPULATION = "SUSPECTED_MANIPULATION"
+
+
+class PrivacyMode(StrEnum):
+    """Privacy tiers governing transmission of investigation data to external reasoning models."""
+
+    MODE_A_OFFLINE = "MODE_A_OFFLINE"
+    MODE_B_STATISTICAL = "MODE_B_STATISTICAL"
+    MODE_C_REDACTED = "MODE_C_REDACTED"
