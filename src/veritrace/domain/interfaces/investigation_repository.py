@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Protocol, runtime_checkable
 
 from veritrace.domain.entities.cross_document_relation import CrossDocumentRelation
+from veritrace.domain.entities.dossier import Dossier
 from veritrace.domain.entities.investigation import Investigation
 from veritrace.domain.value_objects.identifiers import InvestigationId, OrganizationId
 
@@ -79,4 +80,20 @@ class InvestigationRepository(Protocol):
         organization_id: OrganizationId,
     ) -> list[CrossDocumentRelation]:
         """List all CrossDocumentRelation entities belonging to an investigation."""
+        ...
+
+    def add_dossier(
+        self,
+        dossier: Dossier,
+        organization_id: OrganizationId,
+    ) -> None:
+        """Persist a compiled Dossier entity, verifying tenant ownership."""
+        ...
+
+    def list_dossiers(
+        self,
+        investigation_id: InvestigationId,
+        organization_id: OrganizationId,
+    ) -> list[Dossier]:
+        """List all compiled Dossier entities for an investigation."""
         ...

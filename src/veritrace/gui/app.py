@@ -22,6 +22,9 @@ from veritrace.application.services.document_ingestion_service import (
 from veritrace.application.services.investigation_service import (
     InvestigationService,
 )
+from veritrace.application.services.text_extraction_service import (
+    TextExtractionService,
+)
 from veritrace.gui.styles.theme_manager import load_stylesheet
 from veritrace.gui.views.main_window import MainWindow
 
@@ -37,6 +40,7 @@ class VeriTraceApp:
         investigation_service: InvestigationService | None = None,
         correlation_service: CrossDocumentCorrelationService | None = None,
         ingestion_service: DocumentIngestionService | None = None,
+        extraction_service: TextExtractionService | None = None,
         uow_factory: Any = None,
         organization_id: str = "org_11111111111111111111111111111111",
         headless: bool = False,
@@ -48,6 +52,7 @@ class VeriTraceApp:
         self._investigation_service = investigation_service
         self._correlation_service = correlation_service
         self._ingestion_service = ingestion_service
+        self._extraction_service = extraction_service
         self._uow_factory = uow_factory
         self._organization_id = organization_id
         self._headless = headless
@@ -118,6 +123,7 @@ class VeriTraceApp:
                 investigation_service=inv_service,
                 correlation_service=corr_service,
                 ingestion_service=self._ingestion_service,
+                extraction_service=self._extraction_service,
                 uow_factory=self._uow_factory,
                 organization_id=self._organization_id,
             )

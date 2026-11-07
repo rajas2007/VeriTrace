@@ -16,6 +16,15 @@ class CopyMoveDetector:
     """Detects duplicated or cloned image patches (such as forged signatures or stamps)
 
     across different pages or distinct documents using multi-scale ORB feature matching.
+
+    LIMITATION NOTICE (Recurring Templates & Corporate Logos):
+    In industrial multi-document investigations (e.g., matching Purchase Orders, Delivery
+    Challans, and Invoices), genuine documents from the same vendor naturally share identical
+    letterhead banners, supplier corporate logos, and standardized table borders. Because
+    feature matching flags visual inlier correspondences, identical legitimate template
+    elements will produce match records. Matches denote visual pattern correspondences
+    and MUST be treated as candidate observations for human adjudication, NOT definitive
+    proof of illicit tampering or unauthorized duplication.
     """
 
     def __init__(

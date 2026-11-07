@@ -6,6 +6,7 @@ Extract Digital Text -> Persist Results -> Record Audit Events.
 
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -28,6 +29,8 @@ from veritrace.application.services.text_extraction_service import (
     TextExtractionService,
 )
 from veritrace.domain.enums.document import DocumentType
+
+logger = logging.getLogger("veritrace.application.workflows.document_processing")
 
 
 @dataclass(slots=True)
@@ -90,6 +93,21 @@ class DocumentProcessingWorkflow:
             actor_id=actor_id,
         )
 
+        # 4. Classify document after extraction has completed
+        try:
+            if document_type == DocumentType.UNCLASSIFIED:
+                classified_type, _ = self._investigation_service.classify_document(
+                    document_id=doc.document_id,
+                    organization_id=organization_id,
+                )
+                doc = doc.model_copy(update={"document_type": classified_type})
+        except Exception as err:
+            logger.warning(
+                "Post-extraction classification failed for document '%s': %s",
+                doc.document_id,
+                err,
+            )
+
         return WorkflowExecutionResult(
             investigation=inv,
             document=doc,
@@ -130,6 +148,21 @@ class DocumentProcessingWorkflow:
             organization_id=organization_id,
             actor_id=actor_id,
         )
+
+        # 4. Classify document after extraction has completed
+        try:
+            if document_type == DocumentType.UNCLASSIFIED:
+                classified_type, _ = self._investigation_service.classify_document(
+                    document_id=doc.document_id,
+                    organization_id=organization_id,
+                )
+                doc = doc.model_copy(update={"document_type": classified_type})
+        except Exception as err:
+            logger.warning(
+                "Post-extraction classification failed for document '%s': %s",
+                doc.document_id,
+                err,
+            )
 
         return WorkflowExecutionResult(
             investigation=inv,

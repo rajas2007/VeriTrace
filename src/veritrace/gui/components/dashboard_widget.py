@@ -49,6 +49,8 @@ class DashboardBannerWidget(QWidget):
     """Investigation header banner displaying metrics and correlation trigger controls."""
 
     run_correlation_requested = Signal(bool)  # is_order_closed
+    run_forensics_requested = Signal()
+    generate_dossier_requested = Signal()
 
     def __init__(self, parent: Any = None) -> None:
         super().__init__(parent)
@@ -86,6 +88,22 @@ class DashboardBannerWidget(QWidget):
         self._btn_correlate.setStyleSheet("padding: 8px 18px; font-size: 13px;")
         self._btn_correlate.clicked.connect(self._on_correlate_clicked)
         action_bar.addWidget(self._btn_correlate)
+
+        self._btn_forensics = QPushButton("Scan Forensics", self)
+        self._btn_forensics.setStyleSheet("padding: 8px 16px; font-size: 13px; font-weight: 600;")
+        self._btn_forensics.setToolTip(
+            "Scan pages for visual forensics (signatures, morphology, pattern correspondences)"
+        )
+        self._btn_forensics.clicked.connect(self._on_forensics_clicked)
+        action_bar.addWidget(self._btn_forensics)
+
+        self._btn_dossier = QPushButton("Compile PS-2 Dossier", self)
+        self._btn_dossier.setStyleSheet("padding: 8px 16px; font-size: 13px; font-weight: 600;")
+        self._btn_dossier.setToolTip(
+            "Compile complete 6-section PS-2 Investigation Dossier (JSON & ReportLab PDF)"
+        )
+        self._btn_dossier.clicked.connect(self._on_dossier_clicked)
+        action_bar.addWidget(self._btn_dossier)
 
         main_layout.addLayout(action_bar)
 
@@ -129,6 +147,20 @@ class DashboardBannerWidget(QWidget):
         """Enable or disable correlation action button."""
         self._btn_correlate.setEnabled(enabled)
 
+    def set_forensics_enabled(self, enabled: bool) -> None:
+        """Enable or disable visual forensics action button."""
+        self._btn_forensics.setEnabled(enabled)
+
+    def set_dossier_enabled(self, enabled: bool) -> None:
+        """Enable or disable dossier compilation action button."""
+        self._btn_dossier.setEnabled(enabled)
+
     def _on_correlate_clicked(self) -> None:
         is_closed = self._chk_closed.isChecked()
         self.run_correlation_requested.emit(is_closed)
+
+    def _on_forensics_clicked(self) -> None:
+        self.run_forensics_requested.emit()
+
+    def _on_dossier_clicked(self) -> None:
+        self.generate_dossier_requested.emit()

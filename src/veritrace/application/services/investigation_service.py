@@ -2,7 +2,14 @@
 
 from __future__ import annotations
 
+import hashlib
+import logging
 from collections.abc import Callable
+from pathlib import Path
+from typing import Any
+
+import cv2
+import numpy as np
 
 from veritrace.application.dto.document import DocumentIngestionResultDTO
 from veritrace.application.dto.investigation import (
@@ -15,15 +22,47 @@ from veritrace.application.dto.investigation import (
     ReviewDecisionDTO,
     ReviewFindingRequestDTO,
 )
+from veritrace.capabilities.classification.classifier import DocumentClassifier
+from veritrace.capabilities.forensics.copy_move import CopyMoveDetector
+from veritrace.capabilities.forensics.cropper import EvidenceCropper
+from veritrace.capabilities.forensics.signatures.detector import SignatureDetector
+from veritrace.capabilities.forensics.signatures.stroke_analyzer import (
+    SignatureStrokeAnalyzer,
+)
+from veritrace.capabilities.forensics.signatures.verifier import SignatureVerifier
+from veritrace.capabilities.quality.analyzer import DocumentQualityAnalyzer
+from veritrace.capabilities.quality.models import DocumentQualityResult
+from veritrace.capabilities.reasoning.contextual_engine import ContextualReasoningEngine
+from veritrace.capabilities.reasoning.synthesizer import NarrativeSynthesizer
+from veritrace.capabilities.reporting.dossier_compiler import DossierCompiler
+from veritrace.capabilities.reporting.models import InvestigationDossierPayload
 from veritrace.domain.entities.audit_event import AuditEvent
 from veritrace.domain.entities.document_page import DocumentPage
+from veritrace.domain.entities.dossier import Dossier
+from veritrace.domain.entities.evidence import Evidence
+from veritrace.domain.entities.finding import Finding
 from veritrace.domain.entities.investigation import Investigation
 from veritrace.domain.entities.review_decision import ReviewDecision
+from veritrace.domain.entities.signature_reference import SignatureReferenceProfile
 from veritrace.domain.enums.audit import ActorType, AuditEventType
-from veritrace.domain.enums.forensic import ReviewDecisionType
+from veritrace.domain.enums.document import DocumentStatus, DocumentType
+from veritrace.domain.enums.forensic import (
+    EpistemicTier,
+    FindingCategory,
+    FindingSeverity,
+    ReviewDecisionType,
+    ReviewStatus,
+)
 from veritrace.domain.enums.investigation import InvestigationStatus
 from veritrace.domain.exceptions.base import EntityNotFoundError
 from veritrace.domain.interfaces.unit_of_work import UnitOfWork
+from veritrace.domain.value_objects.geometry import NormalizedBoundingBox
+from veritrace.domain.value_objects.identifiers import FND_PREFIX, generate_id
+from veritrace.infrastructure.persistence.models.signature_reference import (
+    SignatureReferenceProfileModel,
+)
+
+logger = logging.getLogger("veritrace.application.services.investigation_service")
 
 
 class InvestigationService:
@@ -448,3 +487,725 @@ class InvestigationService:
         """List pages of a document."""
         with self._get_uow() as uow:
             return uow.documents.list_pages(document_id, organization_id)
+
+    def assess_document_quality(
+        self,
+        investigation_id: str,
+        organization_id: str,
+    ) -> list[DocumentQualityResult]:
+        """Run multi-factor quality inspection across all documents in an investigation."""
+        with self._get_uow() as uow:
+            docs = uow.documents.list_by_investigation(investigation_id, organization_id)
+            analyzer = DocumentQualityAnalyzer()
+            results: list[DocumentQualityResult] = []
+            for d in docs:
+                if d.storage_path and Path(d.storage_path).exists():
+                    res = analyzer.analyze_document(file_path=d.storage_path, document_id=d.id)
+                    results.append(res)
+            return results
+
+    def classify_document(
+        self,
+        document_id: str,
+        organization_id: str,
+    ) -> tuple[DocumentType, float]:
+        """Classify a single document after extraction has completed.
+
+        Requires the document to be in DocumentStatus.PROCESSED status.
+        Preserves UNCLASSIFIED when extraction is incomplete or content is insufficient.
+        Preserves human-validated or pre-set classifications.
+        """
+        with self._get_uow() as uow:
+            doc = uow.documents.get_by_id(document_id, organization_id)
+            if doc is None:
+                raise EntityNotFoundError(
+                    f"Document '{document_id}' not found in organization '{organization_id}'"
+                )
+
+            # 1. Do not overwrite an already validated human or pre-set classification
+            if doc.document_type != DocumentType.UNCLASSIFIED:
+                logger.info(
+                    "Document '%s' already classified as '%s'; preserving existing classification.",
+                    document_id,
+                    doc.document_type,
+                )
+                return doc.document_type, doc.classification_confidence or 1.0
+
+            # 2. Precondition: Document must be in successfully PROCESSED status
+            if doc.status != DocumentStatus.PROCESSED:
+                logger.warning(
+                    "Classification deferred: Document '%s' is in status '%s' (expected '%s'). "
+                    "Extraction must complete successfully before classification.",
+                    document_id,
+                    doc.status,
+                    DocumentStatus.PROCESSED,
+                )
+                return DocumentType.UNCLASSIFIED, 0.0
+
+            # 3. Retrieve extracted fields and text
+            fields = uow.documents.list_extracted_fields_by_document(document_id, organization_id)
+            raw_text_parts = [f.raw_text for f in fields if f.raw_text]
+            combined_text = "\n".join(raw_text_parts) if raw_text_parts else None
+
+            # 4. If no text or fields exist, preserve UNCLASSIFIED
+            if not combined_text and not fields:
+                logger.info(
+                    "Document '%s' has no extracted text or fields; remaining UNCLASSIFIED.",
+                    document_id,
+                )
+                return DocumentType.UNCLASSIFIED, 0.0
+
+            classifier = DocumentClassifier()
+            dtype, conf = classifier.classify(
+                text=combined_text,
+                filename=doc.original_filename,
+                extracted_fields=fields,
+            )
+
+            if dtype != DocumentType.UNCLASSIFIED:
+                doc.document_type = dtype
+                doc.classification_confidence = conf
+                uow.documents.update(doc, organization_id)
+                uow.commit()
+
+            return doc.document_type, conf
+
+    def classify_documents(
+        self,
+        investigation_id: str,
+        organization_id: str,
+    ) -> dict[str, DocumentType]:
+        """Automatically classify unclassified, processed documents in an investigation."""
+        with self._get_uow() as uow:
+            docs = uow.documents.list_by_investigation(investigation_id, organization_id)
+            classifier = DocumentClassifier()
+            classification_map: dict[str, DocumentType] = {}
+            for d in docs:
+                # 1. Preserve existing classifications
+                if d.document_type != DocumentType.UNCLASSIFIED:
+                    classification_map[d.id] = d.document_type
+                    continue
+
+                # 2. Precondition: Must be in PROCESSED status
+                if d.status != DocumentStatus.PROCESSED:
+                    classification_map[d.id] = d.document_type
+                    continue
+
+                fields = uow.documents.list_extracted_fields_by_document(d.id, organization_id)
+                raw_text_parts = [f.raw_text for f in fields if f.raw_text]
+                combined_text = "\n".join(raw_text_parts) if raw_text_parts else None
+
+                if not combined_text and not fields:
+                    classification_map[d.id] = d.document_type
+                    continue
+
+                dtype, conf = classifier.classify(
+                    text=combined_text,
+                    filename=d.original_filename,
+                    extracted_fields=fields,
+                )
+                if dtype != DocumentType.UNCLASSIFIED:
+                    d.document_type = dtype
+                    d.classification_confidence = conf
+                    uow.documents.update(d, organization_id)
+                classification_map[d.id] = d.document_type
+            uow.commit()
+            return classification_map
+
+    def compile_investigation_dossier(
+        self,
+        investigation_id: str,
+        organization_id: str,
+        output_dir: Path | str | None = None,
+    ) -> tuple[Dossier, InvestigationDossierPayload, Path, Path]:
+        """Compile complete PS-2 Investigation Dossier (JSON and ReportLab PDF) and record audit."""
+        with self._get_uow() as uow:
+            inv = uow.investigations.get_by_id(investigation_id, organization_id)
+            if inv is None:
+                msg = (
+                    f"Investigation '{investigation_id}' not found in "
+                    f"organization '{organization_id}'"
+                )
+                raise EntityNotFoundError(msg)
+
+            documents = uow.documents.list_by_investigation(investigation_id, organization_id)
+            all_fields = []
+            for d in documents:
+                fields = uow.documents.list_extracted_fields_by_document(d.id, organization_id)
+                all_fields.extend(fields)
+
+            findings = uow.findings.list_by_investigation(investigation_id, organization_id)
+            evidence_records = uow.evidence.list_by_investigation(investigation_id, organization_id)
+
+            reasoning_engine = ContextualReasoningEngine()
+            evals, _ = reasoning_engine.evaluate_document(all_fields)
+
+            synthesizer = NarrativeSynthesizer()
+            executive_narrative = synthesizer.synthesize_executive_summary(findings)
+
+            if output_dir:
+                target_dir = Path(output_dir)
+            else:
+                target_dir = Path("artifacts/dossiers") / str(investigation_id)
+            target_dir.mkdir(parents=True, exist_ok=True)
+
+            compiler = DossierCompiler()
+            dossier_entity, payload, pdf_path, json_path = compiler.compile_dossier(
+                investigation=inv,
+                documents=documents,
+                fields=all_fields,
+                rule_evaluations=evals,
+                findings_or_proposals=findings,
+                evidence_records=evidence_records,
+                executive_narrative=executive_narrative,
+                output_dir=target_dir,
+            )
+
+            uow.investigations.add_dossier(dossier_entity, organization_id)
+
+            audit = AuditEvent.create(
+                investigation_id=investigation_id,
+                event_type=AuditEventType.DOSSIER_COMPILED,
+                actor_type=ActorType.SYSTEM_PIPELINE,
+                actor_id="dossier_compiler",
+                event_payload={
+                    "dossier_id": dossier_entity.id,
+                    "pdf_path": str(pdf_path),
+                    "json_path": str(json_path),
+                    "pdf_sha256": dossier_entity.pdf_hash_sha256,
+                    "findings_included": len(findings),
+                    "documents_included": len(documents),
+                },
+            )
+            uow.audit_events.add(audit, organization_id)
+            uow.commit()
+
+            return dossier_entity, payload, pdf_path, json_path
+
+    def list_dossiers(
+        self,
+        investigation_id: str,
+        organization_id: str,
+    ) -> list[Dossier]:
+        """List all compiled dossier records for an investigation."""
+        with self._get_uow() as uow:
+            return uow.investigations.list_dossiers(investigation_id, organization_id)
+
+    @staticmethod
+    def _compute_forensic_fingerprint(
+        category: FindingCategory,
+        analysis_type: str,
+        scope_key: str,
+        coord_key: str = "",
+    ) -> str:
+        """Calculate deterministic fingerprint for a forensic finding."""
+        raw = f"{category.value}|{analysis_type}|{scope_key}|{coord_key}"
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:16]
+
+    def run_forensic_analysis(
+        self,
+        investigation_id: str,
+        organization_id: str,
+        reference_profiles: list[SignatureReferenceProfile] | None = None,
+        crops_dir: Path | str | None = None,
+    ) -> list[FindingResponseDTO]:
+        """Execute visual forensic analysis (signatures, stroke morphology, copy-move detection)
+
+        across all document pages in an investigation.
+
+        Adheres strictly to the Six-Level Epistemic Assessment Scale:
+        - Safe, deterministic idempotency: Repeated analysis reuses existing findings and crops.
+        - Preserves human review decisions (ReviewStatus, ReviewDecision records, audit history).
+        - Keeps forensic observations separate from confirmed fraud conclusions.
+        - Records candidates under ReviewStatus.PENDING_REVIEW for human adjudication.
+        - Clearly indicates when image quality prevents reliable optical stroke analysis.
+        - Persists visual evidence crops and ANOMALY_FLAGGED audit events without duplication.
+        """
+        newly_created_files: list[Path] = []
+        try:
+            with self._get_uow() as uow:
+                inv = uow.investigations.get_by_id(investigation_id, organization_id)
+                if inv is None:
+                    raise EntityNotFoundError(
+                        f"Investigation '{investigation_id}' "
+                        f"not found in organization '{organization_id}'"
+                    )
+
+                docs = uow.documents.list_by_investigation(investigation_id, organization_id)
+                cropper = EvidenceCropper(padding_px=15)
+                sig_detector = SignatureDetector()
+                stroke_analyzer = SignatureStrokeAnalyzer()
+                sig_verifier = SignatureVerifier(
+                    detector=sig_detector, stroke_analyzer=stroke_analyzer
+                )
+                copy_move_detector = CopyMoveDetector(min_inlier_matches=10)
+
+                base_crops_dir = (
+                    Path(crops_dir)
+                    if crops_dir
+                    else Path("artifacts/crops") / str(investigation_id)
+                )
+                base_crops_dir.mkdir(parents=True, exist_ok=True)
+
+                existing_findings = uow.findings.list_by_investigation(
+                    investigation_id, organization_id
+                )
+                existing_evidence = uow.evidence.list_by_investigation(
+                    investigation_id, organization_id
+                )
+
+                # Index existing evidence by crop path and page+coord key
+                existing_evidence_by_crop_path: dict[str, Evidence] = {}
+                existing_evidence_by_coord: dict[tuple[str, int, int, int, int], Evidence] = {}
+                for ev in existing_evidence:
+                    try:
+                        resolved_crop = str(Path(ev.crop_image_path).resolve())
+                        existing_evidence_by_crop_path[resolved_crop] = ev
+                    except Exception:
+                        pass
+                    coord_key = (
+                        str(ev.page_id),
+                        int(round(ev.norm_ymin * 100)),
+                        int(round(ev.norm_xmin * 100)),
+                        int(round(ev.norm_ymax * 100)),
+                        int(round(ev.norm_xmax * 100)),
+                    )
+                    existing_evidence_by_coord[coord_key] = ev
+
+                # Index existing findings by fingerprint and category+title
+                existing_findings_by_fp: dict[str, Finding] = {}
+                existing_findings_by_title: dict[tuple[FindingCategory, str], Finding] = {}
+                for f in existing_findings:
+                    if f.investigator_guidance and "[fp:" in f.investigator_guidance:
+                        try:
+                            start = f.investigator_guidance.index("[fp:") + 4
+                            end = f.investigator_guidance.index("]", start)
+                            fp_str = f.investigator_guidance[start:end]
+                            existing_findings_by_fp[fp_str] = f
+                        except Exception:
+                            pass
+                    existing_findings_by_title[(f.category, f.title)] = f
+
+                newly_created_findings: list[Finding] = []
+                newly_created_evidence: list[Evidence] = []
+                active_findings: list[Finding] = []
+                seen_finding_ids: set[str] = set()
+
+                def get_or_create_evidence(
+                    page_id: str,
+                    img_bgr: np.ndarray,
+                    bbox: NormalizedBoundingBox,
+                    target_crop_path: Path,
+                    grounding: str,
+                ) -> Evidence:
+                    resolved_target = str(target_crop_path.resolve())
+                    c_key = (
+                        str(page_id),
+                        int(round(bbox.ymin * 100)),
+                        int(round(bbox.xmin * 100)),
+                        int(round(bbox.ymax * 100)),
+                        int(round(bbox.xmax * 100)),
+                    )
+                    matched_ev = existing_evidence_by_crop_path.get(
+                        resolved_target
+                    ) or existing_evidence_by_coord.get(c_key)
+                    if matched_ev and Path(matched_ev.crop_image_path).is_file():
+                        return matched_ev
+
+                    for ev in newly_created_evidence:
+                        if ev.page_id == page_id:
+                            ev_c_key = (
+                                str(ev.page_id),
+                                int(round(ev.norm_ymin * 100)),
+                                int(round(ev.norm_xmin * 100)),
+                                int(round(ev.norm_ymax * 100)),
+                                int(round(ev.norm_xmax * 100)),
+                            )
+                            if ev_c_key == c_key and Path(ev.crop_image_path).is_file():
+                                return ev
+
+                    new_ev = cropper.create_evidence_entity(
+                        page_id=page_id,
+                        image_or_path=img_bgr,
+                        bbox=bbox,
+                        output_crop_path=target_crop_path,
+                        grounding_explanation=grounding,
+                    )
+                    newly_created_files.append(target_crop_path)
+                    newly_created_evidence.append(new_ev)
+                    existing_evidence_by_crop_path[resolved_target] = new_ev
+                    existing_evidence_by_coord[c_key] = new_ev
+                    return new_ev
+
+                def register_or_reuse_finding(
+                    category: FindingCategory,
+                    analysis_type: str,
+                    scope_key: str,
+                    coord_key: str,
+                    epistemic_tier: EpistemicTier,
+                    severity: FindingSeverity,
+                    title: str,
+                    narrative: str,
+                    confidence: float,
+                    evidence_items: list[Evidence],
+                    investigator_guidance: str | None = None,
+                    signature_ref_id: str | None = None,
+                ) -> Finding:
+                    fp = self._compute_forensic_fingerprint(
+                        category, analysis_type, scope_key, coord_key
+                    )
+                    matched = existing_findings_by_fp.get(fp) or existing_findings_by_title.get(
+                        (category, title)
+                    )
+
+                    if matched:
+                        if matched.id in seen_finding_ids:
+                            return matched
+                        seen_finding_ids.add(matched.id)
+
+                        # Strict Human Review Preservation:
+                        # Never alter review_status, decisions, or human-edited fields
+                        if matched.review_status != ReviewStatus.PENDING_REVIEW:
+                            logger.info(
+                                "Preserving human-reviewed finding '%s' (status: %s)",
+                                matched.id,
+                                matched.review_status,
+                            )
+                        else:
+                            matched.confidence = confidence
+
+                        # Maintain evidence associations
+                        ev_updated = False
+                        for ev in evidence_items:
+                            if ev.id not in matched.evidence_ids:
+                                matched.link_evidence(ev.id)
+                                ev_updated = True
+                        if ev_updated:
+                            uow.findings.update(matched, organization_id)
+
+                        active_findings.append(matched)
+                        return matched
+
+                    # Genuinely new finding
+                    guidance_with_fp = f"[fp:{fp}] {investigator_guidance or ''}".strip()
+                    new_fnd = Finding.create(
+                        finding_id=generate_id(FND_PREFIX),
+                        investigation_id=investigation_id,
+                        category=category,
+                        epistemic_tier=epistemic_tier,
+                        severity=severity,
+                        title=title,
+                        narrative_explanation=narrative,
+                        confidence=confidence,
+                        investigator_guidance=guidance_with_fp,
+                        review_status=ReviewStatus.PENDING_REVIEW,
+                        signature_reference_id=signature_ref_id,
+                    )
+                    for ev in evidence_items:
+                        new_fnd.link_evidence(ev.id)
+
+                    newly_created_findings.append(new_fnd)
+                    active_findings.append(new_fnd)
+                    seen_finding_ids.add(new_fnd.id)
+                    existing_findings_by_fp[fp] = new_fnd
+                    existing_findings_by_title[(category, title)] = new_fnd
+                    return new_fnd
+
+                page_data: list[tuple[Any, Any, np.ndarray]] = []
+
+                for doc in docs:
+                    pages = uow.documents.list_pages(doc.id, organization_id)
+                    for page in pages:
+                        if not page.image_storage_path:
+                            continue
+                        p_path = Path(page.image_storage_path)
+                        if not p_path.is_file():
+                            continue
+                        img_bgr = cv2.imread(str(p_path))
+                        if img_bgr is None:
+                            continue
+
+                        img_h, img_w = img_bgr.shape[:2]
+
+                        # Quality Verification Gate: Check for minimum operational resolution
+                        if img_h < 150 or img_w < 150:
+                            register_or_reuse_finding(
+                                category=FindingCategory.SIGNATURE_VERIFICATION,
+                                analysis_type="LOW_RES_PAGE",
+                                scope_key=str(page.id),
+                                coord_key=f"{img_w}x{img_h}",
+                                epistemic_tier=EpistemicTier.CONFIRMED_OBSERVATION,
+                                severity=FindingSeverity.LOW,
+                                title=(
+                                    f"Forensic Quality Limitation: Low Resolution "
+                                    f"({doc.original_filename}, Page {page.page_number})"
+                                ),
+                                narrative=(
+                                    f"Page image resolution ({img_w}x{img_h}px) is below "
+                                    "threshold for reliable optical stroke and feature extraction. "
+                                    "Epistemic rating: INSUFFICIENT_EVIDENCE."
+                                ),
+                                confidence=1.0,
+                                evidence_items=[],
+                            )
+                            continue
+
+                        page_data.append((doc, page, img_bgr))
+
+                        # 1. Signature Candidate Detection & Stroke Analysis
+                        candidates = sig_detector.detect_candidate_regions(img_bgr)
+                        for c_idx, bbox in enumerate(candidates):
+                            crop_path = (
+                                base_crops_dir / f"{doc.id}_p{page.page_number}_sig_{c_idx}.png"
+                            )
+                            try:
+                                ev = get_or_create_evidence(
+                                    page_id=page.id,
+                                    img_bgr=img_bgr,
+                                    bbox=bbox,
+                                    target_crop_path=crop_path,
+                                    grounding=(
+                                        f"Signature candidate on {doc.original_filename} "
+                                        f"(page {page.page_number})"
+                                    ),
+                                )
+                            except Exception as crop_err:
+                                logger.warning(
+                                    "Evidence cropping failed for signature: %s", crop_err
+                                )
+                                continue
+
+                        # Analyze stroke morphology
+                        try:
+                            meas, est = stroke_analyzer.analyze_crop(Path(ev.crop_image_path), bbox)
+                        except Exception:
+                            continue
+
+                        # Compare against reference profiles if provided
+                        evaluated_ref = False
+                        if reference_profiles:
+                            for ref in reference_profiles:
+                                if ref.organization_id != organization_id:
+                                    continue
+                                analysis_res = sig_verifier.verify_against_reference(
+                                    questioned_crop=Path(ev.crop_image_path),
+                                    reference_profile_or_crop=ref,
+                                    document_id=doc.id,
+                                    page_number=page.page_number,
+                                    normalized_bbox=bbox,
+                                )
+                                evaluated_ref = True
+                                dist = analysis_res.estimate.metric_embedding_distance
+                                if dist is not None and dist > 0.35:
+                                    persisted_ref_id: str | None = None
+                                    session = getattr(uow, "_session", None)
+                                    if session is not None and session.get(
+                                        SignatureReferenceProfileModel, ref.id
+                                    ):
+                                        persisted_ref_id = ref.id
+
+                                    ymin_int = int(round(bbox.ymin * 100))
+                                    xmin_int = int(round(bbox.xmin * 100))
+                                    coord_str = f"{ymin_int}_{xmin_int}"
+                                    register_or_reuse_finding(
+                                        category=FindingCategory.SIGNATURE_VERIFICATION,
+                                        analysis_type="STROKE_DIVERGENCE",
+                                        scope_key=f"{page.id}:{ref.id}",
+                                        coord_key=coord_str,
+                                        epistemic_tier=EpistemicTier.DETECTED_INCONSISTENCY,
+                                        severity=(
+                                            FindingSeverity.HIGH
+                                            if dist > 0.55
+                                            else FindingSeverity.MEDIUM
+                                        ),
+                                        title=(
+                                            f"Signature Stroke Divergence against Reference "
+                                            f"({getattr(ref, 'signatory_name', None) or ref.id})"
+                                        ),
+                                        narrative=(
+                                            f"Optical stroke distance ({dist:.3f}) exceeds "
+                                            f"threshold against enrolled profile '{ref.id}'. "
+                                            f"Width: {meas.apparent_stroke_width_mean_px:.1f}px. "
+                                            "Status remains unconfirmed pending adjudication."
+                                        ),
+                                        confidence=min(
+                                            1.0, max(0.4, 1.0 - analysis_res.uncertainty_score)
+                                        ),
+                                        evidence_items=[ev],
+                                        signature_ref_id=persisted_ref_id,
+                                    )
+                                    break
+
+                        # If no reference matched or provided, inspect perimeter discontinuity
+                        if not evaluated_ref and meas.boundary_mask_discontinuity > 0.30:
+                            coord_str = (
+                                f"{int(round(bbox.ymin * 100))}_{int(round(bbox.xmin * 100))}"
+                            )
+                            register_or_reuse_finding(
+                                category=FindingCategory.SIGNATURE_VERIFICATION,
+                                analysis_type="BOUNDARY_DISCONTINUITY",
+                                scope_key=str(page.id),
+                                coord_key=coord_str,
+                                epistemic_tier=EpistemicTier.DETECTED_INCONSISTENCY,
+                                severity=FindingSeverity.MEDIUM,
+                                title=f"Signature Boundary Discontinuity (Page {page.page_number})",
+                                narrative=(
+                                    f"Mask discontinuity ({meas.boundary_mask_discontinuity:.2f}) "
+                                    f"detected on {doc.original_filename}. "
+                                    "Suggests potential clipping artifact. Status: PENDING_REVIEW."
+                                ),
+                                confidence=0.75,
+                                evidence_items=[ev],
+                            )
+
+                # 2. Cross-Page Copy-Move Detection
+                for i in range(len(page_data)):
+                    for j in range(i + 1, len(page_data)):
+                        doc_a, page_a, img_a = page_data[i]
+                        doc_b, page_b, img_b = page_data[j]
+
+                        matches = copy_move_detector.compare_pages(
+                            img_a, img_b, page_a.page_number, page_b.page_number
+                        )
+                        for m_idx, match in enumerate(matches):
+                            if match.inlier_match_count >= 10:
+                                src_crop_path = (
+                                    base_crops_dir / f"cm_src_{page_a.id}_{page_b.id}_{m_idx}.png"
+                                )
+                                tgt_crop_path = (
+                                    base_crops_dir / f"cm_tgt_{page_a.id}_{page_b.id}_{m_idx}.png"
+                                )
+
+                                try:
+                                    ev_a = get_or_create_evidence(
+                                        page_id=page_a.id,
+                                        img_bgr=img_a,
+                                        bbox=match.source_bbox,
+                                        target_crop_path=src_crop_path,
+                                        grounding=(
+                                            f"Match on {doc_a.original_filename} "
+                                            f"(p. {page_a.page_number})"
+                                        ),
+                                    )
+                                    ev_b = get_or_create_evidence(
+                                        page_id=page_b.id,
+                                        img_bgr=img_b,
+                                        bbox=match.target_bbox,
+                                        target_crop_path=tgt_crop_path,
+                                        grounding=(
+                                            f"Match on {doc_b.original_filename} "
+                                            f"(p. {page_b.page_number})"
+                                        ),
+                                    )
+
+                                    sorted_pages = sorted([page_a.id, page_b.id])
+                                    s_ymin = int(round(match.source_bbox.ymin * 100))
+                                    s_xmin = int(round(match.source_bbox.xmin * 100))
+                                    t_ymin = int(round(match.target_bbox.ymin * 100))
+                                    t_xmin = int(round(match.target_bbox.xmin * 100))
+                                    coord_str = f"{s_ymin}_{s_xmin}:{t_ymin}_{t_xmin}"
+                                    register_or_reuse_finding(
+                                        category=FindingCategory.COPY_MOVE_CLONE,
+                                        analysis_type="COPY_MOVE_CORRESPONDENCE",
+                                        scope_key=f"{sorted_pages[0]}:{sorted_pages[1]}",
+                                        coord_key=coord_str,
+                                        epistemic_tier=EpistemicTier.DETECTED_INCONSISTENCY,
+                                        severity=FindingSeverity.HIGH,
+                                        title=(
+                                            "Visual Pattern Correspondence: "
+                                            f"{doc_a.original_filename} vs "
+                                            f"{doc_b.original_filename}"
+                                        ),
+                                        narrative=(
+                                            f"ORB identified {match.inlier_match_count} visual "
+                                            f"correspondences between p.{page_a.page_number} "
+                                            f"of '{doc_a.original_filename}' and "
+                                            f"p.{page_b.page_number} of "
+                                            f"'{doc_b.original_filename}' "
+                                            f"(similarity: {match.similarity_score:.2f}). "
+                                            "Notice: Standard vendor logos, headers, or forms "
+                                            "naturally produce high keypoint correspondence "
+                                            "across valid documents. This finding denotes an "
+                                            "optical observation for human verification and "
+                                            "does NOT constitute proof of document tampering."
+                                        ),
+                                        confidence=match.similarity_score,
+                                        evidence_items=[ev_a, ev_b],
+                                        investigator_guidance=(
+                                            "Verify whether the matched visual region "
+                                            "corresponds to a legitimate shared template "
+                                            "(e.g. corporate logo or table grid) rather "
+                                            "than an unauthorized duplicate patch."
+                                        ),
+                                    )
+                                except Exception as cm_err:
+                                    logger.warning(
+                                        "Copy-move evidence generation failed: %s", cm_err
+                                    )
+
+                # 3. Persist Generated Evidence and Findings
+                for ev in newly_created_evidence:
+                    uow.evidence.add(ev, organization_id)
+
+                for fnd in newly_created_findings:
+                    uow.findings.add(fnd, organization_id)
+
+                if newly_created_findings or newly_created_evidence:
+                    audit = AuditEvent.create(
+                        investigation_id=investigation_id,
+                        event_type=AuditEventType.ANOMALY_FLAGGED,
+                        actor_type=ActorType.SYSTEM_PIPELINE,
+                        actor_id="forensic_engine",
+                        event_payload={
+                            "new_findings_count": len(newly_created_findings),
+                            "new_evidence_count": len(newly_created_evidence),
+                            "reused_findings_count": len(active_findings)
+                            - len(newly_created_findings),
+                        },
+                    )
+                    uow.audit_events.add(audit, organization_id)
+
+                uow.commit()
+
+                # Map all active findings in scope to DTOs with populated review decisions
+                dto_results: list[FindingResponseDTO] = []
+                for f in active_findings:
+                    decisions = uow.findings.list_review_decisions(f.id, organization_id)
+                    dto_results.append(
+                        FindingResponseDTO(
+                            id=f.id,
+                            investigation_id=f.investigation_id,
+                            category=f.category,
+                            epistemic_tier=f.epistemic_tier,
+                            severity=f.severity,
+                            title=f.title,
+                            narrative_explanation=f.narrative_explanation,
+                            confidence=f.confidence,
+                            investigator_guidance=f.investigator_guidance,
+                            review_status=f.review_status,
+                            evidence_ids=sorted(list(f.evidence_ids)),
+                            signature_reference_id=f.signature_reference_id,
+                            created_at=f.created_at,
+                            review_decisions=[
+                                ReviewDecisionDTO(
+                                    id=d.id,
+                                    finding_id=d.finding_id,
+                                    reviewer_id=d.reviewer_id,
+                                    decision=d.decision,
+                                    rationale=d.rationale,
+                                    timestamp=d.timestamp,
+                                )
+                                for d in decisions
+                            ],
+                        )
+                    )
+                return dto_results
+        except Exception:
+            # Clean up any newly created files on disk that were not committed
+            for file_path in newly_created_files:
+                try:
+                    if file_path.is_file():
+                        file_path.unlink(missing_ok=True)
+                except Exception:
+                    pass
+            raise

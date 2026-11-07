@@ -20,6 +20,9 @@ from veritrace.application.services.document_ingestion_service import (
 from veritrace.application.services.investigation_service import (
     InvestigationService,
 )
+from veritrace.application.services.text_extraction_service import (
+    TextExtractionService,
+)
 from veritrace.bootstrap import bootstrap_application
 from veritrace.gui.app import VeriTraceApp
 from veritrace.infrastructure.persistence.database import (
@@ -70,6 +73,7 @@ def main() -> int:
 
     storage = OriginalDocumentStorage(allow_workspace_storage=True)
     ingestion_service = DocumentIngestionService(uow_factory, storage)
+    extraction_service = TextExtractionService(uow_factory, storage)
     inv_service = InvestigationService(uow_factory)
     corr_service = CrossDocumentCorrelationService(uow_factory)
 
@@ -79,6 +83,7 @@ def main() -> int:
         investigation_service=inv_service,
         correlation_service=corr_service,
         ingestion_service=ingestion_service,
+        extraction_service=extraction_service,
         uow_factory=uow_factory,
         headless=headless,
     )

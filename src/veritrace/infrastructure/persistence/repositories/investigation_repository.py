@@ -6,12 +6,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from veritrace.domain.entities.cross_document_relation import CrossDocumentRelation
+from veritrace.domain.entities.dossier import Dossier
 from veritrace.domain.entities.investigation import Investigation
 from veritrace.domain.exceptions.base import EntityNotFoundError, TenantIsolationError
 from veritrace.domain.value_objects.identifiers import InvestigationId, OrganizationId
 from veritrace.infrastructure.persistence.mappers.cross_document_relation_mapper import (
     CrossDocumentRelationMapper,
 )
+from veritrace.infrastructure.persistence.mappers.dossier_mapper import DossierMapper
 from veritrace.infrastructure.persistence.mappers.investigation_mapper import (
     InvestigationMapper,
 )
@@ -19,6 +21,7 @@ from veritrace.infrastructure.persistence.models.cross_document_relation import 
     CrossDocumentRelationModel,
 )
 from veritrace.infrastructure.persistence.models.document import DocumentModel
+from veritrace.infrastructure.persistence.models.dossier import DossierModel
 from veritrace.infrastructure.persistence.models.investigation import InvestigationModel
 
 
@@ -226,3 +229,60 @@ class SqliteInvestigationRepository:
         )
         rows = self._session.execute(stmt).scalars().all()
         return [CrossDocumentRelationMapper.to_entity(r) for r in rows]
+
+    def add_dossier(
+        self,
+        dossier: Dossier,
+        organization_id: OrganizationId,
+    ) -> None:
+        """Persist a compiled Dossier entity, verifying tenant ownership."""
+        inv_stmt = select(InvestigationModel).where(
+            InvestigationModel.id == str(dossier.investigation_id),
+            InvestigationModel.organization_id == str(organization_id),
+        )
+        inv = self._session.execute(inv_stmt).scalar_one_or_none()
+        if inv is None:
+            any_inv = self._session.get(InvestigationModel, str(dossier.investigation_id))
+            if any_inv is not None:
+                raise TenantIsolationError(
+                    f"Cross-organization violation: Investigation '{dossier.investigation_id}' "
+                    f"belongs to organization '{any_inv.organization_id}', not '{organization_id}'"
+                )
+            raise EntityNotFoundError(
+                f"Investigation '{dossier.investigation_id}' "
+                f"not found in organization '{organization_id}'"
+            )
+
+        model = DossierMapper.to_model(dossier)
+        self._session.add(model)
+        self._session.flush()
+
+    def list_dossiers(
+        self,
+        investigation_id: InvestigationId,
+        organization_id: OrganizationId,
+    ) -> list[Dossier]:
+        """List all compiled Dossier entities for an investigation."""
+        inv_stmt = select(InvestigationModel).where(
+            InvestigationModel.id == str(investigation_id),
+            InvestigationModel.organization_id == str(organization_id),
+        )
+        inv = self._session.execute(inv_stmt).scalar_one_or_none()
+        if inv is None:
+            any_inv = self._session.get(InvestigationModel, str(investigation_id))
+            if any_inv is not None:
+                raise TenantIsolationError(
+                    f"Cross-organization violation: Investigation '{investigation_id}' "
+                    f"belongs to organization '{any_inv.organization_id}', not '{organization_id}'"
+                )
+            raise EntityNotFoundError(
+                f"Investigation '{investigation_id}' not found in organization '{organization_id}'"
+            )
+
+        stmt = (
+            select(DossierModel)
+            .where(DossierModel.investigation_id == str(investigation_id))
+            .order_by(DossierModel.generated_at.desc())
+        )
+        rows = self._session.execute(stmt).scalars().all()
+        return [DossierMapper.to_entity(r) for r in rows]

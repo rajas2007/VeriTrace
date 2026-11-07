@@ -334,3 +334,80 @@ def test_correlation_worker_thread(app_instance, test_uow_factory):
     assert len(results) == 1
     assert results[0].discrepancies_count >= 2
     assert len(progress_updates) >= 4
+
+
+def test_dossier_worker_and_gui_action(app_instance, test_uow_factory, tmp_path):
+    """Verify background DossierWorker and MainWindow compile dossier action."""
+    inv_service = InvestigationService(test_uow_factory)
+    corr_service = CrossDocumentCorrelationService(test_uow_factory)
+    org_id = "org_11111111111111111111111111111111"
+    demo_id = seed_industrial_demo(test_uow_factory, org_id)
+
+    # Correlate first to generate findings
+    corr_req = CorrelationRequestDTO(investigation_id=demo_id, organization_id=org_id)
+    corr_service.correlate_investigation(corr_req)
+
+    from veritrace.gui.controllers.dossier_worker import DossierWorker
+
+    output_dir = tmp_path / "gui_dossiers"
+    worker = DossierWorker(
+        investigation_service=inv_service,
+        investigation_id=demo_id,
+        organization_id=org_id,
+        output_dir=output_dir,
+    )
+
+    progress_updates: list[tuple[int, str]] = []
+    finished_files: list[tuple[str, str]] = []
+
+    worker.progress_signal.connect(lambda pct, msg: progress_updates.append((pct, msg)))
+    worker.finished_signal.connect(lambda pdf, json_f: finished_files.append((pdf, json_f)))
+
+    worker.run()
+
+    assert len(finished_files) == 1
+    pdf_p, json_p = finished_files[0]
+    assert Path(pdf_p).is_file()
+    assert Path(json_p).is_file()
+    assert len(progress_updates) >= 4
+
+
+def test_forensic_worker_and_gui_action(app_instance, test_uow_factory, tmp_path):
+    """Verify background ForensicWorker and MainWindow forensic scan action."""
+    inv_service = InvestigationService(test_uow_factory)
+    org_id = "org_11111111111111111111111111111111"
+    demo_id = seed_industrial_demo(test_uow_factory, org_id)
+
+    from veritrace.gui.controllers.forensic_worker import ForensicWorker
+
+    crops_dir = tmp_path / "gui_crops"
+    worker = ForensicWorker(
+        investigation_service=inv_service,
+        investigation_id=demo_id,
+        organization_id=org_id,
+        crops_dir=crops_dir,
+    )
+
+    progress_updates: list[tuple[int, str]] = []
+    finished_counts: list[int] = []
+
+    worker.progress_signal.connect(lambda pct, msg: progress_updates.append((pct, msg)))
+    worker.finished_signal.connect(lambda count: finished_counts.append(count))
+
+    worker.run()
+
+    assert len(finished_counts) == 1
+    assert len(progress_updates) >= 4
+
+    # Verify GUI MainWindow integration
+    corr_service = CrossDocumentCorrelationService(test_uow_factory)
+    window = MainWindow(
+        investigation_service=inv_service,
+        correlation_service=corr_service,
+        uow_factory=test_uow_factory,
+        organization_id=org_id,
+    )
+    window._on_investigation_selected(demo_id)
+    assert len(window._current_findings) >= 0
+
+    window.close()

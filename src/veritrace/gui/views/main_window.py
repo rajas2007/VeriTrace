@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Qt
@@ -38,6 +39,9 @@ from veritrace.application.services.document_ingestion_service import (
 from veritrace.application.services.investigation_service import (
     InvestigationService,
 )
+from veritrace.application.services.text_extraction_service import (
+    TextExtractionService,
+)
 from veritrace.domain.entities.document_page import DocumentPage
 from veritrace.domain.enums.document import DocumentType
 from veritrace.gui.components.dashboard_widget import DashboardBannerWidget
@@ -47,6 +51,8 @@ from veritrace.gui.components.finding_table import FindingTableWidget
 from veritrace.gui.components.investigation_sidebar import InvestigationSidebar
 from veritrace.gui.components.status_bar import VeriTraceStatusBar
 from veritrace.gui.controllers.correlation_worker import CorrelationWorker
+from veritrace.gui.controllers.dossier_worker import DossierWorker
+from veritrace.gui.controllers.forensic_worker import ForensicWorker
 from veritrace.gui.demo_data import seed_industrial_demo
 
 logger = logging.getLogger("veritrace.gui.main_window")
@@ -60,6 +66,7 @@ class MainWindow(QMainWindow):
         investigation_service: InvestigationService,
         correlation_service: CrossDocumentCorrelationService,
         ingestion_service: DocumentIngestionService | None = None,
+        extraction_service: TextExtractionService | None = None,
         uow_factory: Any = None,
         organization_id: str = "org_11111111111111111111111111111111",
         parent: Any = None,
@@ -71,6 +78,7 @@ class MainWindow(QMainWindow):
         self._investigation_service = investigation_service
         self._correlation_service = correlation_service
         self._ingestion_service = ingestion_service
+        self._extraction_service = extraction_service
         self._uow_factory = uow_factory
         self._organization_id = organization_id
 
@@ -80,6 +88,8 @@ class MainWindow(QMainWindow):
         self._docs_by_id: dict[str, DocumentIngestionResultDTO] = {}
         self._pages_by_id: dict[str, DocumentPage] = {}
         self._active_worker: CorrelationWorker | None = None
+        self._dossier_worker: DossierWorker | None = None
+        self._forensic_worker: ForensicWorker | None = None
 
         self._setup_ui()
         self._load_investigations()
@@ -119,6 +129,8 @@ class MainWindow(QMainWindow):
 
         self._dashboard_banner = DashboardBannerWidget(central_container)
         self._dashboard_banner.run_correlation_requested.connect(self._on_run_correlation)
+        self._dashboard_banner.run_forensics_requested.connect(self._on_run_forensics)
+        self._dashboard_banner.generate_dossier_requested.connect(self._on_generate_dossier)
         central_layout.addWidget(self._dashboard_banner)
 
         self._tabs = QTabWidget(central_container)
@@ -225,6 +237,18 @@ class MainWindow(QMainWindow):
         self._dashboard_banner.set_correlate_enabled(False)
         self._status_bar.start_progress("Running cross-document correlation engine...")
 
+        # Run auto-classification on unclassified documents only if unclassified documents exist
+        has_unclassified = any(
+            doc.document_type == DocumentType.UNCLASSIFIED for doc in self._docs_by_id.values()
+        )
+        if has_unclassified:
+            try:
+                self._investigation_service.classify_documents(
+                    self._active_investigation_id, self._organization_id
+                )
+            except Exception as err:
+                logger.warning("Automated document classification warning: %s", err)
+
         request = CorrelationRequestDTO(
             investigation_id=self._active_investigation_id,
             organization_id=self._organization_id,
@@ -250,6 +274,91 @@ class MainWindow(QMainWindow):
         self._status_bar.set_status(f"Correlation error: {err_msg}", stage="ERROR")
         self._show_message(
             "Correlation Engine Error", f"Analysis failed:\n{err_msg}", is_error=True
+        )
+
+    def _on_run_forensics(self) -> None:
+        """Trigger asynchronous background execution of visual forensic analysis."""
+        if not self._active_investigation_id:
+            self._show_message(
+                "No Case Selected",
+                "Please select an active investigation to run forensic analysis.",
+                is_error=True,
+            )
+            return
+
+        self._dashboard_banner.set_forensics_enabled(False)
+        self._status_bar.start_progress(
+            "Scanning visual forensics (signatures, stroke morphology, copy-move)..."
+        )
+
+        self._forensic_worker = ForensicWorker(
+            investigation_service=self._investigation_service,
+            investigation_id=self._active_investigation_id,
+            organization_id=self._organization_id,
+            parent=self,
+        )
+        self._forensic_worker.progress_signal.connect(self._status_bar.update_progress)
+        self._forensic_worker.finished_signal.connect(self._on_forensics_finished)
+        self._forensic_worker.error_signal.connect(self._on_forensics_error)
+        self._forensic_worker.start()
+
+    def _on_forensics_finished(self, findings_count: int) -> None:
+        self._dashboard_banner.set_forensics_enabled(True)
+        self._status_bar.finish_progress(
+            f"Forensic scan complete: {findings_count} visual findings recorded."
+        )
+        self._reload_case_data()
+
+    def _on_forensics_error(self, err_msg: str) -> None:
+        self._dashboard_banner.set_forensics_enabled(True)
+        self._status_bar.set_status(f"Forensic error: {err_msg}", stage="ERROR")
+        self._show_message(
+            "Forensic Scan Failed",
+            f"Visual forensic analysis failed:\n{err_msg}",
+            is_error=True,
+        )
+
+    def _on_generate_dossier(self) -> None:
+        """Trigger asynchronous background compilation of the PS-2 Investigation Dossier."""
+        if not self._active_investigation_id:
+            self._show_message(
+                "No Case Selected",
+                "Please select an active investigation to compile its dossier.",
+                is_error=True,
+            )
+            return
+
+        self._dashboard_banner.set_dossier_enabled(False)
+        self._status_bar.start_progress("Compiling 6-section PS-2 Investigation Dossier...")
+
+        self._dossier_worker = DossierWorker(
+            investigation_service=self._investigation_service,
+            investigation_id=self._active_investigation_id,
+            organization_id=self._organization_id,
+            parent=self,
+        )
+        self._dossier_worker.progress_signal.connect(self._status_bar.update_progress)
+        self._dossier_worker.finished_signal.connect(self._on_dossier_finished)
+        self._dossier_worker.error_signal.connect(self._on_dossier_error)
+        self._dossier_worker.start()
+
+    def _on_dossier_finished(self, pdf_path: str, json_path: str) -> None:
+        self._dashboard_banner.set_dossier_enabled(True)
+        self._status_bar.finish_progress(f"Dossier ready: {Path(pdf_path).name}")
+        self._show_message(
+            "Investigation Dossier Compiled",
+            f"PS-2 Investigation Dossier generated successfully:\n\n"
+            f"PDF: {pdf_path}\n"
+            f"JSON: {json_path}",
+        )
+
+    def _on_dossier_error(self, err_msg: str) -> None:
+        self._dashboard_banner.set_dossier_enabled(True)
+        self._status_bar.set_status(f"Dossier error: {err_msg}", stage="ERROR")
+        self._show_message(
+            "Dossier Compilation Failed",
+            f"Failed to compile dossier:\n{err_msg}",
+            is_error=True,
         )
 
     def _on_document_selected(self, document_id: str) -> None:
@@ -420,7 +529,30 @@ class MainWindow(QMainWindow):
                 file_path=file_path,
                 document_type=DocumentType.UNCLASSIFIED,
             )
-            self._ingestion_service.ingest_document(dto)
+            doc_res = self._ingestion_service.ingest_document(dto)
+
+            # Extract digital text if extraction service is available
+            extracted_successfully = False
+            if self._extraction_service:
+                try:
+                    self._extraction_service.extract_document_text(
+                        document_id=doc_res.document_id,
+                        organization_id=self._organization_id,
+                    )
+                    extracted_successfully = True
+                except Exception as extract_err:
+                    logger.warning("Post-ingestion extraction warning: %s", extract_err)
+
+            # Trigger classification only after successful extraction
+            if extracted_successfully:
+                try:
+                    self._investigation_service.classify_document(
+                        document_id=doc_res.document_id,
+                        organization_id=self._organization_id,
+                    )
+                except Exception as class_err:
+                    logger.warning("Post-ingestion classification warning: %s", class_err)
+
             self._reload_case_data()
             self._status_bar.set_status(f"Ingested document: {Path(file_path).name}")
         except Exception as e:
