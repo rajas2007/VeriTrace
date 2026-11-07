@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
     QComboBox,
     QHBoxLayout,
@@ -35,14 +35,16 @@ class FindingTableWidget(QWidget):
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(6)
+        layout.setSpacing(8)
 
         # Filter bar
         filter_layout = QHBoxLayout()
-        filter_layout.setSpacing(8)
+        filter_layout.setSpacing(10)
 
-        lbl_filter = QLabel("Filters:", self)
-        lbl_filter.setStyleSheet("color: #8e8e9c; font-weight: bold;")
+        lbl_filter = QLabel("🔍 Filter:", self)
+        lbl_filter.setStyleSheet(
+            "color: #38bdf8; font-weight: 700; font-size: 11px; letter-spacing: 0.5px;"
+        )
         filter_layout.addWidget(lbl_filter)
 
         self._filter_severity = QComboBox(self)
@@ -69,7 +71,10 @@ class FindingTableWidget(QWidget):
         filter_layout.addWidget(self._search_input, 1)
 
         self._count_label = QLabel("0 findings", self)
-        self._count_label.setStyleSheet("color: #8e8e9c; font-weight: 600;")
+        self._count_label.setStyleSheet(
+            "color: #94a3b8; font-weight: 600; font-size: 11px; "
+            "background: #0f1420; border: 1px solid #1c2438; border-radius: 6px; padding: 5px 10px;"
+        )
         filter_layout.addWidget(self._count_label)
 
         layout.addLayout(filter_layout)
@@ -133,7 +138,7 @@ class FindingTableWidget(QWidget):
             self._count_label.setText(f"{len(filtered)} of {len(self._all_findings)} findings")
         else:
             self._count_label.setText(
-                "0 findings — Click 'Run Cross-Document Correlation' to analyze"
+                "0 findings — Click '⚡ Run Full Forensics' to analyze"
             )
         self._populate_table()
 
@@ -141,12 +146,15 @@ class FindingTableWidget(QWidget):
         self._table.blockSignals(True)
         self._table.setRowCount(len(self._filtered_findings))
 
+        bold_font = QFont("Segoe UI", 9, QFont.Weight.Bold)
+
         for row, f in enumerate(self._filtered_findings):
             # 0: Severity
             item_sev = QTableWidgetItem(f.severity.value)
             item_sev.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             sev_color = QColor(ThemeManager.get_severity_color(f.severity.value))
             item_sev.setForeground(sev_color)
+            item_sev.setFont(bold_font)
             item_sev.setData(Qt.ItemDataRole.UserRole, f.id)
             self._table.setItem(row, 0, item_sev)
 
@@ -155,6 +163,7 @@ class FindingTableWidget(QWidget):
             item_tier = QTableWidgetItem(tier_display)
             tier_color = QColor(ThemeManager.get_tier_color(f.epistemic_tier.value))
             item_tier.setForeground(tier_color)
+            item_tier.setFont(bold_font)
             self._table.setItem(row, 1, item_tier)
 
             # 2: Category
@@ -170,6 +179,7 @@ class FindingTableWidget(QWidget):
             # 4: Confidence
             item_conf = QTableWidgetItem(f"{f.confidence * 100:.0f}%")
             item_conf.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+            item_conf.setFont(bold_font)
             self._table.setItem(row, 4, item_conf)
 
             # 5: Review Status
@@ -177,6 +187,7 @@ class FindingTableWidget(QWidget):
             item_status.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             status_color = QColor(ThemeManager.get_status_color(f.review_status.value))
             item_status.setForeground(status_color)
+            item_status.setFont(bold_font)
             self._table.setItem(row, 5, item_status)
 
         self._table.blockSignals(False)

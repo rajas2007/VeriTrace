@@ -21,18 +21,19 @@ class VeriTraceStatusBar(QStatusBar):
 
         self._container = QWidget(self)
         layout = QHBoxLayout(self._container)
-        layout.setContentsMargins(6, 2, 6, 2)
-        layout.setSpacing(12)
+        layout.setContentsMargins(8, 2, 8, 2)
+        layout.setSpacing(14)
 
         self._stage_badge = QLabel("IDLE", self)
         self._stage_badge.setStyleSheet(
-            "background-color: #2a2a36; color: #a0a0b0; "
-            "padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 10px;"
+            "background-color: #0f1420; color: #10b981; border: 1px solid #10b981; "
+            "padding: 2px 8px; border-radius: 4px; font-weight: 800; font-size: 10px; "
+            "letter-spacing: 0.5px;"
         )
         layout.addWidget(self._stage_badge)
 
         self._status_label = QLabel("Ready", self)
-        self._status_label.setStyleSheet("color: #d0d0d8; font-weight: 500;")
+        self._status_label.setStyleSheet("color: #f1f5f9; font-weight: 600; font-size: 12px;")
         layout.addWidget(self._status_label)
 
         layout.addStretch()
@@ -40,12 +41,15 @@ class VeriTraceStatusBar(QStatusBar):
         self._progress_bar = QProgressBar(self)
         self._progress_bar.setRange(0, 100)
         self._progress_bar.setValue(0)
-        self._progress_bar.setFixedWidth(200)
+        self._progress_bar.setFixedWidth(220)
+        self._progress_bar.setFixedHeight(12)
         self._progress_bar.setVisible(False)
         layout.addWidget(self._progress_bar)
 
         self._telemetry_label = QLabel("", self)
-        self._telemetry_label.setStyleSheet("color: #7e7e8c; font-size: 11px;")
+        self._telemetry_label.setStyleSheet(
+            "color: #64748b; font-size: 11px; font-family: 'Segoe UI', monospace;"
+        )
         layout.addWidget(self._telemetry_label)
 
         self.addPermanentWidget(self._container, 1)
@@ -54,20 +58,23 @@ class VeriTraceStatusBar(QStatusBar):
         """Update status message and stage indicator."""
         self._status_label.setText(message)
         self._stage_badge.setText(stage.upper())
-        if stage.upper() == "READY" or stage.upper() == "IDLE":
+        if stage.upper() in ("READY", "IDLE"):
             self._stage_badge.setStyleSheet(
-                "background-color: #2a2a36; color: #a0a0b0; "
-                "padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 10px;"
+                "background-color: #064e3b; color: #34d399; border: 1px solid #10b981; "
+                "padding: 2px 8px; border-radius: 4px; font-weight: 800; font-size: 10px; "
+                "letter-spacing: 0.5px;"
             )
-        elif stage.upper() == "ANALYZING" or stage.upper() == "PROCESSING":
+        elif stage.upper() in ("ANALYZING", "PROCESSING"):
             self._stage_badge.setStyleSheet(
-                "background-color: #0d6efd; color: #ffffff; "
-                "padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 10px;"
+                "background-color: #1e3a8a; color: #38bdf8; border: 1px solid #38bdf8; "
+                "padding: 2px 8px; border-radius: 4px; font-weight: 800; font-size: 10px; "
+                "letter-spacing: 0.5px;"
             )
         elif stage.upper() == "ERROR":
             self._stage_badge.setStyleSheet(
-                "background-color: #dc3545; color: #ffffff; "
-                "padding: 2px 6px; border-radius: 3px; font-weight: bold; font-size: 10px;"
+                "background-color: #7f1d1d; color: #f87171; border: 1px solid #ef4444; "
+                "padding: 2px 8px; border-radius: 4px; font-weight: 800; font-size: 10px; "
+                "letter-spacing: 0.5px;"
             )
 
     def start_progress(self, message: str = "Processing...") -> None:

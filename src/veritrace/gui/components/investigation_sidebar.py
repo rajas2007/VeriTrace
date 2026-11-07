@@ -38,17 +38,20 @@ class InvestigationSidebar(QWidget):
         self._documents: list[DocumentIngestionResultDTO] = []
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(8, 8, 8, 8)
+        layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(10)
 
         # 1. Header & Case Switcher
         header_layout = QHBoxLayout()
-        header_title = QLabel("INVESTIGATION", self)
-        header_title.setStyleSheet("font-weight: bold; color: #8e8e9c; font-size: 11px;")
+        header_title = QLabel("🗂️ INVESTIGATION CASE", self)
+        header_title.setStyleSheet(
+            "font-weight: 800; color: #38bdf8; font-size: 11px; letter-spacing: 0.6px;"
+        )
         header_layout.addWidget(header_title)
         header_layout.addStretch()
 
-        self._btn_new = QPushButton("+ New", self)
+        self._btn_new = QPushButton("+ New Case", self)
+        self._btn_new.setStyleSheet("padding: 4px 10px; font-size: 11px; font-weight: 700;")
         self._btn_new.setToolTip("Create a new investigation case")
         self._btn_new.clicked.connect(self.new_investigation_requested.emit)
         header_layout.addWidget(self._btn_new)
@@ -62,29 +65,34 @@ class InvestigationSidebar(QWidget):
         self._card_frame = QFrame(self)
         self._card_frame.setObjectName("card")
         card_layout = QVBoxLayout(self._card_frame)
-        card_layout.setContentsMargins(8, 8, 8, 8)
-        card_layout.setSpacing(4)
+        card_layout.setContentsMargins(10, 10, 10, 10)
+        card_layout.setSpacing(6)
 
         self._lbl_ref = QLabel("Ref: --", self._card_frame)
-        self._lbl_ref.setStyleSheet("color: #0d6efd; font-weight: 600;")
+        self._lbl_ref.setStyleSheet("color: #38bdf8; font-weight: 700; font-size: 12px;")
         card_layout.addWidget(self._lbl_ref)
 
         self._lbl_status = QLabel("Status: --", self._card_frame)
+        self._lbl_status.setStyleSheet("color: #cbd5e1; font-size: 11px;")
         card_layout.addWidget(self._lbl_status)
 
         self._lbl_risk = QLabel("Risk: --", self._card_frame)
+        self._lbl_risk.setStyleSheet("color: #cbd5e1; font-size: 11px;")
         card_layout.addWidget(self._lbl_risk)
 
         layout.addWidget(self._card_frame)
 
         # 3. Documents Section
         doc_header = QHBoxLayout()
-        doc_title = QLabel("DOCUMENTS", self)
-        doc_title.setStyleSheet("font-weight: bold; color: #8e8e9c; font-size: 11px;")
+        doc_title = QLabel("📑 CASE EVIDENCE DOSSIER", self)
+        doc_title.setStyleSheet(
+            "font-weight: 800; color: #38bdf8; font-size: 11px; letter-spacing: 0.6px;"
+        )
         doc_header.addWidget(doc_title)
         doc_header.addStretch()
 
-        self._btn_add_doc = QPushButton("+ Add", self)
+        self._btn_add_doc = QPushButton("+ Import", self)
+        self._btn_add_doc.setStyleSheet("padding: 4px 10px; font-size: 11px; font-weight: 700;")
         self._btn_add_doc.clicked.connect(self.add_document_requested.emit)
         doc_header.addWidget(self._btn_add_doc)
         layout.addLayout(doc_header)
@@ -98,8 +106,9 @@ class InvestigationSidebar(QWidget):
         layout.addWidget(self._doc_tree, 1)
 
         # 4. Demo Data Action
-        self._btn_demo = QPushButton("Load Industrial Demo (4 Docs)", self)
+        self._btn_demo = QPushButton("🔄 Load Industrial Alloy Demo (4 Docs)", self)
         self._btn_demo.setObjectName("primaryButton")
+        self._btn_demo.setStyleSheet("padding: 9px 14px; font-size: 12px; font-weight: 700;")
         self._btn_demo.clicked.connect(self.load_demo_requested.emit)
         layout.addWidget(self._btn_demo)
 
@@ -129,12 +138,12 @@ class InvestigationSidebar(QWidget):
 
     def _update_case_card(self, inv: InvestigationResponseDTO) -> None:
         self._lbl_ref.setText(f"Ref: {inv.reference_code}")
-        self._lbl_status.setText(f"Status: {inv.status.value}")
+        self._lbl_status.setText(f"Status: <b>{inv.status.value}</b>")
         risk_color = ThemeManager.get_severity_color(
             "CRITICAL" if inv.risk_score >= 0.75 else "MEDIUM" if inv.risk_score >= 0.4 else "LOW"
         )
         self._lbl_risk.setText(
-            f"Risk: <span style='color: {risk_color}; font-weight: bold;'>"
+            f"Risk Score: <span style='color: {risk_color}; font-weight: 800; font-size: 12px;'>"
             f"{inv.risk_score:.2f} ({inv.risk_classification.value})</span>"
         )
 
@@ -144,8 +153,19 @@ class InvestigationSidebar(QWidget):
         self._doc_tree.clear()
         for doc in documents:
             item = QTreeWidgetItem(self._doc_tree)
-            item.setText(0, doc.original_filename)
-            item.setText(1, doc.document_type.value)
+            doc_type_val = doc.document_type.value
+            icon_prefix = "📄"
+            if "PURCHASE" in doc_type_val:
+                icon_prefix = "📋"
+            elif "DELIVERY" in doc_type_val or "CHALLAN" in doc_type_val:
+                icon_prefix = "🚚"
+            elif "TEST_CERTIFICATE" in doc_type_val:
+                icon_prefix = "🔬"
+            elif "INVOICE" in doc_type_val:
+                icon_prefix = "🧾"
+
+            item.setText(0, f"{icon_prefix} {doc.original_filename}")
+            item.setText(1, doc_type_val.replace("_", " "))
             item.setText(2, str(doc.page_count))
             item.setData(0, Qt.ItemDataRole.UserRole, doc.document_id)
 

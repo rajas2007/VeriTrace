@@ -16,23 +16,23 @@ CURRENT_DIR = Path(__file__).resolve().parent
 DEFAULT_QSS_PATH = CURRENT_DIR / "dark_theme.qss"
 
 SEVERITY_COLORS: dict[str, str] = {
-    "CRITICAL": "#dc3545",
-    "HIGH": "#fd7e14",
-    "MEDIUM": "#ffc107",
-    "LOW": "#6c757d",
+    "CRITICAL": "#ef4444",
+    "HIGH": "#f97316",
+    "MEDIUM": "#eab308",
+    "LOW": "#64748b",
 }
 
 STATUS_COLORS: dict[str, str] = {
-    "CONFIRMED": "#198754",
-    "DISMISSED": "#6c757d",
-    "PENDING_REVIEW": "#0d6efd",
-    "ANNOTATED": "#6f42c1",
+    "CONFIRMED": "#10b981",
+    "DISMISSED": "#64748b",
+    "PENDING_REVIEW": "#3b82f6",
+    "ANNOTATED": "#a855f7",
 }
 
 TIER_COLORS: dict[str, str] = {
-    "CONFIRMED_OBSERVATION": "#20c997",
-    "DETECTED_INCONSISTENCY": "#fd7e14",
-    "SUSPECTED_MANIPULATION": "#dc3545",
+    "CONFIRMED_OBSERVATION": "#06b6d4",
+    "DETECTED_INCONSISTENCY": "#f97316",
+    "SUSPECTED_MANIPULATION": "#ef4444",
 }
 
 
@@ -89,23 +89,24 @@ class ThemeManager:
     @classmethod
     def get_severity_color(cls, severity: str) -> str:
         """Return hex color code for a severity level."""
-        return SEVERITY_COLORS.get(severity.upper(), "#6c757d")
+        return SEVERITY_COLORS.get(severity.upper(), "#64748b")
 
     @classmethod
     def get_status_color(cls, status: str) -> str:
         """Return hex color code for a review status."""
-        return STATUS_COLORS.get(status.upper(), "#6c757d")
+        return STATUS_COLORS.get(status.upper(), "#64748b")
 
     @classmethod
     def get_tier_color(cls, tier: str) -> str:
         """Return hex color code for an epistemic tier."""
-        return TIER_COLORS.get(tier.upper(), "#fd7e14")
+        return TIER_COLORS.get(tier.upper(), "#f97316")
 
     @classmethod
     def format_badge_html(cls, text: str, bg_color: str, fg_color: str = "#ffffff") -> str:
         """Return styled HTML span badge."""
         return (
             f"<span style='background-color: {bg_color}; color: {fg_color}; "
-            f"padding: 2px 8px; border-radius: 3px; font-weight: bold; font-size: 11px;'>"
+            f"padding: 3px 9px; border-radius: 9px; font-weight: 700; font-size: 11px; "
+            f"letter-spacing: 0.3px;'>"
             f"{text}</span>"
         )

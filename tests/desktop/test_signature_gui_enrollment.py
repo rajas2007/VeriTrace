@@ -25,9 +25,8 @@ from veritrace.gui.components.signature_workbench import (
 from veritrace.gui.views.main_window import MainWindow
 
 
-def test_signature_workbench_widget_subject_and_reference_filtering(qtbot) -> None:
+def test_signature_workbench_widget_subject_and_reference_filtering(app_instance) -> None:
     widget = SignatureWorkbenchWidget()
-    qtbot.addWidget(widget)
 
     # Initial state
     assert widget._combo_subjects.count() == 1  # "All Signatories"
@@ -89,9 +88,8 @@ def test_signature_workbench_widget_subject_and_reference_filtering(qtbot) -> No
     assert widget.get_selected_reference_id() == "ref_1"
 
 
-def test_create_authorized_subject_dialog(qtbot) -> None:
+def test_create_authorized_subject_dialog(app_instance) -> None:
     dlg = CreateAuthorizedSubjectDialog()
-    qtbot.addWidget(dlg)
 
     dlg._txt_name.setText("Arthur Pendelton")
     dlg._txt_desig.setText("Chief Executive Officer")
@@ -101,7 +99,7 @@ def test_create_authorized_subject_dialog(qtbot) -> None:
     assert data == ("Arthur Pendelton", "Chief Executive Officer", "MANDATE-CEO-01")
 
 
-def test_enroll_signature_reference_dialog(qtbot, tmp_path: Path) -> None:
+def test_enroll_signature_reference_dialog(app_instance, tmp_path: Path) -> None:
     # Create valid synthetic image
     img = np.ones((80, 200, 3), dtype=np.uint8) * 255
     img_path = tmp_path / "specimen.png"
@@ -117,7 +115,6 @@ def test_enroll_signature_reference_dialog(qtbot, tmp_path: Path) -> None:
     )
 
     dlg = EnrollSignatureReferenceDialog(subjects=[s1], preselected_subject_id="subj_10")
-    qtbot.addWidget(dlg)
 
     assert dlg._combo_subjects.currentData() == "subj_10"
 

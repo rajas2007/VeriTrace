@@ -47,8 +47,8 @@ class DocumentCanvasView(QGraphicsView):
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
-        self.setBackgroundBrush(QBrush(QColor("#090d16")))
-        self.setStyleSheet("border: 1px solid #21262d; border-radius: 6px;")
+        self.setBackgroundBrush(QBrush(QColor("#06090f")))
+        self.setStyleSheet("border: 1px solid #1c2438; border-radius: 6px;")
 
         self._pixmap_item: QGraphicsPixmapItem | None = None
         self._highlight_rect: QGraphicsRectItem | None = None
@@ -123,21 +123,21 @@ class DocumentCanvasView(QGraphicsView):
                 0,
                 self._current_image_width,
                 self._current_image_height,
-                QPen(QColor("#30363d"), 1),
-                QBrush(QColor("#161b22")),
+                QPen(QColor("#1c2438"), 1),
+                QBrush(QColor("#0f1420")),
             )
             title_text = self._scene.addSimpleText(
                 f"{doc_name or self._title} (Page {page_num})",
                 QFont("Segoe UI", 14, QFont.Weight.Bold),
             )
-            title_text.setBrush(QBrush(QColor("#58a6ff")))
+            title_text.setBrush(QBrush(QColor("#38bdf8")))
             title_text.setPos(30, 40)
 
             sub_text = self._scene.addSimpleText(
                 "Digital Structured Forensic Representation",
                 QFont("Segoe UI", 10),
             )
-            sub_text.setBrush(QBrush(QColor("#8b949e")))
+            sub_text.setBrush(QBrush(QColor("#94a3b8")))
             sub_text.setPos(30, 75)
 
         # Overlay evidence bounding box if present
@@ -152,8 +152,8 @@ class DocumentCanvasView(QGraphicsView):
             pw = max(6.0, (xmax - xmin) * self._current_image_width)
             ph = max(6.0, (ymax - ymin) * self._current_image_height)
 
-            box_pen = QPen(QColor("#f85149"), 2.5, Qt.PenStyle.SolidLine)
-            box_brush = QBrush(QColor(248, 81, 73, 50))  # Semi-transparent crimson
+            box_pen = QPen(QColor("#ef4444"), 2.5, Qt.PenStyle.SolidLine)
+            box_brush = QBrush(QColor(239, 68, 68, 45))  # Semi-transparent crimson
             self._highlight_rect = self._scene.addRect(px, py, pw, ph, box_pen, box_brush)
 
             # High-tech tag badge
@@ -161,7 +161,7 @@ class DocumentCanvasView(QGraphicsView):
                 f"ROI: [{xmin:.3f}, {ymin:.3f}] - [{xmax:.3f}, {ymax:.3f}]",
                 QFont("Segoe UI", 9, QFont.Weight.DemiBold),
             )
-            tag.setBrush(QBrush(QColor("#58a6ff")))
+            tag.setBrush(QBrush(QColor("#38bdf8")))
             tag.setPos(px, max(0.0, py - 18))
             self._tag_item = tag
 
@@ -191,15 +191,15 @@ class SideBySideDocumentViewer(QWidget):
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(6, 6, 6, 6)
-        main_layout.setSpacing(6)
+        main_layout.setSpacing(8)
 
         # Header toolbar bar
         header_bar = QHBoxLayout()
-        header_bar.setSpacing(8)
+        header_bar.setSpacing(10)
 
         header_lbl = QLabel("DUAL-CANVAS FORENSIC COMPARATOR", self)
         header_lbl.setStyleSheet(
-            "color: #58a6ff; font-weight: bold; font-size: 11px; letter-spacing: 0.5px;"
+            "color: #38bdf8; font-weight: 800; font-size: 11px; letter-spacing: 0.6px;"
         )
         header_bar.addWidget(header_lbl)
         header_bar.addStretch()
@@ -233,11 +233,11 @@ class SideBySideDocumentViewer(QWidget):
         left_container = QWidget(self._splitter)
         left_layout = QVBoxLayout(left_container)
         left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(4)
+        left_layout.setSpacing(6)
         self._left_title = QLabel("Source Document", left_container)
         self._left_title.setStyleSheet(
-            "font-weight: 600; color: #58a6ff; padding: 3px 6px; "
-            "background: #161b22; border-radius: 4px;"
+            "font-weight: 700; color: #38bdf8; padding: 4px 8px; "
+            "background: #0f1420; border: 1px solid #1c2438; border-radius: 6px;"
         )
         left_layout.addWidget(self._left_title)
         self._left_canvas = DocumentCanvasView("Source Document", left_container)
@@ -247,11 +247,11 @@ class SideBySideDocumentViewer(QWidget):
         right_container = QWidget(self._splitter)
         right_layout = QVBoxLayout(right_container)
         right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(4)
+        right_layout.setSpacing(6)
         self._right_title = QLabel("Target Document", right_container)
         self._right_title.setStyleSheet(
-            "font-weight: 600; color: #f0883e; padding: 3px 6px; "
-            "background: #161b22; border-radius: 4px;"
+            "font-weight: 700; color: #f97316; padding: 4px 8px; "
+            "background: #0f1420; border: 1px solid #1c2438; border-radius: 6px;"
         )
         right_layout.addWidget(self._right_title)
         self._right_canvas = DocumentCanvasView("Target Document", right_container)

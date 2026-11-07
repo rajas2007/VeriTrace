@@ -20,24 +20,32 @@ class MetricCard(QFrame):
     """Visual metric card displaying an analytical counter and label."""
 
     def __init__(
-        self, label: str, value: str = "0", color: str = "#58a6ff", parent: Any = None
+        self, label: str, value: str = "0", color: str = "#38bdf8", parent: Any = None
     ) -> None:
         super().__init__(parent)
         self.setObjectName("card")
-        self.setMinimumWidth(120)
+        self.setMinimumWidth(125)
+        self.setStyleSheet(
+            f"QFrame#card {{ background-color: #0f1420; border: 1px solid #1c2438; "
+            f"border-top: 3px solid {color}; border-radius: 8px; }}"
+            f"QFrame#card:hover {{ border-color: {color}; }}"
+        )
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(12, 8, 12, 8)
-        layout.setSpacing(2)
+        layout.setContentsMargins(14, 10, 14, 10)
+        layout.setSpacing(3)
 
         self._lbl_value = QLabel(value, self)
-        self._lbl_value.setStyleSheet(f"font-size: 22px; font-weight: bold; color: {color};")
+        self._lbl_value.setStyleSheet(
+            f"font-size: 24px; font-weight: 800; color: {color}; "
+            f"font-family: 'Segoe UI', monospace;"
+        )
         self._lbl_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._lbl_value)
 
         self._lbl_label = QLabel(label, self)
         self._lbl_label.setStyleSheet(
-            "color: #8b949e; font-size: 11px; font-weight: 600; letter-spacing: 0.5px;"
+            "color: #94a3b8; font-size: 10px; font-weight: 700; letter-spacing: 0.8px;"
         )
         self._lbl_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._lbl_label)
@@ -60,7 +68,7 @@ class DashboardBannerWidget(QWidget):
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 6)
-        main_layout.setSpacing(8)
+        main_layout.setSpacing(10)
 
         # 1. Action Bar
         action_bar = QHBoxLayout()
@@ -69,7 +77,7 @@ class DashboardBannerWidget(QWidget):
         title_layout = QVBoxLayout()
         title_lbl = QLabel("Cross-Document Intelligence & Forensic Command Center", self)
         title_lbl.setStyleSheet(
-            "font-size: 15px; font-weight: bold; color: #ffffff; letter-spacing: 0.5px;"
+            "font-size: 15px; font-weight: 800; color: #f1f5f9; letter-spacing: 0.5px;"
         )
         title_layout.addWidget(title_lbl)
 
@@ -77,7 +85,7 @@ class DashboardBannerWidget(QWidget):
             "Deterministic cross-document alignment, physical consistency, and PS-2 dossiers",
             self,
         )
-        sub_lbl.setStyleSheet("color: #8b949e; font-size: 11px;")
+        sub_lbl.setStyleSheet("color: #94a3b8; font-size: 11px;")
         title_layout.addWidget(sub_lbl)
         action_bar.addLayout(title_layout, 1)
 
@@ -90,12 +98,12 @@ class DashboardBannerWidget(QWidget):
 
         self._btn_correlate = QPushButton("⚡ Run Full Forensics", self)
         self._btn_correlate.setObjectName("primaryButton")
-        self._btn_correlate.setStyleSheet("padding: 8px 16px; font-size: 13px;")
+        self._btn_correlate.setStyleSheet("padding: 8px 16px; font-size: 12px; font-weight: 700;")
         self._btn_correlate.clicked.connect(self._on_correlate_clicked)
         action_bar.addWidget(self._btn_correlate)
 
         self._btn_forensics = QPushButton("Scan Forensics", self)
-        self._btn_forensics.setStyleSheet("padding: 8px 16px; font-size: 13px; font-weight: 600;")
+        self._btn_forensics.setStyleSheet("padding: 8px 16px; font-size: 12px; font-weight: 600;")
         self._btn_forensics.setToolTip(
             "Scan pages for visual forensics (signatures, morphology, pattern correspondences)"
         )
@@ -103,7 +111,7 @@ class DashboardBannerWidget(QWidget):
         action_bar.addWidget(self._btn_forensics)
 
         self._btn_dossier = QPushButton("Compile PS-2 Dossier", self)
-        self._btn_dossier.setStyleSheet("padding: 8px 16px; font-size: 13px; font-weight: 600;")
+        self._btn_dossier.setStyleSheet("padding: 8px 16px; font-size: 12px; font-weight: 600;")
         self._btn_dossier.setToolTip(
             "Compile complete 6-section PS-2 Investigation Dossier (JSON & ReportLab PDF)"
         )
@@ -112,7 +120,9 @@ class DashboardBannerWidget(QWidget):
 
         self._btn_export_dossier = QPushButton("📄 Export PS-2 Dossier (PDF)", self)
         self._btn_export_dossier.setObjectName("accentButton")
-        self._btn_export_dossier.setStyleSheet("padding: 8px 16px; font-size: 13px;")
+        self._btn_export_dossier.setStyleSheet(
+            "padding: 8px 16px; font-size: 12px; font-weight: 700;"
+        )
         self._btn_export_dossier.clicked.connect(self.export_dossier_requested.emit)
         action_bar.addWidget(self._btn_export_dossier)
 
@@ -120,21 +130,21 @@ class DashboardBannerWidget(QWidget):
 
         # 2. Metric Cards Row
         cards_layout = QHBoxLayout()
-        cards_layout.setSpacing(8)
+        cards_layout.setSpacing(10)
 
-        self._card_docs = MetricCard("DOCUMENTS", "0", "#58a6ff", self)
+        self._card_docs = MetricCard("DOCUMENTS", "0", "#38bdf8", self)
         cards_layout.addWidget(self._card_docs)
 
-        self._card_findings = MetricCard("FINDINGS", "0", "#f0f6fc", self)
+        self._card_findings = MetricCard("FINDINGS", "0", "#f1f5f9", self)
         cards_layout.addWidget(self._card_findings)
 
-        self._card_critical = MetricCard("CRITICAL", "0", "#f85149", self)
+        self._card_critical = MetricCard("CRITICAL", "0", "#ef4444", self)
         cards_layout.addWidget(self._card_critical)
 
-        self._card_high_med = MetricCard("HIGH / MEDIUM", "0", "#f0883e", self)
+        self._card_high_med = MetricCard("HIGH / MEDIUM", "0", "#f97316", self)
         cards_layout.addWidget(self._card_high_med)
 
-        self._card_relations = MetricCard("RELATIONS", "0", "#3fb950", self)
+        self._card_relations = MetricCard("RELATIONS", "0", "#10b981", self)
         cards_layout.addWidget(self._card_relations)
 
         main_layout.addLayout(cards_layout)

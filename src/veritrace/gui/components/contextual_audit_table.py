@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -32,27 +33,30 @@ class ContextualAuditWidget(QWidget):
 
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(8, 8, 8, 8)
-        main_layout.setSpacing(8)
+        main_layout.setSpacing(10)
 
         # Header bar
         header_bar = QHBoxLayout()
-        header_bar.setSpacing(8)
+        header_bar.setSpacing(10)
 
         title_layout = QVBoxLayout()
         title_lbl = QLabel("🧮 Contextual Arithmetic & Chronology Audit Workbench", self)
-        title_lbl.setStyleSheet("font-size: 14px; font-weight: bold; color: #ffffff;")
+        title_lbl.setStyleSheet(
+            "font-size: 15px; font-weight: 800; color: #f1f5f9; letter-spacing: 0.5px;"
+        )
         title_layout.addWidget(title_lbl)
 
         sub_lbl = QLabel(
             "Procurement math checks, weighbridge reconciliation, and temporal order validation",
             self,
         )
-        sub_lbl.setStyleSheet("color: #8b949e; font-size: 11px;")
+        sub_lbl.setStyleSheet("color: #94a3b8; font-size: 11px;")
         title_layout.addWidget(sub_lbl)
         header_bar.addLayout(title_layout, 1)
 
-        self._btn_audit = QPushButton("Run Contextual Audit", self)
+        self._btn_audit = QPushButton("⚡ Run Contextual Audit", self)
         self._btn_audit.setObjectName("primaryButton")
+        self._btn_audit.setStyleSheet("padding: 8px 16px; font-size: 12px; font-weight: 700;")
         self._btn_audit.clicked.connect(self.run_audit_requested.emit)
         header_bar.addWidget(self._btn_audit)
 
@@ -75,6 +79,7 @@ class ContextualAuditWidget(QWidget):
         hh.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
         hh.setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         hh.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)
+        self._table.setAlternatingRowColors(True)
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self._table.itemSelectionChanged.connect(self._on_row_selected)
@@ -89,13 +94,13 @@ class ContextualAuditWidget(QWidget):
         detail_card = QFrame(bottom_container)
         detail_card.setObjectName("card")
         detail_layout = QVBoxLayout(detail_card)
-        detail_layout.setContentsMargins(10, 10, 10, 10)
-        detail_layout.setSpacing(6)
+        detail_layout.setContentsMargins(12, 12, 12, 12)
+        detail_layout.setSpacing(8)
 
         self._lbl_detail_title = QLabel(
             "Select an audit item above to view forensic details", detail_card
         )
-        self._lbl_detail_title.setStyleSheet("font-weight: bold; font-size: 13px; color: #58a6ff;")
+        self._lbl_detail_title.setStyleSheet("font-weight: 800; font-size: 13px; color: #38bdf8;")
         detail_layout.addWidget(self._lbl_detail_title)
 
         self._lbl_detail_badge = QLabel("", detail_card)
@@ -103,7 +108,7 @@ class ContextualAuditWidget(QWidget):
 
         self._txt_detail_desc = QTextEdit(detail_card)
         self._txt_detail_desc.setReadOnly(True)
-        self._txt_detail_desc.setMaximumHeight(90)
+        self._txt_detail_desc.setMaximumHeight(95)
         detail_layout.addWidget(self._txt_detail_desc)
 
         bottom_layout.addWidget(detail_card)
@@ -119,15 +124,22 @@ class ContextualAuditWidget(QWidget):
         self._items = items
         self._table.setRowCount(len(items))
 
+        bold_font = QFont("Segoe UI", 9, QFont.Weight.Bold)
+
         for row, item in enumerate(items):
-            self._table.setItem(row, 0, QTableWidgetItem(item.rule_code))
+            code_item = QTableWidgetItem(item.rule_code)
+            code_item.setFont(bold_font)
+            self._table.setItem(row, 0, code_item)
+
             self._table.setItem(row, 1, QTableWidgetItem(item.category.replace("_", " ")))
 
             status_item = QTableWidgetItem(item.status.replace("_", " "))
+            status_item.setFont(bold_font)
+            status_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             if item.status == "PASSED":
-                status_item.setForeground(Qt.GlobalColor.green)
+                status_item.setForeground(QColor("#10b981"))
             else:
-                status_item.setForeground(Qt.GlobalColor.red)
+                status_item.setForeground(QColor("#ef4444"))
             self._table.setItem(row, 2, status_item)
 
             self._table.setItem(row, 3, QTableWidgetItem(item.expected_value))
@@ -148,7 +160,7 @@ class ContextualAuditWidget(QWidget):
         item = self._items[row]
         self._lbl_detail_title.setText(f"{item.rule_code}: {item.rule_name}")
 
-        color = "#3fb950" if item.status == "PASSED" else "#f85149"
+        color = "#10b981" if item.status == "PASSED" else "#ef4444"
         self._lbl_detail_badge.setText(
             f"Category: <b>{item.category}</b> | "
             f"Status: <b style='color:{color};'>{item.status}</b> | "
@@ -158,5 +170,4 @@ class ContextualAuditWidget(QWidget):
             f"{item.description}\n\n"
             f"Expected: {item.expected_value}\n"
             f"Observed: {item.actual_value}\n"
-            f"Cross-Document Sources: {', '.join(item.involved_documents)}"
         )

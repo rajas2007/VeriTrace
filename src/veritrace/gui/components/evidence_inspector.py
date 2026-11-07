@@ -60,11 +60,11 @@ class EvidenceInspectorDock(QDockWidget):
         self._card = QFrame(content)
         self._card.setObjectName("card")
         card_layout = QVBoxLayout(self._card)
-        card_layout.setContentsMargins(10, 10, 10, 10)
-        card_layout.setSpacing(6)
+        card_layout.setContentsMargins(12, 12, 12, 12)
+        card_layout.setSpacing(8)
 
         self._lbl_title = QLabel("Select a finding to inspect", self._card)
-        self._lbl_title.setStyleSheet("font-weight: bold; font-size: 13px; color: #ffffff;")
+        self._lbl_title.setStyleSheet("font-weight: 800; font-size: 13px; color: #f1f5f9;")
         self._lbl_title.setWordWrap(True)
         card_layout.addWidget(self._lbl_title)
 
@@ -72,6 +72,7 @@ class EvidenceInspectorDock(QDockWidget):
         card_layout.addWidget(self._lbl_badges)
 
         self._lbl_confidence = QLabel("", self._card)
+        self._lbl_confidence.setStyleSheet("color: #94a3b8; font-size: 11px;")
         card_layout.addWidget(self._lbl_confidence)
 
         # Confidence gauge bar
@@ -81,10 +82,10 @@ class EvidenceInspectorDock(QDockWidget):
         self._bar_confidence.setFixedHeight(8)
         self._bar_confidence.setTextVisible(False)
         self._bar_confidence.setStyleSheet(
-            "QProgressBar { background: #090d16; border: 1px solid #30363d; "
+            "QProgressBar { background: #06090f; border: 1px solid #1c2438; "
             "border-radius: 4px; } "
             "QProgressBar::chunk { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
-            "stop:0 #1f6feb, stop:1 #00f2fe); border-radius: 3px; }"
+            "stop:0 #1d4ed8, stop:1 #06b6d4); border-radius: 3px; }"
         )
         card_layout.addWidget(self._bar_confidence)
 
@@ -94,41 +95,43 @@ class EvidenceInspectorDock(QDockWidget):
         crops_box = QFrame(content)
         crops_box.setObjectName("card")
         crops_layout = QVBoxLayout(crops_box)
-        crops_layout.setContentsMargins(8, 8, 8, 8)
-        crops_layout.setSpacing(6)
+        crops_layout.setContentsMargins(10, 10, 10, 10)
+        crops_layout.setSpacing(8)
 
         lbl_crops_hdr = QLabel("PIXEL-ANCHORED EVIDENCE CROPS", crops_box)
-        lbl_crops_hdr.setStyleSheet("font-weight: bold; color: #58a6ff; font-size: 11px;")
+        lbl_crops_hdr.setStyleSheet(
+            "font-weight: 700; color: #38bdf8; font-size: 11px; letter-spacing: 0.5px;"
+        )
         crops_layout.addWidget(lbl_crops_hdr)
 
         crops_grid = QGridLayout()
-        crops_grid.setSpacing(6)
+        crops_grid.setSpacing(8)
 
         lbl_q_title = QLabel("Questioned Crop", crops_box)
-        lbl_q_title.setStyleSheet("color: #8b949e; font-size: 10px; font-weight: 600;")
+        lbl_q_title.setStyleSheet("color: #94a3b8; font-size: 10px; font-weight: 700;")
         crops_grid.addWidget(lbl_q_title, 0, 0)
 
-        lbl_r_title = QLabel("Comparison / ELA", crops_box)
-        lbl_r_title.setStyleSheet("color: #8b949e; font-size: 10px; font-weight: 600;")
+        lbl_r_title = QLabel("Comparison / ELA Heatmap", crops_box)
+        lbl_r_title.setStyleSheet("color: #94a3b8; font-size: 10px; font-weight: 700;")
         crops_grid.addWidget(lbl_r_title, 0, 1)
 
         self._lbl_orig_crop = QLabel("No crop available", crops_box)
         self._lbl_orig_crop.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._lbl_orig_crop.setMinimumSize(130, 90)
-        self._lbl_orig_crop.setMaximumHeight(120)
+        self._lbl_orig_crop.setMinimumSize(130, 95)
+        self._lbl_orig_crop.setMaximumHeight(125)
         self._lbl_orig_crop.setStyleSheet(
-            "background-color: #090d16; border: 1px dashed #30363d; "
-            "border-radius: 4px; color: #6e7681;"
+            "background-color: #06090f; border: 1px solid #1c2438; "
+            "border-radius: 6px; color: #64748b; font-size: 11px;"
         )
         crops_grid.addWidget(self._lbl_orig_crop, 1, 0)
 
         self._lbl_ela_crop = QLabel("No crop available", crops_box)
         self._lbl_ela_crop.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._lbl_ela_crop.setMinimumSize(130, 90)
-        self._lbl_ela_crop.setMaximumHeight(120)
+        self._lbl_ela_crop.setMinimumSize(130, 95)
+        self._lbl_ela_crop.setMaximumHeight(125)
         self._lbl_ela_crop.setStyleSheet(
-            "background-color: #090d16; border: 1px dashed #30363d; "
-            "border-radius: 4px; color: #6e7681;"
+            "background-color: #06090f; border: 1px solid #1c2438; "
+            "border-radius: 6px; color: #64748b; font-size: 11px;"
         )
         crops_grid.addWidget(self._lbl_ela_crop, 1, 1)
 
@@ -137,7 +140,9 @@ class EvidenceInspectorDock(QDockWidget):
 
         # 3. Factual Narrative Explanation
         lbl_narrative_hdr = QLabel("FORENSIC NARRATIVE EXPLANATION", content)
-        lbl_narrative_hdr.setStyleSheet("font-weight: bold; color: #8b949e; font-size: 11px;")
+        lbl_narrative_hdr.setStyleSheet(
+            "font-weight: 700; color: #94a3b8; font-size: 11px; letter-spacing: 0.5px;"
+        )
         layout.addWidget(lbl_narrative_hdr)
 
         self._txt_narrative = QTextEdit(content)
@@ -147,7 +152,9 @@ class EvidenceInspectorDock(QDockWidget):
 
         # 4. Adjudication History
         lbl_history_hdr = QLabel("ADJUDICATION AUDIT TRAIL", content)
-        lbl_history_hdr.setStyleSheet("font-weight: bold; color: #8b949e; font-size: 11px;")
+        lbl_history_hdr.setStyleSheet(
+            "font-weight: 700; color: #94a3b8; font-size: 11px; letter-spacing: 0.5px;"
+        )
         layout.addWidget(lbl_history_hdr)
 
         self._txt_history = QTextEdit(content)
@@ -163,16 +170,23 @@ class EvidenceInspectorDock(QDockWidget):
         review_layout.setSpacing(8)
 
         lbl_action_hdr = QLabel("HUMAN REVIEW ADJUDICATION", review_box)
-        lbl_action_hdr.setStyleSheet("font-weight: bold; color: #58a6ff; font-size: 11px;")
+        lbl_action_hdr.setStyleSheet(
+            "font-weight: 700; color: #38bdf8; font-size: 11px; letter-spacing: 0.5px;"
+        )
         review_layout.addWidget(lbl_action_hdr)
 
         reviewer_layout = QHBoxLayout()
-        reviewer_layout.addWidget(QLabel("Reviewer ID:", review_box))
+        lbl_rev = QLabel("Reviewer ID:", review_box)
+        lbl_rev.setStyleSheet("color: #94a3b8; font-weight: 600; font-size: 11px;")
+        reviewer_layout.addWidget(lbl_rev)
         self._inp_reviewer = QLineEdit("analyst_01", review_box)
         reviewer_layout.addWidget(self._inp_reviewer)
         review_layout.addLayout(reviewer_layout)
 
-        review_layout.addWidget(QLabel("Adjudication Rationale / Notes:", review_box))
+        lbl_notes = QLabel("Adjudication Rationale / Notes:", review_box)
+        lbl_notes.setStyleSheet("color: #94a3b8; font-weight: 600; font-size: 11px;")
+        review_layout.addWidget(lbl_notes)
+
         self._txt_rationale = QTextEdit(review_box)
         self._txt_rationale.setPlaceholderText(
             "Enter objective forensic justification for confirming or dismissing this finding..."
@@ -182,6 +196,8 @@ class EvidenceInspectorDock(QDockWidget):
 
         # Action Buttons
         btn_layout = QHBoxLayout()
+        btn_layout.setSpacing(8)
+
         self._btn_confirm = QPushButton("Confirm", review_box)
         self._btn_confirm.setObjectName("confirmButton")
         self._btn_confirm.clicked.connect(self._on_confirm_clicked)
