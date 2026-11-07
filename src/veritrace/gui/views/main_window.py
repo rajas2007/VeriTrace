@@ -579,7 +579,20 @@ class MainWindow(QMainWindow):
                 target_evidence=None,
                 source_ela_path=ela_path or None,
             )
-            self._status_bar.set_status(f"Viewing document: {doc.original_filename}")
+            quality_msg = ""
+            if self._active_investigation_id and self._investigation_service:
+                try:
+                    q_res = self._investigation_service.assess_document_quality(
+                        self._active_investigation_id, self._organization_id
+                    )
+                    doc_q = next((q for q in q_res if q.document_id == document_id), None)
+                    if doc_q:
+                        score_val = doc_q.overall_score
+                        rec_val = doc_q.recommendation.value
+                        quality_msg = f" | Quality: {score_val:.1f}/100 ({rec_val})"
+                except Exception:
+                    pass
+            self._status_bar.set_status(f"Viewing document: {doc.original_filename}{quality_msg}")
 
     def _on_finding_selected(self, finding_id: str) -> None:
         """Bind selected finding to inspector dock and side-by-side canvas."""

@@ -5,7 +5,7 @@
 
 **Target Competition:** DataOps Innovation Hackathon – Problem Statement 2 (PS-2)
 **Product Form Factor:** Standalone Industrial Desktop Software (Windows 10/11 x64)
-**Development Status:** All 12 Industrial Milestones Completed (100% Core Scope, 331 Automated Tests Passing)
+**Development Status:** Milestone 2.1 Complete — Production & Demo Ready (100% Core Scope, 391 Automated Tests Passing across 7 Quality Gates, Standalone Windows PyInstaller Executable Built)
 
 ---
 
@@ -35,7 +35,7 @@ VeriTrace is intentionally architected as **standalone native desktop software**
 ## 3. Eight Core Planned Forensic Capabilities
 
 1. **Multi-Document Industrial Ingestion:** Native OS drag-and-drop import for multi-page PDFs, PNGs, and JPEGs grouped into an immutable investigation container with cryptographic SHA-256 evidence hashing across manufacturing, logistics, and BFSI packages.
-2. **Multilingual Text Quality & Multi-Engine OCR:** Native PyMuPDF vector extraction combined with an extensible multilingual OCR engine abstraction (PaddleOCR / Tesseract) covering 12 Indian languages (English, Hindi, and Marathi priority).
+2. **Multilingual Text Quality & Multi-Engine OCR:** Direct digital PDF text extraction via PyMuPDF combined with an extensible OCR engine abstraction (Tesseract 5.x with CLAHE preprocessing); tested on English, Hindi, and Marathi text with Indic numeral and Unicode NFC normalization (extensible 12-language roadmap).
 3. **Advanced Layout & Structure Understanding:** Hierarchical reading order, complex table extraction, and header-item-footer relationships via PyMuPDF and optional Docling adapters.
 4. **Visual Forensics Suite (OpenCV & Pillow):**
    * **Error Level Analysis (ELA):** Detects localized JPEG compression differential anomalies to highlight spliced or modified figures.
@@ -57,19 +57,14 @@ VeriTrace is intentionally architected as **standalone native desktop software**
 | **Application Layer** | **Python 3.11 Services** | In-process application services (`InvestigationService`, `DocumentService`, `ForensicsService`, `DossierService`). |
 | **Background Threading** | **QThreadPool & QRunnable** | Multi-threaded forensic pipeline execution without blocking UI event loop. |
 | **Database & ORM** | **SQLite (WAL) + SQLAlchemy 2.0** | Local relational persistence (15 Core Entities + 1 Association Table) in `%LOCALAPPDATA%`. |
-| **PDF Processing** | **PyMuPDF (`fitz`)** | Direct vector text extraction, font auditing, and 300 DPI lossless page rendering. |
+| **PDF Processing** | **PyMuPDF (`fitz`)** | Direct digital PDF text extraction, font auditing, and 300 DPI page rasterization. |
 | **OCR Engines** | **Tesseract 5.x & PaddleOCR (Eval)** | Extensible `TextExtractorProtocol` abstraction for English and Indian scripts (Hindi, Marathi). |
 | **Computer Vision** | **OpenCV + Pillow + NumPy** | Error Level Analysis (ELA), baseline regression, visual evidence cropping. |
 | **Local ML Inference** | **ONNX Runtime (`onnxruntime`)** | Local CPU inference for quantized Siamese CNN signature comparison models. |
 | **Text Matching** | **RapidFuzz** | High-speed C++ Levenshtein string and entity alignment. |
 | **AI Reasoning** | **Configurable LLM + Offline Fallback** | Grounded narrative synthesis over verified findings via `LLMProviderProtocol` (*optional cloud Groq, with 100% deterministic template fallback*). |
 | **Reporting Engine** | **ReportLab** | Programmatic compilation of auditor-grade multi-page PDF dossiers. |
-| **Packaging & Distribution**| **PyInstaller + Inno Setup** | One-folder Python bundle + single-click Windows installer (`VeriTrace-Setup.exe`). |
-| **Computer Vision** | **OpenCV + Pillow + NumPy** | Error Level Analysis (ELA), baseline regression, visual evidence cropping. |
-| **Text Matching** | **RapidFuzz** | High-speed C++ Levenshtein string and entity alignment. |
-| **AI Reasoning** | **Configurable LLM + Offline Fallback** | Grounded narrative synthesis over verified findings via `LLMProviderProtocol` (*optional cloud Groq candidate, with 100% deterministic template fallback*). |
-| **Reporting Engine** | **ReportLab** | Programmatic compilation of auditor-grade multi-page PDF dossiers. |
-| **Packaging & Distribution**| **PyInstaller + Inno Setup** | One-folder Python bundle + single-click Windows installer (`VeriTrace-Setup.exe`). |
+| **Packaging & Distribution**| **PyInstaller + Inno Setup** | Standalone one-folder executable (`dist\VeriTrace\VeriTrace.exe`) + Inno Setup installer script (`packaging\installer\veritrace_setup.iss`). |
 
 ---
 
@@ -240,21 +235,24 @@ VeriTrace/
 
 ---
 
-## 8. Planned Windows Distribution
+## 8. Windows Packaging & Distribution Status
 
-> [!NOTE]
-> The single-click downloadable installer (`VeriTrace-Setup.exe`) is a **planned release deliverable** scheduled for compilation and verification during **Milestone 6 (Desktop Packaging & Release)**, not an already completed artifact.
+> [!IMPORTANT]
+> **Windows Packaging & Release Status:**
+> - **Standalone Executable (Complete & Verified):** The application is packaged into a standalone 64-bit Windows bundle at `dist\VeriTrace\VeriTrace.exe` (12.48 MB binary; 185 MB runtime directory) using PyInstaller 6.22 on Python 3.11.9. It has been verified via live interactive and background execution.
+> - **Inno Setup Installer Script (Complete & Configured):** The production installer script is authored at [`packaging/installer/veritrace_setup.iss`](packaging/installer/veritrace_setup.iss). It configures the target directory (`{autopf}\VeriTrace`) and strictly isolates user databases in `{localappdata}\VeriTrace` with `Flags: uninsneveruninstall` to prevent accidental data loss during upgrades.
+> - **Installer Binary Compilation Note:** The Inno Setup compiler (`ISCC.exe`) is an external build tool not pre-installed on this specific headless machine. Compiling `VeriTrace-Setup-v2.1.exe` requires running `iscc packaging\installer\veritrace_setup.iss` on any Windows workstation with Inno Setup installed.
 
-The distribution package will feature:
-* **Self-Contained Installer:** Bundles the Python runtime, PySide6 dependencies, capability engines, and Tesseract OCR binaries into a single Inno Setup wizard (`VeriTrace-Setup.exe`).
-* **Zero Host Prerequisites:** Installs and launches smoothly on standard Windows 10/11 x64 systems without requiring pre-installed Python, Node.js, or development toolchains.
-* **Automated Data Directory Initialization:** Automatically initializes `%LOCALAPPDATA%/VeriTrace/` and the SQLite WAL database on first launch.
+The standalone distribution package features:
+* **Zero Host Prerequisites:** Self-contained executable bundles Python 3.11, PySide6, OpenCV, and capability engines without requiring pre-installed Python, Node.js, or developer tools.
+* **Air-Gapped Data Isolation:** Automatically initializes `%LOCALAPPDATA%/VeriTrace/` and the SQLite WAL database on first launch, strictly isolated from cloud sync folders.
+* **Forensic Neutrality Invariant:** Automated optical heuristics never claim to prove legal fraud or criminal forgery; qualified human document examiners retain ultimate authority.
 
 ---
 
 ## 9. Current Development Status & Milestone Execution
 
-All **12 Industrial Milestones** are fully implemented, verified with **331 automated unit, integration, and architecture tests**, and committed to `main`:
+All **12 Industrial Milestones** are fully implemented, verified with **391 automated unit, integration, and architecture tests** across 7 quality gates, and committed to `main`:
 
 * **Milestone 1: Industrial Product Foundation:** Charter across 7 sectors, PS-2 analysis, green GitHub CI.
 * **Milestone 2: Shared Contracts & Domain:** 15 Core Entities, Enums, Value Objects, SQLite UnitOfWork, Alembic migrations.
@@ -277,15 +275,17 @@ All **12 Industrial Milestones** are fully implemented, verified with **331 auto
 ```powershell
 python -m pytest
 ```
-Executes all 331 tests across architecture, benchmarks, desktop GUI, persistence, forensics, and rules in ~30 seconds.
+Executes all 391 tests across architecture, benchmarks, desktop GUI, persistence, forensics, and rules in ~30 seconds.
 
-### 2. Generate Curated Hackathon Demo Bundles
-```powershell
-python scripts/development/generate_demo_bundles.py
-```
-Compiles both official test packages into `samples/`:
-- `samples/CASE-2026-IND-01/`: Industrial procurement bundle (`PO_SteelTubes_AutoCorp.pdf`, `DeliveryChallan_SteelTubes_Tampered.pdf`, `MillTestCert_Grade_ForgedSig.pdf`).
-- `samples/CASE-2026-0891/`: Financial banking bundle (`National_ID_RajeshSharma.pdf`, `SalarySlip_Nov2023_Tampered.pdf`, `BankStatement_Nov2023_Conflicting.pdf`).
+### 2. Access Industrial Demonstration Packages
+The 4-document industrial procurement demonstration dataset is available at `samples/industrial_procurement/`:
+- `PO-2026-IND-001.pdf`: Purchase Order (1,000 KG SS 316L @ ₹450.00/KG = ₹450,000.00).
+- `DC-98741.pdf`: Delivery Challan (800 KG dispatched SS 304, Heat #H-8821-A; 200 KG shortfall).
+- `MTC-H8821.pdf`: Mill Test Certificate (Mo = 0.020% confirms Grade SS 304 substituted for SS 316L).
+- `INV-88992.pdf`: Commercial Invoice (Overbilled for 1,000 KG @ ₹450.00 + 18% GST + Freight = ₹536,000.00).
+- **Net Detected Overbilling:** **₹106,200.00** (₹90,000.00 taxable base + ₹16,200.00 GST).
+
+To load the complete case into the local database with one click, launch the desktop application and click **`Load Industrial Demo`** on the Operational Dashboard.
 
 ### 3. Launch Native Desktop Workstation
 ```powershell

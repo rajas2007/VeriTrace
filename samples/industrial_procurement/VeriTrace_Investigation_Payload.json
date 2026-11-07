@@ -1,0 +1,597 @@
+{
+  "investigation_id": "inv_5929d759286545c499c0b68612e270eb",
+  "case_reference": "INV-2026-IND-001",
+  "generated_at": "2026-11-07T09:43:02.715150+00:00",
+  "section_1_document_overview": [
+    {
+      "document_id": "doc_83fb8d777e8640078e819b687b67b1f7",
+      "filename": "PO-2026-IND-001.pdf",
+      "mime_type": "application/pdf",
+      "file_size_bytes": 6228,
+      "sha256_hash": "2bf2c400e5dc2f66df0ed3a44df6f4982567822850b544d767e1759e45d3d23d",
+      "page_count": 1,
+      "document_type": "PURCHASE_ORDER",
+      "status": "UPLOADED",
+      "ingested_at": "2026-11-07T09:43:01.302267+00:00"
+    },
+    {
+      "document_id": "doc_d110c33d6fdb429aa7e6dce1dcbdbc1b",
+      "filename": "DC-98741.pdf",
+      "mime_type": "application/pdf",
+      "file_size_bytes": 5568,
+      "sha256_hash": "a28f6dbf8ea6774231bbf45210f1661369feb1419baabc33d1a8458e43747b61",
+      "page_count": 1,
+      "document_type": "DELIVERY_CHALLAN",
+      "status": "UPLOADED",
+      "ingested_at": "2026-11-07T09:43:01.385487+00:00"
+    },
+    {
+      "document_id": "doc_195fd9ddf67940d495930d63c8a4a07a",
+      "filename": "MTC-H8821.pdf",
+      "mime_type": "application/pdf",
+      "file_size_bytes": 5875,
+      "sha256_hash": "272eee01f0585c212aa52129bd1c7611fc60f4620d474c1291fcd1af0b114ade",
+      "page_count": 1,
+      "document_type": "MILL_TEST_CERT",
+      "status": "UPLOADED",
+      "ingested_at": "2026-11-07T09:43:01.459942+00:00"
+    },
+    {
+      "document_id": "doc_7c1bca9251d74f92b48e51ae09bea446",
+      "filename": "INV-88992.pdf",
+      "mime_type": "application/pdf",
+      "file_size_bytes": 7266,
+      "sha256_hash": "963ef766649082288028aae3c64c010c06cc49f5fcc8b5393bf075a804a4c001",
+      "page_count": 1,
+      "document_type": "COMMERCIAL_INVOICE",
+      "status": "UPLOADED",
+      "ingested_at": "2026-11-07T09:43:01.535341+00:00"
+    }
+  ],
+  "section_2_extracted_information": [
+    {
+      "field_name": "order_date",
+      "field_value": "2026-03-01",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "material_grade",
+      "field_value": "SS 316L",
+      "confidence": 0.98,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "purchase_order_number",
+      "field_value": "PO-2026-IND-001",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "total_amount",
+      "field_value": "450000.00",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "ordered_quantity",
+      "field_value": "1000 KG",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "vendor_name",
+      "field_value": "Apex Heavy Engineering Ltd",
+      "confidence": 0.98,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "unit_rate",
+      "field_value": "450.00",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "line_total",
+      "field_value": "450000.00",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "material_grade",
+      "field_value": "SS 304",
+      "confidence": 0.97,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "delivered_quantity",
+      "field_value": "800 KG",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "challan_number",
+      "field_value": "DC-98741",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "purchase_order_reference",
+      "field_value": "PO-2026-IND-001",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "batch_number",
+      "field_value": "H-8821-A",
+      "confidence": 0.98,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "delivery_date",
+      "field_value": "2026-03-05",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "heat_number",
+      "field_value": "H-8821-A",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "certificate_number",
+      "field_value": "MTC-H8821",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "material_grade",
+      "field_value": "SS 304",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "inspection_date",
+      "field_value": "2026-03-04",
+      "confidence": 0.98,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "total_amount",
+      "field_value": "536000.00",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "unit_rate",
+      "field_value": "450.00",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "line_total",
+      "field_value": "450000.00",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "freight",
+      "field_value": "5000.00",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "invoice_number",
+      "field_value": "INV-88992",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "grand_total",
+      "field_value": "536000.00",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "billed_quantity",
+      "field_value": "1000 KG",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "challan_reference",
+      "field_value": "DC-98741",
+      "confidence": 0.98,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "invoice_date",
+      "field_value": "2026-03-06",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "tax_amount",
+      "field_value": "81000.00",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "material_grade",
+      "field_value": "SS 316L",
+      "confidence": 0.98,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "purchase_order_reference",
+      "field_value": "PO-2026-IND-001",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    },
+    {
+      "field_name": "subtotal",
+      "field_value": "450000.00",
+      "confidence": 0.99,
+      "page_number": 1,
+      "language": null,
+      "script": null
+    }
+  ],
+  "section_3_contextual_analysis": [
+    {
+      "rule_name": "SUBTOTAL_TAX_GRAND_TOTAL",
+      "category": "ARITHMETIC_MISMATCH",
+      "description": "Grand total mismatch: expected 531000.00, observed 536000.00 (diff: 5000.00)",
+      "expected_value": 531000.0,
+      "observed_value": 536000.0,
+      "discrepancy": 5000.0,
+      "affected_fields": [
+        "subtotal",
+        "tax_amount",
+        "grand_total"
+      ]
+    }
+  ],
+  "section_4_visual_forensic_findings": [
+    {
+      "finding_id": "fnd_32c57e39ba434aee9b0cd183947d3b06",
+      "category": "CROSS_DOC_MISMATCH",
+      "epistemic_tier": "DETECTED_INCONSISTENCY",
+      "severity": "CRITICAL",
+      "title": "Material Grade Contradiction: SS 316L vs SS 304",
+      "explanation": "Metallurgical specification contradiction: PURCHASE_ORDER ordered material grade 'SS 316L' (SS316L), but MILL_TEST_CERT specifies 'SS 304' (SS304). Grade substitution may compromise structural or chemical compliance.",
+      "confidence": 0.98,
+      "measurements": {},
+      "evidence_crop_path": null
+    },
+    {
+      "finding_id": "fnd_54b5d441fd4c4360a5065dbcfd104cc4",
+      "category": "CROSS_DOC_MISMATCH",
+      "epistemic_tier": "DETECTED_INCONSISTENCY",
+      "severity": "CRITICAL",
+      "title": "Material Grade Contradiction: SS 316L vs SS 304",
+      "explanation": "Metallurgical specification contradiction: PURCHASE_ORDER ordered material grade 'SS 316L' (SS316L), but DELIVERY_CHALLAN specifies 'SS 304' (SS304). Grade substitution may compromise structural or chemical compliance.",
+      "confidence": 0.97,
+      "measurements": {},
+      "evidence_crop_path": null
+    },
+    {
+      "finding_id": "fnd_9d38a6701ff24ce7928df73b277b22a9",
+      "category": "CROSS_DOC_MISMATCH",
+      "epistemic_tier": "DETECTED_INCONSISTENCY",
+      "severity": "HIGH",
+      "title": "Quantity Discrepancy: COMMERCIAL_INVOICE exceeds DELIVERY_CHALLAN by 200.00 KG (25.00%)",
+      "explanation": "COMMERCIAL_INVOICE claims 1000.00 KG ('1000.0 KG'), which exceeds DELIVERY_CHALLAN baseline of 800.00 KG ('800.0 KG') by 200.00 KG (25.00%). Requires investigation for excess billing or dispatch overrun.",
+      "confidence": 1.0,
+      "measurements": {},
+      "evidence_crop_path": null
+    },
+    {
+      "finding_id": "fnd_eaff025a50724ae1929ca75c716524a2",
+      "category": "CROSS_DOC_MISMATCH",
+      "epistemic_tier": "DETECTED_INCONSISTENCY",
+      "severity": "CRITICAL",
+      "title": "Material Grade Contradiction: SS 316L vs SS 304",
+      "explanation": "Metallurgical specification contradiction: PURCHASE_ORDER ordered material grade 'SS 316L' (SS316L), but MILL_TEST_CERT specifies 'SS 304' (SS304). Grade substitution may compromise structural or chemical compliance.",
+      "confidence": 0.98,
+      "measurements": {},
+      "evidence_crop_path": null
+    },
+    {
+      "finding_id": "fnd_f9e76e4e912349819ab67aabb1061e5a",
+      "category": "CROSS_DOC_MISMATCH",
+      "epistemic_tier": "DETECTED_INCONSISTENCY",
+      "severity": "CRITICAL",
+      "title": "Material Grade Contradiction: SS 316L vs SS 304",
+      "explanation": "Metallurgical specification contradiction: PURCHASE_ORDER ordered material grade 'SS 316L' (SS316L), but DELIVERY_CHALLAN specifies 'SS 304' (SS304). Grade substitution may compromise structural or chemical compliance.",
+      "confidence": 0.97,
+      "measurements": {},
+      "evidence_crop_path": null
+    },
+    {
+      "finding_id": "fnd_daa8bdc47f364863a5843d0f0cb83dbb",
+      "category": "CROSS_DOC_MISMATCH",
+      "epistemic_tier": "DETECTED_INCONSISTENCY",
+      "severity": "LOW",
+      "title": "Delivery Shortfall on Closed Order: DELIVERY_CHALLAN short by 200.00 KG (20.00%)",
+      "explanation": "DELIVERY_CHALLAN delivered only 800.00 KG ('800.0 KG') against closed PURCHASE_ORDER requirement of 1000.00 KG ('1000.0 KG'). Shortfall of 200.00 KG (20.00%) on closed case.",
+      "confidence": 1.0,
+      "measurements": {},
+      "evidence_crop_path": null
+    },
+    {
+      "finding_id": "fnd_6e6c5565add4466cbc4a2b2f78d34999",
+      "category": "CROSS_DOC_MISMATCH",
+      "epistemic_tier": "DETECTED_INCONSISTENCY",
+      "severity": "HIGH",
+      "title": "Quantity Discrepancy: COMMERCIAL_INVOICE exceeds DELIVERY_CHALLAN by 200.00 KG (25.00%)",
+      "explanation": "COMMERCIAL_INVOICE claims 1000.00 KG ('1000.0 KG'), which exceeds DELIVERY_CHALLAN baseline of 800.00 KG ('800.0 KG') by 200.00 KG (25.00%). Requires investigation for excess billing or dispatch overrun.",
+      "confidence": 1.0,
+      "measurements": {},
+      "evidence_crop_path": null
+    }
+  ],
+  "section_5_evidence_traceability": [
+    {
+      "evidence_id": "evd_13546128770d4258bcfaac125499abf2",
+      "page_number": 1,
+      "normalized_bbox": {
+        "ymin": 0.2518,
+        "xmin": 0.521,
+        "ymax": 0.2755,
+        "xmax": 0.6387
+      },
+      "crop_image_path": "evidence/crop_fld_840951f30fce4456a51f362dadf1b44a.png",
+      "heatmap_image_path": null,
+      "grounding_explanation": "Extracted field 'billed_quantity': '1000 KG'"
+    },
+    {
+      "evidence_id": "evd_18275301fa10495aa5fd707941f37f21",
+      "page_number": 1,
+      "normalized_bbox": {
+        "ymin": 0.2518,
+        "xmin": 0.7311,
+        "ymax": 0.2755,
+        "xmax": 0.8571
+      },
+      "crop_image_path": "evidence/crop_fld_496ee09372f04ba8b29deb8edd28ccc9.png",
+      "heatmap_image_path": null,
+      "grounding_explanation": "Extracted field 'delivered_quantity': '800 KG'"
+    },
+    {
+      "evidence_id": "evd_19d22a9adc324fe79035a23a81c580fc",
+      "page_number": 1,
+      "normalized_bbox": {
+        "ymin": 0.2518,
+        "xmin": 0.3613,
+        "ymax": 0.2755,
+        "xmax": 0.4706
+      },
+      "crop_image_path": "evidence/crop_fld_25e223d58a614f78a9771f07a1a5a52f.png",
+      "heatmap_image_path": null,
+      "grounding_explanation": "Extracted field 'material_grade': 'SS 316L'"
+    },
+    {
+      "evidence_id": "evd_352c68f4e8134fc8894c06b32ebb3aeb",
+      "page_number": 1,
+      "normalized_bbox": {
+        "ymin": 0.2518,
+        "xmin": 0.5294,
+        "ymax": 0.2755,
+        "xmax": 0.6387
+      },
+      "crop_image_path": "evidence/crop_fld_99b9e04cc79d4da2bf5e357c3b316f6d.png",
+      "heatmap_image_path": null,
+      "grounding_explanation": "Extracted field 'ordered_quantity': '1000 KG'"
+    },
+    {
+      "evidence_id": "evd_36a4ea62580c499081ce80130bfbc27a",
+      "page_number": 1,
+      "normalized_bbox": {
+        "ymin": 0.2518,
+        "xmin": 0.5462,
+        "ymax": 0.2755,
+        "xmax": 0.6639
+      },
+      "crop_image_path": "evidence/crop_fld_250856125cfe40928dd360894ca2dd6e.png",
+      "heatmap_image_path": null,
+      "grounding_explanation": "Extracted field 'material_grade': 'SS 304'"
+    },
+    {
+      "evidence_id": "evd_6b85cde24a65430b9785d1b617b58ea0",
+      "page_number": 1,
+      "normalized_bbox": {
+        "ymin": 0.2518,
+        "xmin": 0.7311,
+        "ymax": 0.2755,
+        "xmax": 0.8571
+      },
+      "crop_image_path": "evidence/crop_fld_496ee09372f04ba8b29deb8edd28ccc9.png",
+      "heatmap_image_path": null,
+      "grounding_explanation": "Extracted field 'delivered_quantity': '800 KG'"
+    },
+    {
+      "evidence_id": "evd_6c28d460c8cb46849eed90b601a89753",
+      "page_number": 1,
+      "normalized_bbox": {
+        "ymin": 0.2518,
+        "xmin": 0.3613,
+        "ymax": 0.2755,
+        "xmax": 0.4706
+      },
+      "crop_image_path": "evidence/crop_fld_25e223d58a614f78a9771f07a1a5a52f.png",
+      "heatmap_image_path": null,
+      "grounding_explanation": "Extracted field 'material_grade': 'SS 316L'"
+    },
+    {
+      "evidence_id": "evd_87cc03850c9b44eab2b3166e686f74b5",
+      "page_number": 1,
+      "normalized_bbox": {
+        "ymin": 0.2518,
+        "xmin": 0.521,
+        "ymax": 0.2755,
+        "xmax": 0.6387
+      },
+      "crop_image_path": "evidence/crop_fld_840951f30fce4456a51f362dadf1b44a.png",
+      "heatmap_image_path": null,
+      "grounding_explanation": "Extracted field 'billed_quantity': '1000 KG'"
+    },
+    {
+      "evidence_id": "evd_98881be35e0547adb1182111e38af44b",
+      "page_number": 1,
+      "normalized_bbox": {
+        "ymin": 0.1734,
+        "xmin": 0.7395,
+        "ymax": 0.1948,
+        "xmax": 0.8403
+      },
+      "crop_image_path": "evidence/crop_fld_782cc179238c415e922502fce246282d.png",
+      "heatmap_image_path": null,
+      "grounding_explanation": "Extracted field 'material_grade': 'SS 304'"
+    },
+    {
+      "evidence_id": "evd_aff09ce9a1724c028a2f9f3ba0043f90",
+      "page_number": 1,
+      "normalized_bbox": {
+        "ymin": 0.1734,
+        "xmin": 0.7395,
+        "ymax": 0.1948,
+        "xmax": 0.8403
+      },
+      "crop_image_path": "evidence/crop_fld_782cc179238c415e922502fce246282d.png",
+      "heatmap_image_path": null,
+      "grounding_explanation": "Extracted field 'material_grade': 'SS 304'"
+    },
+    {
+      "evidence_id": "evd_c2e0716985854b9abdace1c051370b9c",
+      "page_number": 1,
+      "normalized_bbox": {
+        "ymin": 0.2518,
+        "xmin": 0.3613,
+        "ymax": 0.2755,
+        "xmax": 0.4706
+      },
+      "crop_image_path": "evidence/crop_fld_25e223d58a614f78a9771f07a1a5a52f.png",
+      "heatmap_image_path": null,
+      "grounding_explanation": "Extracted field 'material_grade': 'SS 316L'"
+    },
+    {
+      "evidence_id": "evd_c8c933d2297b4624b30a213f3629261a",
+      "page_number": 1,
+      "normalized_bbox": {
+        "ymin": 0.2518,
+        "xmin": 0.7311,
+        "ymax": 0.2755,
+        "xmax": 0.8571
+      },
+      "crop_image_path": "evidence/crop_fld_496ee09372f04ba8b29deb8edd28ccc9.png",
+      "heatmap_image_path": null,
+      "grounding_explanation": "Extracted field 'delivered_quantity': '800 KG'"
+    },
+    {
+      "evidence_id": "evd_d1d04afb5929455ebee39dab50da1860",
+      "page_number": 1,
+      "normalized_bbox": {
+        "ymin": 0.2518,
+        "xmin": 0.5462,
+        "ymax": 0.2755,
+        "xmax": 0.6639
+      },
+      "crop_image_path": "evidence/crop_fld_250856125cfe40928dd360894ca2dd6e.png",
+      "heatmap_image_path": null,
+      "grounding_explanation": "Extracted field 'material_grade': 'SS 304'"
+    },
+    {
+      "evidence_id": "evd_f196739e19b142f3a485c630e9b2651b",
+      "page_number": 1,
+      "normalized_bbox": {
+        "ymin": 0.2518,
+        "xmin": 0.3613,
+        "ymax": 0.2755,
+        "xmax": 0.4706
+      },
+      "crop_image_path": "evidence/crop_fld_25e223d58a614f78a9771f07a1a5a52f.png",
+      "heatmap_image_path": null,
+      "grounding_explanation": "Extracted field 'material_grade': 'SS 316L'"
+    }
+  ],
+  "section_6_investigation_summary": {
+    "executive_narrative": "Investigation concluded with 7 forensic finding(s) identified across physical, mathematical, and chronological verification dimensions:\n\n\nEpistemic Guidance: In accordance with forensic standards, machine observations constitute empirical evidence and must be reviewed by a human investigator.",
+    "risk_score": 0.0,
+    "risk_classification": "UNDETERMINED",
+    "findings_by_tier": {
+      "DETECTED_INCONSISTENCY": 7
+    },
+    "findings_by_category": {
+      "CROSS_DOC_MISMATCH": 7
+    },
+    "limitations": [
+      "Static 2D image analysis cannot reconstruct dynamic writing speed or pressure.",
+      "Scanned resolution below 200 DPI increases character segmentation uncertainty.",
+      "Machine observations are empirical findings requiring human examiner review."
+    ],
+    "examiner_name": "Lead Forensic Document Examiner",
+    "reviewed_at": "2026-11-07T09:43:02.715150+00:00"
+  }
+}
