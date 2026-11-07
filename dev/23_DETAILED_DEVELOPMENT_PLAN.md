@@ -42,23 +42,26 @@ flowchart TD
 * **Objective:** Codify shared data contracts (`NormalizedBoundingBox`, `ExtractedToken`, `ExtractedField`, `ExtractionProvenance`, `IngestionResult`), uniform `ProcessingStatus` enums, service protocols (`typing.Protocol`), 15 Core Entities + 1 Assoc Table, and 7 canonical test fixtures.
 
 ### Milestone 3: Desktop Shell, Persistence & Ingestion Foundation
-* **Status:** **PLANNED (Next Phase)**
-* **Responsible:** Rajas (GUI, Persistence, Jobs) & Shravan (Ingestion Validation)
+* **Status:** **COMPLETED**
+* **Responsible:** Rajas & Shravan
 * **Modules Affected:**
   * `src/veritrace/main.py`, `src/veritrace/gui/app.py`, `src/veritrace/gui/views/main_window.py`
-  * `src/veritrace/gui/styles/dark_theme.qss`
+  * `src/veritrace/gui/components/`, `src/veritrace/gui/styles/dark_theme.qss`
   * `src/veritrace/infrastructure/persistence/`, `src/veritrace/application/services/`
   * `src/veritrace/capabilities/ingestion/`, `src/veritrace/workers/`
 * **Deliverables:**
-  * Launchable PySide6 native desktop window with 4-pane docking layout.
+  * Launchable PySide6 native desktop window with 4-pane docking layout (`MainWindow`).
+  * High-DPI Document Viewer with sub-millimeter bounding box overlays and interactive zoom/pan (`DocumentViewer`).
+  * Evidence Inspector dock widget with original vs ELA differential crops and HITL triage controls (`EvidenceInspector`).
+  * Case hierarchy tree and drag-and-drop file intake dropzone (`InvestigationSidebar`, `FileDropZone`).
+  * Structured Discrepancy Matrix and multi-tier anomaly table (`FindingTable`).
   * SQLite WAL database initialization at `%LOCALAPPDATA%/VeriTrace/database/veritrace.sqlite`.
   * `InvestigationService.create_investigation()` and `DocumentService.ingest_documents()`.
-  * Drag-and-drop file import dropzone with instant SHA-256 calculation and immutable local copying.
   * Asynchronous `investigation_jobs` runner (`QThreadPool` + `QRunnable`) emitting reactive Qt Signals.
 * **Acceptance Criteria:** Dropping an industrial 3-file bundle (PO + Challan + Test Certificate) registers the case, saves original files, and schedules an investigation job with reactive UI progress.
 
 ### Milestone 4: Multilingual OCR Benchmarking & Multi-Engine Integration
-* **Status:** **PLANNED**
+* **Status:** **COMPLETED**
 * **Responsible:** Shravan
 * **Modules Affected:**
   * `src/veritrace/infrastructure/pdf/`, `src/veritrace/infrastructure/ocr/`
@@ -72,7 +75,7 @@ flowchart TD
 * **Acceptance Criteria:** Bilingual Hindi-English and Marathi-English documents extract structured tokens with valid normalized coordinates $[ymin, xmin, ymax, xmax] \in [0.0, 1.0]$.
 
 ### Milestone 5: Advanced Document Layout & Structure Understanding
-* **Status:** **PLANNED**
+* **Status:** **COMPLETED**
 * **Responsible:** Shravan
 * **Modules Affected:**
   * `src/veritrace/capabilities/extraction/layout/`, `src/veritrace/capabilities/extraction/`
@@ -83,10 +86,10 @@ flowchart TD
 * **Acceptance Criteria:** Complex borderless industrial tables parse cleanly into structured key-value and row-column representations without dropped cells.
 
 ### Milestone 6: Signature Detection & Localization
-* **Status:** **PLANNED**
+* **Status:** **COMPLETED**
 * **Responsible:** Shravan (Algorithms) & Rajas (Viewer Integration)
 * **Modules Affected:**
-  * `src/veritrace/capabilities/forensics/signature/`, `src/veritrace/gui/components/`
+  * `src/veritrace/capabilities/forensics/signatures/`, `src/veritrace/gui/components/`
 * **Deliverables:**
   * Contour and stroke density heuristic algorithms isolating handwritten signatures from printed text and form lines.
   * Filter separating horizontal underlines and circular rubber stamps.
@@ -95,10 +98,10 @@ flowchart TD
 * **Acceptance Criteria:** Signature blocks on inspection reports and delivery challans are accurately bounded ($\text{IoU} \ge 0.75$) and displayed as inspectable evidence patches.
 
 ### Milestone 7: Signature Reference Comparison Prototype
-* **Status:** **PLANNED**
+* **Status:** **COMPLETED**
 * **Responsible:** Shravan (Model Inference) & Rajas (Registry UI)
 * **Modules Affected:**
-  * `src/veritrace/capabilities/forensics/signature/`, `src/veritrace/infrastructure/models/`
+  * `src/veritrace/capabilities/forensics/signatures/`, `src/veritrace/infrastructure/models/`
   * `src/veritrace/gui/dialogs/`, `src/veritrace/domain/entities/`
 * **Deliverables:**
   * UI dialogs for `Organization`, `AuthorizedSubject`, and `SignatureReferenceProfile` enrollment.
@@ -108,10 +111,10 @@ flowchart TD
 * **Acceptance Criteria:** Questioned signature compared against enrolled reference samples outputs metric similarity and uncertainty in $<250\text{ms}$ on CPU with zero cloud calls.
 
 ### Milestone 8: Visual Forensic Analysis Suite
-* **Status:** **PLANNED**
+* **Status:** **COMPLETED**
 * **Responsible:** Shravan (Vision Algorithms) & Rajas (Evidence Inspector)
 * **Modules Affected:**
-  * `src/veritrace/capabilities/forensics/visual/`, `src/veritrace/infrastructure/vision/`
+  * `src/veritrace/capabilities/forensics/`, `src/veritrace/infrastructure/vision/`
   * `src/veritrace/gui/components/evidence_inspector.py`
 * **Deliverables:**
   * Error Level Analysis (ELA) differential engine computing JPEG compression heatmaps.
@@ -121,10 +124,11 @@ flowchart TD
 * **Acceptance Criteria:** Digitally altered quantity on a test delivery challan flags with elevated ELA noise and baseline jitter, generating side-by-side evidence crops in the inspector.
 
 ### Milestone 9: Cross-Language Entity & Concept Correlation
-* **Status:** **PLANNED**
-* **Responsible:** Shravan (Matching Logic) & Rajas (Discrepancy Matrix View)
+* **Status:** **COMPLETED**
+* **Responsible:** Rajas (Matching Logic & Correlation Engine)
 * **Modules Affected:**
-  * `src/veritrace/capabilities/correlation/`, `src/veritrace/gui/views/`
+  * `src/veritrace/capabilities/correlation/`, `src/veritrace/domain/rules/cross_document.py`
+  * `src/veritrace/gui/views/`
 * **Deliverables:**
   * RapidFuzz entity reconciliation aligning vendor names, consignees, dates, and amounts across files.
   * Multilingual concept dictionary mapping accounting terms across Indian languages ("Total Amount" $\leftrightarrow$ "एकूण रक्कम" $\leftrightarrow$ "कुल रकम").
@@ -132,7 +136,7 @@ flowchart TD
 * **Acceptance Criteria:** Discrepancies between ordered PO quantity and delivered challan quantity are automatically detected and visualized in the contradiction matrix.
 
 ### Milestone 10: Industrial Contextual Reasoning & Verification
-* **Status:** **PLANNED**
+* **Status:** **COMPLETED**
 * **Responsible:** Rajas (Application Coordination) & Shravan (Rule Logic)
 * **Modules Affected:**
   * `src/veritrace/domain/rules/`, `src/veritrace/capabilities/reasoning/`
@@ -144,8 +148,8 @@ flowchart TD
 * **Acceptance Criteria:** Offline execution generates complete, high-quality factual forensic explanations without network calls.
 
 ### Milestone 11: Investigation Dossier & Audit Workflows
-* **Status:** **PLANNED**
-* **Responsible:** Rajas
+* **Status:** **COMPLETED**
+* **Responsible:** Rajas & Shravan
 * **Modules Affected:**
   * `src/veritrace/capabilities/reporting/`, `src/veritrace/infrastructure/reporting/`
   * `src/veritrace/gui/components/evidence_inspector.py`

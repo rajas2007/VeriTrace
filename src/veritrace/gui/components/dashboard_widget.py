@@ -20,7 +20,7 @@ class MetricCard(QFrame):
     """Visual metric card displaying an analytical counter and label."""
 
     def __init__(
-        self, label: str, value: str = "0", color: str = "#0d6efd", parent: Any = None
+        self, label: str, value: str = "0", color: str = "#58a6ff", parent: Any = None
     ) -> None:
         super().__init__(parent)
         self.setObjectName("card")
@@ -36,7 +36,9 @@ class MetricCard(QFrame):
         layout.addWidget(self._lbl_value)
 
         self._lbl_label = QLabel(label, self)
-        self._lbl_label.setStyleSheet("color: #8e8e9c; font-size: 11px; font-weight: 600;")
+        self._lbl_label.setStyleSheet(
+            "color: #8b949e; font-size: 11px; font-weight: 600; letter-spacing: 0.5px;"
+        )
         self._lbl_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self._lbl_label)
 
@@ -49,8 +51,12 @@ class DashboardBannerWidget(QWidget):
     """Investigation header banner displaying metrics and correlation trigger controls."""
 
     run_correlation_requested = Signal(bool)  # is_order_closed
+<<<<<<< HEAD
     run_forensics_requested = Signal()
     generate_dossier_requested = Signal()
+=======
+    export_dossier_requested = Signal()
+>>>>>>> 4b23890e073b4435bd8606178ff05403f236f444
 
     def __init__(self, parent: Any = None) -> None:
         super().__init__(parent)
@@ -64,15 +70,17 @@ class DashboardBannerWidget(QWidget):
         action_bar.setSpacing(10)
 
         title_layout = QVBoxLayout()
-        title_lbl = QLabel("Cross-Document Intelligence & Correlation Dashboard", self)
-        title_lbl.setStyleSheet("font-size: 15px; font-weight: bold; color: #ffffff;")
+        title_lbl = QLabel("Cross-Document Intelligence & Forensic Command Center", self)
+        title_lbl.setStyleSheet(
+            "font-size: 15px; font-weight: bold; color: #ffffff; letter-spacing: 0.5px;"
+        )
         title_layout.addWidget(title_lbl)
 
         sub_lbl = QLabel(
-            "Deterministic cross-document alignment and forensic anomaly detection",
+            "Deterministic cross-document alignment, physical consistency, and PS-2 dossiers",
             self,
         )
-        sub_lbl.setStyleSheet("color: #8e8e9c; font-size: 11px;")
+        sub_lbl.setStyleSheet("color: #8b949e; font-size: 11px;")
         title_layout.addWidget(sub_lbl)
         action_bar.addLayout(title_layout, 1)
 
@@ -83,12 +91,13 @@ class DashboardBannerWidget(QWidget):
         )
         action_bar.addWidget(self._chk_closed)
 
-        self._btn_correlate = QPushButton("Run Cross-Document Correlation", self)
+        self._btn_correlate = QPushButton("⚡ Run Full Forensics", self)
         self._btn_correlate.setObjectName("primaryButton")
-        self._btn_correlate.setStyleSheet("padding: 8px 18px; font-size: 13px;")
+        self._btn_correlate.setStyleSheet("padding: 8px 16px; font-size: 13px;")
         self._btn_correlate.clicked.connect(self._on_correlate_clicked)
         action_bar.addWidget(self._btn_correlate)
 
+<<<<<<< HEAD
         self._btn_forensics = QPushButton("Scan Forensics", self)
         self._btn_forensics.setStyleSheet("padding: 8px 16px; font-size: 13px; font-weight: 600;")
         self._btn_forensics.setToolTip(
@@ -104,6 +113,13 @@ class DashboardBannerWidget(QWidget):
         )
         self._btn_dossier.clicked.connect(self._on_dossier_clicked)
         action_bar.addWidget(self._btn_dossier)
+=======
+        self._btn_export_dossier = QPushButton("📄 Export PS-2 Dossier (PDF)", self)
+        self._btn_export_dossier.setObjectName("accentButton")
+        self._btn_export_dossier.setStyleSheet("padding: 8px 16px; font-size: 13px;")
+        self._btn_export_dossier.clicked.connect(self.export_dossier_requested.emit)
+        action_bar.addWidget(self._btn_export_dossier)
+>>>>>>> 4b23890e073b4435bd8606178ff05403f236f444
 
         main_layout.addLayout(action_bar)
 
@@ -111,19 +127,19 @@ class DashboardBannerWidget(QWidget):
         cards_layout = QHBoxLayout()
         cards_layout.setSpacing(8)
 
-        self._card_docs = MetricCard("DOCUMENTS", "0", "#0d6efd", self)
+        self._card_docs = MetricCard("DOCUMENTS", "0", "#58a6ff", self)
         cards_layout.addWidget(self._card_docs)
 
-        self._card_findings = MetricCard("FINDINGS", "0", "#ffffff", self)
+        self._card_findings = MetricCard("FINDINGS", "0", "#f0f6fc", self)
         cards_layout.addWidget(self._card_findings)
 
-        self._card_critical = MetricCard("CRITICAL", "0", "#dc3545", self)
+        self._card_critical = MetricCard("CRITICAL", "0", "#f85149", self)
         cards_layout.addWidget(self._card_critical)
 
-        self._card_high_med = MetricCard("HIGH / MEDIUM", "0", "#fd7e14", self)
+        self._card_high_med = MetricCard("HIGH / MEDIUM", "0", "#f0883e", self)
         cards_layout.addWidget(self._card_high_med)
 
-        self._card_relations = MetricCard("RELATIONS", "0", "#20c997", self)
+        self._card_relations = MetricCard("RELATIONS", "0", "#3fb950", self)
         cards_layout.addWidget(self._card_relations)
 
         main_layout.addLayout(cards_layout)

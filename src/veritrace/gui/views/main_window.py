@@ -8,12 +8,14 @@ from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QAction, QKeySequence
 from PySide6.QtWidgets import (
     QFileDialog,
     QMainWindow,
     QMessageBox,
     QSplitter,
     QTabWidget,
+    QToolBar,
     QVBoxLayout,
     QWidget,
 )
@@ -23,6 +25,7 @@ from veritrace.application.dto.correlation import (
     CorrelationSummaryDTO,
 )
 from veritrace.application.dto.document import DocumentIngestionResultDTO
+from veritrace.application.dto.dossier import DossierExportRequestDTO
 from veritrace.application.dto.investigation import (
     EvidenceResponseDTO,
     FindingResponseDTO,
@@ -36,6 +39,12 @@ from veritrace.application.services.cross_document_correlation_service import (
 from veritrace.application.services.document_ingestion_service import (
     DocumentIngestionService,
 )
+from veritrace.application.services.dossier_export_service import (
+    DossierExportService,
+)
+from veritrace.application.services.forensic_analysis_service import (
+    ForensicAnalysisService,
+)
 from veritrace.application.services.investigation_service import (
     InvestigationService,
 )
@@ -44,11 +53,13 @@ from veritrace.application.services.text_extraction_service import (
 )
 from veritrace.domain.entities.document_page import DocumentPage
 from veritrace.domain.enums.document import DocumentType
+from veritrace.gui.components.contextual_audit_table import ContextualAuditWidget
 from veritrace.gui.components.dashboard_widget import DashboardBannerWidget
 from veritrace.gui.components.document_viewer import SideBySideDocumentViewer
 from veritrace.gui.components.evidence_inspector import EvidenceInspectorDock
 from veritrace.gui.components.finding_table import FindingTableWidget
 from veritrace.gui.components.investigation_sidebar import InvestigationSidebar
+from veritrace.gui.components.signature_workbench import SignatureWorkbenchWidget
 from veritrace.gui.components.status_bar import VeriTraceStatusBar
 from veritrace.gui.controllers.correlation_worker import CorrelationWorker
 from veritrace.gui.controllers.dossier_worker import DossierWorker
@@ -66,14 +77,19 @@ class MainWindow(QMainWindow):
         investigation_service: InvestigationService,
         correlation_service: CrossDocumentCorrelationService,
         ingestion_service: DocumentIngestionService | None = None,
+<<<<<<< HEAD
         extraction_service: TextExtractionService | None = None,
+=======
+        dossier_export_service: DossierExportService | None = None,
+        forensic_analysis_service: ForensicAnalysisService | None = None,
+>>>>>>> 4b23890e073b4435bd8606178ff05403f236f444
         uow_factory: Any = None,
         organization_id: str = "org_11111111111111111111111111111111",
         parent: Any = None,
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle("VeriTrace Workstation — Cross-Document Forensic Intelligence")
-        self.resize(1400, 900)
+        self.resize(1440, 920)
 
         self._investigation_service = investigation_service
         self._correlation_service = correlation_service
@@ -81,6 +97,18 @@ class MainWindow(QMainWindow):
         self._extraction_service = extraction_service
         self._uow_factory = uow_factory
         self._organization_id = organization_id
+
+        if dossier_export_service:
+            self._dossier_export_service = dossier_export_service
+        elif uow_factory:
+            self._dossier_export_service = DossierExportService(uow_factory)
+        else:
+            self._dossier_export_service = None
+
+        if forensic_analysis_service:
+            self._forensic_analysis_service = forensic_analysis_service
+        else:
+            self._forensic_analysis_service = ForensicAnalysisService(uow_factory)
 
         self._active_investigation_id: str | None = None
         self._current_findings: list[FindingResponseDTO] = []
@@ -91,6 +119,8 @@ class MainWindow(QMainWindow):
         self._dossier_worker: DossierWorker | None = None
         self._forensic_worker: ForensicWorker | None = None
 
+        self._setup_menus()
+        self._setup_toolbar()
         self._setup_ui()
         self._load_investigations()
 
@@ -105,6 +135,123 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, title, text)
         else:
             QMessageBox.information(self, title, text)
+
+    def _setup_menus(self) -> None:
+        """Create standard application menu bar."""
+        menubar = self.menuBar()
+
+        # 1. File Menu
+        file_menu = menubar.addMenu("&File")
+
+        act_new_inv = QAction("&New Investigation", self)
+        act_new_inv.setShortcut(QKeySequence("Ctrl+N"))
+        act_new_inv.triggered.connect(self._on_new_investigation)
+        file_menu.addAction(act_new_inv)
+
+        act_add_doc = QAction("&Import Document...", self)
+        act_add_doc.setShortcut(QKeySequence("Ctrl+O"))
+        act_add_doc.triggered.connect(self._on_add_document)
+        file_menu.addAction(act_add_doc)
+
+        file_menu.addSeparator()
+
+        act_export_pdf = QAction("Export &PS-2 Dossier (PDF)...", self)
+        act_export_pdf.setShortcut(QKeySequence("Ctrl+E"))
+        act_export_pdf.triggered.connect(self._on_export_pdf_dossier)
+        file_menu.addAction(act_export_pdf)
+
+        act_export_json = QAction("Export Structured &JSON Payload...", self)
+        act_export_json.setShortcut(QKeySequence("Ctrl+J"))
+        act_export_json.triggered.connect(self._on_export_json_dossier)
+        file_menu.addAction(act_export_json)
+
+        file_menu.addSeparator()
+
+        act_exit = QAction("E&xit", self)
+        act_exit.setShortcut(QKeySequence("Ctrl+Q"))
+        act_exit.triggered.connect(self.close)
+        file_menu.addAction(act_exit)
+
+        # 2. View Menu
+        view_menu = menubar.addMenu("&View")
+
+        act_zoom_in = QAction("Zoom &In", self)
+        act_zoom_in.setShortcut(QKeySequence("Ctrl++"))
+        act_zoom_in.triggered.connect(lambda: self._doc_viewer._left_canvas.zoom_in())
+        view_menu.addAction(act_zoom_in)
+
+        act_zoom_out = QAction("Zoom &Out", self)
+        act_zoom_out.setShortcut(QKeySequence("Ctrl+-"))
+        act_zoom_out.triggered.connect(lambda: self._doc_viewer._left_canvas.zoom_out())
+        view_menu.addAction(act_zoom_out)
+
+        act_fit = QAction("&Fit to Screen", self)
+        act_fit.setShortcut(QKeySequence("Ctrl+0"))
+        act_fit.triggered.connect(lambda: self._doc_viewer._reset_both_zooms())
+        view_menu.addAction(act_fit)
+
+        # 3. Forensic Engines Menu
+        forensics_menu = menubar.addMenu("F&orensics")
+
+        act_run_corr = QAction("⚡ Run &Cross-Document Correlation", self)
+        act_run_corr.setShortcut(QKeySequence("F5"))
+        act_run_corr.triggered.connect(lambda: self._on_run_correlation(False))
+        forensics_menu.addAction(act_run_corr)
+
+        act_run_sig = QAction("✍️ Run &Signature Hu Moment Verification", self)
+        act_run_sig.triggered.connect(self._on_run_signatures)
+        forensics_menu.addAction(act_run_sig)
+
+        act_run_audit = QAction("🧮 Run &Contextual Procurement Math Audit", self)
+        act_run_audit.triggered.connect(self._on_run_contextual_audit)
+        forensics_menu.addAction(act_run_audit)
+
+        # 4. Demo Bundles Menu
+        demos_menu = menubar.addMenu("&Demo Cases")
+
+        act_demo_ind = QAction("🏭 Load Case 1: Industrial Alloy Fraud (PO/DC/MTC/Invoice)", self)
+        act_demo_ind.triggered.connect(self._on_load_demo)
+        demos_menu.addAction(act_demo_ind)
+
+        # 5. Help Menu
+        help_menu = menubar.addMenu("&Help")
+        act_about = QAction("&About VeriTrace Workstation", self)
+        act_about.triggered.connect(self._on_about)
+        help_menu.addAction(act_about)
+
+    def _setup_toolbar(self) -> None:
+        """Create quick action forensic toolbar."""
+        toolbar = QToolBar("Forensic Actions", self)
+        toolbar.setMovable(False)
+
+        act_import = toolbar.addAction("📥 Import Document")
+        act_import.triggered.connect(self._on_add_document)
+
+        act_run = toolbar.addAction("⚡ Run Full Forensics")
+        act_run.triggered.connect(lambda: self._on_run_correlation(False))
+
+        toolbar.addSeparator()
+
+        act_export_pdf = toolbar.addAction("📄 Export PS-2 Dossier (PDF)")
+        act_export_pdf.triggered.connect(self._on_export_pdf_dossier)
+
+        act_export_json = toolbar.addAction("📊 Export JSON Dossier")
+        act_export_json.triggered.connect(self._on_export_json_dossier)
+
+        toolbar.addSeparator()
+
+        act_sig = toolbar.addAction("✍️ Signature Workbench")
+        act_sig.triggered.connect(lambda: self._tabs.setCurrentIndex(2))
+
+        act_audit = toolbar.addAction("🧮 Math & Chronology Audit")
+        act_audit.triggered.connect(lambda: self._tabs.setCurrentIndex(3))
+
+        toolbar.addSeparator()
+
+        act_demo = toolbar.addAction("🔄 Load Demo Case")
+        act_demo.triggered.connect(self._on_load_demo)
+
+        self.addToolBar(toolbar)
 
     def _setup_ui(self) -> None:
         # Central Splitter
@@ -129,13 +276,17 @@ class MainWindow(QMainWindow):
 
         self._dashboard_banner = DashboardBannerWidget(central_container)
         self._dashboard_banner.run_correlation_requested.connect(self._on_run_correlation)
+<<<<<<< HEAD
         self._dashboard_banner.run_forensics_requested.connect(self._on_run_forensics)
         self._dashboard_banner.generate_dossier_requested.connect(self._on_generate_dossier)
+=======
+        self._dashboard_banner.export_dossier_requested.connect(self._on_export_pdf_dossier)
+>>>>>>> 4b23890e073b4435bd8606178ff05403f236f444
         central_layout.addWidget(self._dashboard_banner)
 
         self._tabs = QTabWidget(central_container)
 
-        # Tab 0: Contradiction Matrix
+        # Tab 0: Contradiction Matrix & Findings
         matrix_container = QWidget(self._tabs)
         matrix_layout = QVBoxLayout(matrix_container)
         matrix_layout.setContentsMargins(4, 4, 4, 4)
@@ -145,13 +296,23 @@ class MainWindow(QMainWindow):
         matrix_layout.addWidget(self._finding_table)
         self._tabs.addTab(matrix_container, "Contradiction Matrix")
 
-        # Tab 1: Side-by-Side Evidence Viewer
+        # Tab 1: Side-by-Side Evidence Canvas
         self._doc_viewer = SideBySideDocumentViewer(self._tabs)
         self._tabs.addTab(self._doc_viewer, "Side-by-Side Evidence Canvas")
 
+        # Tab 2: Signature Forensics Workbench
+        self._signature_workbench = SignatureWorkbenchWidget(self._tabs)
+        self._signature_workbench.run_verification_requested.connect(self._on_run_signatures)
+        self._tabs.addTab(self._signature_workbench, "✍️ Signature Workbench")
+
+        # Tab 3: Contextual Arithmetic & Chronology Audit
+        self._contextual_audit = ContextualAuditWidget(self._tabs)
+        self._contextual_audit.run_audit_requested.connect(self._on_run_contextual_audit)
+        self._tabs.addTab(self._contextual_audit, "🧮 Math & Chronology Audit")
+
         central_layout.addWidget(self._tabs, 1)
         main_splitter.addWidget(central_container)
-        main_splitter.setSizes([320, 1080])
+        main_splitter.setSizes([320, 1120])
 
         self.setCentralWidget(main_splitter)
 
@@ -168,11 +329,30 @@ class MainWindow(QMainWindow):
         self._status_bar.set_telemetry(f"Org: {self._organization_id}")
 
     def _load_investigations(self) -> None:
-        """Fetch investigations for organization and populate sidebar."""
+        """Fetch investigations for organization, auto-seeding demo on first launch."""
         invs = self._investigation_service.list_investigations(self._organization_id)
+        if not invs and self._uow_factory:
+            # Auto-seed industrial demo on fresh launch so the workstation has immediate data
+            try:
+                seed_industrial_demo(self._uow_factory, organization_id=self._organization_id)
+                invs = self._investigation_service.list_investigations(self._organization_id)
+            except Exception as e:
+                logger.warning("Auto-seeding demo on first launch skipped: %s", e)
+
         if invs:
             self._sidebar.set_investigations(invs, selected_id=invs[0].id)
             self._on_investigation_selected(invs[0].id)
+            if not self._current_findings and self._correlation_service:
+                try:
+                    corr_req = CorrelationRequestDTO(
+                        investigation_id=invs[0].id,
+                        organization_id=self._organization_id,
+                        is_order_closed=False,
+                    )
+                    self._correlation_service.correlate_investigation(corr_req)
+                    self._reload_case_data()
+                except Exception as e:
+                    logger.warning("Initial correlation skipped: %s", e)
         else:
             self._status_bar.set_status(
                 "No active investigations found. Create a case or load demo."
@@ -225,6 +405,11 @@ class MainWindow(QMainWindow):
         )
 
         self._status_bar.set_status(f"Loaded {len(docs)} documents and {len(findings)} findings.")
+
+        # Update Contextual Audit
+        if self._forensic_analysis_service:
+            audit_items = self._forensic_analysis_service.run_contextual_audit(inv_id, org_id)
+            self._contextual_audit.set_audit_items(audit_items)
 
     def _on_run_correlation(self, is_order_closed: bool) -> None:
         """Trigger asynchronous background cross-document correlation."""
@@ -372,6 +557,14 @@ class MainWindow(QMainWindow):
         if pages:
             first_page = pages[0]
             self._tabs.setCurrentIndex(1)
+
+            # Generate or fetch ELA heatmap
+            ela_path = ""
+            if self._forensic_analysis_service and first_page.image_storage_path:
+                ela_path = self._forensic_analysis_service.get_or_generate_ela_heatmap(
+                    first_page.image_storage_path
+                )
+
             self._doc_viewer.load_comparison(
                 source_doc_name=f"{doc.original_filename} (Page {first_page.page_number})",
                 source_img_path=first_page.image_storage_path,
@@ -379,6 +572,7 @@ class MainWindow(QMainWindow):
                 target_doc_name="Select a second document or finding to compare",
                 target_img_path=None,
                 target_evidence=None,
+                source_ela_path=ela_path or None,
             )
             self._status_bar.set_status(f"Viewing document: {doc.original_filename}")
 
@@ -431,6 +625,20 @@ class MainWindow(QMainWindow):
         elif tgt_ev:
             tgt_img_path = tgt_ev.crop_image_path
 
+        # Compute or retrieve ELA heatmap paths
+        src_ela = ""
+        tgt_ela = ""
+        if self._forensic_analysis_service:
+            if src_img_path:
+                src_ela = self._forensic_analysis_service.get_or_generate_ela_heatmap(src_img_path)
+            if tgt_img_path:
+                tgt_ela = self._forensic_analysis_service.get_or_generate_ela_heatmap(tgt_img_path)
+
+        # Update inspector crops
+        src_crop = src_ev.crop_image_path if src_ev else (src_img_path or "")
+        tgt_crop = tgt_ev.crop_image_path if tgt_ev else (src_ela or "")
+        self._inspector_dock.set_crops(src_crop, tgt_crop)
+
         self._doc_viewer.load_comparison(
             source_doc_name=src_doc_name,
             source_img_path=src_img_path,
@@ -438,6 +646,8 @@ class MainWindow(QMainWindow):
             target_doc_name=tgt_doc_name,
             target_img_path=tgt_img_path,
             target_evidence=tgt_ev,
+            source_ela_path=src_ela or None,
+            target_ela_path=tgt_ela or None,
         )
 
     def _on_finding_activated(self, finding_id: str) -> None:
@@ -518,8 +728,6 @@ class MainWindow(QMainWindow):
             return
 
         try:
-            from pathlib import Path
-
             from veritrace.application.dto.document import DocumentIngestDTO
 
             dto = DocumentIngestDTO(
@@ -583,3 +791,156 @@ class MainWindow(QMainWindow):
         except Exception as e:
             logger.exception("Failed to seed industrial demo: %s", e)
             self._show_message("Demo Seed Error", str(e), is_error=True)
+
+    def _on_export_pdf_dossier(self) -> None:
+        """Export official PS-2 Investigation Dossier in ReportLab PDF format."""
+        if not self._active_investigation_id or not self._dossier_export_service:
+            self._show_message(
+                "Export Unavailable", "Please select an active case first.", is_error=True
+            )
+            return
+
+        default_name = f"VeriTrace_Dossier_{self._active_investigation_id}.pdf"
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export PS-2 Forensic Dossier (PDF)",
+            default_name,
+            "PDF Documents (*.pdf)",
+        )
+        if not file_path:
+            return
+
+        try:
+            req = DossierExportRequestDTO(
+                investigation_id=self._active_investigation_id,
+                organization_id=self._organization_id,
+                output_pdf_path=file_path,
+            )
+            result = self._dossier_export_service.export_dossier(req)
+            self._status_bar.set_status(
+                f"Exported PS-2 Dossier PDF: {result.pdf_path} (Hash: {result.sha256_hash[:16]}...)"
+            )
+            self._show_message(
+                "Dossier Exported Successfully",
+                f"PS-2 Forensic Dossier compiled.\n\n"
+                f"Artifact: {result.pdf_path}\n"
+                f"Cryptographic Hash: {result.sha256_hash}\n"
+                f"Documents: {result.documents_count} | Findings: {result.findings_count}",
+            )
+        except Exception as e:
+            logger.exception("Dossier export failed: %s", e)
+            self._show_message("Export Failed", str(e), is_error=True)
+
+    def _on_export_json_dossier(self) -> None:
+        """Export official PS-2 structured JSON payload."""
+        if not self._active_investigation_id or not self._dossier_export_service:
+            self._show_message(
+                "Export Unavailable", "Please select an active case first.", is_error=True
+            )
+            return
+
+        default_name = f"VeriTrace_Payload_{self._active_investigation_id}.json"
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export Forensic JSON Intelligence Payload",
+            default_name,
+            "JSON Documents (*.json)",
+        )
+        if not file_path:
+            return
+
+        try:
+            req = DossierExportRequestDTO(
+                investigation_id=self._active_investigation_id,
+                organization_id=self._organization_id,
+                output_json_path=file_path,
+            )
+            result = self._dossier_export_service.export_dossier(req)
+            self._status_bar.set_status(f"Exported JSON Dossier: {result.json_path}")
+            self._show_message(
+                "JSON Dossier Exported",
+                f"Standardized PS-2 JSON Payload generated:\n{result.json_path}",
+            )
+        except Exception as e:
+            logger.exception("JSON export failed: %s", e)
+            self._show_message("Export Failed", str(e), is_error=True)
+
+    def _on_run_signatures(self) -> None:
+        """Detect and verify signatures across all documents in active investigation."""
+        if not self._active_investigation_id or not self._forensic_analysis_service:
+            return
+
+        self._status_bar.start_progress("Running Signature Detection & Hu Moment Analysis...")
+
+        # Detect signatures across loaded document pages
+        all_detections = []
+        for doc_id, doc in self._docs_by_id.items():
+            pages = [p for p in self._pages_by_id.values() if p.document_id == doc_id]
+            for p in pages:
+                if p.image_storage_path and Path(p.image_storage_path).exists():
+                    sigs = self._forensic_analysis_service.detect_signatures(
+                        image_path=p.image_storage_path,
+                        document_id=doc_id,
+                        document_name=doc.original_filename,
+                        page_number=p.page_number,
+                    )
+                    all_detections.extend(sigs)
+
+        # Build pairwise comparisons if 2 or more signatures found
+        comparisons = []
+        if len(all_detections) >= 2:
+            ref = all_detections[0]
+            for q in all_detections[1:]:
+                comp = self._forensic_analysis_service.compare_signatures(
+                    questioned_crop_path=q.crop_path,
+                    reference_crop_path=ref.crop_path,
+                    questioned_name=f"{q.document_name} (p.{q.page_number})",
+                    reference_name=f"{ref.document_name} (p.{ref.page_number})",
+                )
+                comparisons.append(comp)
+        elif len(all_detections) == 1:
+            # Single detected signature compared against self or reference
+            s = all_detections[0]
+            comp = self._forensic_analysis_service.compare_signatures(
+                questioned_crop_path=s.crop_path,
+                reference_crop_path=s.crop_path,
+                questioned_name=f"{s.document_name} (p.{s.page_number})",
+                reference_name="Enrolled Reference (Authorized Signatory)",
+            )
+            comparisons.append(comp)
+
+        self._signature_workbench.set_comparisons(comparisons)
+        self._tabs.setCurrentIndex(2)  # Switch to signature tab
+        self._status_bar.finish_progress(
+            f"Signature Analysis complete: {len(all_detections)} detected, "
+            f"{len(comparisons)} verified."
+        )
+
+    def _on_run_contextual_audit(self) -> None:
+        """Run contextual arithmetic and chronology audit across case."""
+        if not self._active_investigation_id or not self._forensic_analysis_service:
+            return
+
+        self._status_bar.start_progress("Evaluating Contextual Math & Chronology Rules...")
+        items = self._forensic_analysis_service.run_contextual_audit(
+            self._active_investigation_id, self._organization_id
+        )
+        self._contextual_audit.set_audit_items(items)
+        self._tabs.setCurrentIndex(3)  # Switch to audit tab
+        self._status_bar.finish_progress(
+            f"Contextual audit complete: {len(items)} rules evaluated."
+        )
+
+    def _on_about(self) -> None:
+        """Show About dialog."""
+        self._show_message(
+            "About VeriTrace Workstation",
+            "VeriTrace Cross-Document Intelligence Workstation v1.0\n\n"
+            "Forensic capabilities:\n"
+            "• Visual ELA Heatmap Differential & Baseline Analysis\n"
+            "• Invariant Hu Moments Signature Verification (ASTM E3079)\n"
+            "• Cross-Document Contradiction & Correlation Matrix\n"
+            "• Contextual Procurement Math & Chronology Audit\n"
+            "• PS-2 Cryptographically Verified PDF Dossier Compilation\n\n"
+            "Engineered for 100% offline, air-gapped forensic operations.",
+        )

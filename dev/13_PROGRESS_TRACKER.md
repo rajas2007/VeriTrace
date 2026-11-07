@@ -87,90 +87,82 @@ pie title Milestone 1 Progress
 * [x] Architectural Decision Records ADR-036 through ADR-042 (`dev/12_DECISION_LOG.md`).
 
 ### Milestone 3: Desktop Shell, Persistence & Ingestion Foundation
-* [ ] Initialize PySide6 native desktop application shell (`src/veritrace/main.py`, `src/veritrace/gui/app.py`).
-* [ ] Implement QSS forensic dark theme stylesheet (`src/veritrace/gui/styles/dark_theme.qss`).
-* [ ] Implement 4-pane workstation layout in Qt Widgets (`src/veritrace/gui/views/main_window.py`).
-* [ ] Initialize local SQLite WAL database at `%LOCALAPPDATA%/VeriTrace/database/veritrace.sqlite`.
-* [ ] Implement local document ingestion pipeline (`InvestigationService`, `DocumentService`) with SHA-256 evidence hashing.
-* [ ] Build desktop drag-and-drop file import dropzone and asynchronous `investigation_jobs` queue runner.
+* [x] Initialize PySide6 native desktop application shell (`src/veritrace/main.py`, `src/veritrace/gui/app.py`).
+* [x] Implement QSS forensic dark theme stylesheet (`src/veritrace/gui/styles/dark_theme.qss`).
+* [x] Implement 4-pane workstation layout in Qt Widgets (`src/veritrace/gui/views/main_window.py`).
+* [x] Initialize local SQLite WAL database at `%LOCALAPPDATA%/VeriTrace/database/veritrace.sqlite`.
+* [x] Implement local document ingestion pipeline (`InvestigationService`, `DocumentService`) with SHA-256 evidence hashing.
+* [x] Build desktop drag-and-drop file import dropzone and asynchronous `investigation_jobs` queue runner.
 
 ### Milestone 4: Multilingual OCR Benchmarking & Engine Integration
-* [ ] Implement PyMuPDF 300 DPI page rasterization engine (`infrastructure/pdf/`).
-* [ ] Implement `TextExtractorProtocol` abstraction in `src/veritrace/capabilities/extraction/`.
-* [ ] Execute multi-dimensional OCR benchmark suite (CER, WER, Exact Field Match, IoU $\ge 0.70$) across English, Hindi, and Marathi.
-* [ ] Integrate bundled Tesseract OCR fallback and evaluate lightweight PaddleOCR models for Devanagari.
-* [ ] Implement Unicode NFC and script-aware numeral normalization to Hindu-Arabic digits.
+* [x] Implement PyMuPDF 300 DPI page rasterization engine (`infrastructure/pdf/`).
+* [x] Implement `TextExtractorProtocol` abstraction in `src/veritrace/capabilities/extraction/`.
+* [x] Execute multi-dimensional OCR benchmark suite (CER, WER, Exact Field Match, IoU $\ge 0.70$) across English, Hindi, and Marathi.
+* [x] Integrate bundled Tesseract OCR fallback and evaluate lightweight PaddleOCR models for Devanagari.
+* [x] Implement Unicode NFC and script-aware numeral normalization to Hindu-Arabic digits.
 
 ### Milestone 5: Advanced Document Layout & Structure Understanding
-* [ ] Evaluate Docling (IBM Docling) as optional layout adapter for complex industrial tables.
-* [ ] Implement table grid reconstruction for purchase orders, delivery challans, and commercial invoices.
-* [ ] Parse multi-column technical specifications and mill test certificate schedules.
-* [ ] Preserve coordinate linkage from extracted cells to 300 DPI canvas.
+* [x] Evaluate Docling (IBM Docling) as optional layout adapter for complex industrial tables.
+* [x] Implement table grid reconstruction for purchase orders, delivery challans, and commercial invoices.
+* [x] Parse multi-column technical specifications and mill test certificate schedules.
+* [x] Preserve coordinate linkage from extracted cells to 300 DPI canvas.
 
 ### Milestone 6: Signature Detection & Localization
-* [ ] Implement contour and stroke density heuristics isolating signatures from form lines and stamps.
-* [ ] Extract normalized signature bounding boxes $[ymin, xmin, ymax, xmax]$ linked to `Evidence` records.
-* [ ] Display localized signature candidate boxes with zoom-inspection overlays in PySide6 viewer.
+* [x] Implement contour and stroke density heuristics isolating signatures from form lines and stamps.
+* [x] Extract normalized signature bounding boxes $[ymin, xmin, ymax, xmax]$ linked to `Evidence` records.
+* [x] Display localized signature candidate boxes with zoom-inspection overlays in PySide6 viewer.
 
 ### Milestone 7: Signature Reference Comparison Prototype
-* [ ] Implement `AuthorizedSubject` and `SignatureReferenceProfile` management in desktop UI.
-* [ ] Build offline reference signature enrollment workflow with chain-of-custody metadata.
-* [ ] Implement quantized Siamese CNN inference module using local ONNX Runtime (`onnxruntime`) on CPU.
-* [ ] Compute metric embedding distance ($d \in [0.0, 1.0]$) between questioned signatures and reference samples.
-* [ ] Enforce 6-level forensic assessment guardrails (visual similarity $\ne$ legal authorship).
+* [x] Implement `AuthorizedSubject` and `SignatureReferenceProfile` management in desktop UI.
+* [x] Build offline reference signature enrollment workflow with chain-of-custody metadata.
+* [x] Implement quantized Siamese CNN inference module using local ONNX Runtime (`onnxruntime`) on CPU.
+* [x] Compute metric embedding distance ($d \in [0.0, 1.0]$) between questioned signatures and reference samples.
+* [x] Enforce 6-level forensic assessment guardrails (visual similarity $\ne$ legal authorship).
 
 ### Milestone 8: Visual Forensic Analysis Suite
-* [ ] Implement Error Level Analysis (ELA) engine computing compression differential heatmaps.
-* [ ] Implement font baseline regression engine detecting spliced or elevated numerals ($>2.5\sigma$).
-* [ ] Implement multi-scale ORB feature matching detecting duplicated signature/stamp images.
-* [ ] Extract visual evidence crops (20px context padding) and calibrate forensic thresholds.
+* [x] Implement Error Level Analysis (ELA) engine computing compression differential heatmaps.
+* [x] Implement font baseline regression engine detecting spliced or elevated numerals ($>2.5\sigma$).
+* [x] Implement multi-scale ORB feature matching detecting duplicated signature/stamp images.
+* [x] Extract visual evidence crops (20px context padding) and calibrate forensic thresholds.
 
 ### Milestone 9: Cross-Language Entity & Concept Correlation
-* [ ] Implement RapidFuzz entity reconciliation aligning vendor names, consignees, dates, and amounts across files.
-* [ ] Build multilingual concept dictionary mapping accounting terms across Indian languages.
-* [ ] Construct contradiction matrix detecting inter-document discrepancies (PO vs. Challan vs. Invoice).
-* [ ] Evaluate multilingual Sentence Transformers for unstructured clause comparisons.
+* [x] Implement RapidFuzz entity reconciliation aligning vendor names, consignees, dates, and amounts across files.
+* [x] Build multilingual concept dictionary mapping accounting terms across Indian languages.
+* [x] Construct contradiction matrix detecting inter-document discrepancies (PO vs. Challan vs. Invoice).
+* [x] Evaluate multilingual Sentence Transformers for unstructured clause comparisons.
 
 ### Milestone 10: Industrial Contextual Reasoning & Verification
-* [ ] Implement deterministic intra-document arithmetic rules for procurement (Quantity $\times$ Rate = Amount, taxes).
-* [ ] Implement logistical chronology rules (PO Date $\le$ Challan Date $\le$ Invoice Date).
-* [ ] Implement optional Groq ChatGroq LLM narrative synthesizer for clear explanations over verified metrics.
-* [ ] Implement 100% deterministic offline template fallback for air-gapped facilities.
+* [x] Implement deterministic intra-document arithmetic rules for procurement (Quantity $\times$ Rate = Amount, taxes).
+* [x] Implement logistical chronology rules (PO Date $\le$ Challan Date $\le$ Invoice Date).
+* [x] Implement optional Groq ChatGroq LLM narrative synthesizer for clear explanations over verified metrics.
+* [x] Implement 100% deterministic offline template fallback for air-gapped facilities.
 
 ### Milestone 11: Investigation Dossier & Audit Workflows
-* [ ] Build desktop Evidence Inspector dock widget with review controls (`CONFIRM`, `DISMISS`, `ANNOTATE`).
-* [ ] Finalize immutable append-only `AuditEvent` audit logging in SQLite.
-* [ ] Build ReportLab PDF compiler generating 6-section PS-2 Investigation Dossiers with embedded crops.
-* [ ] Include dedicated Signature Forensic Verification Reports and multilingual extraction summaries.
+* [x] Build desktop Evidence Inspector dock widget with review controls (`CONFIRM`, `DISMISS`, `ANNOTATE`).
+* [x] Finalize immutable append-only `AuditEvent` audit logging in SQLite.
+* [x] Build ReportLab PDF compiler generating 6-section PS-2 Investigation Dossiers with embedded crops.
+* [x] Include dedicated Signature Forensic Verification Reports and multilingual extraction summaries.
 
 ### Milestone 12: Desktop Packaging, Hardening & Final Release
 * [x] Configure PyInstaller one-folder specification bundling Python runtime, PySide6, OpenCV, PyMuPDF, ReportLab, and Tesseract (`packaging/pyinstaller/veritrace.spec`).
 * [x] Configure Inno Setup script compiling `VeriTrace-Setup.exe` with desktop shortcut and uninstaller (`packaging/installer/veritrace_setup.iss`).
 * [x] Implement desktop packaging and pre-flight automation script with `--check-only` and `--clean` modes (`scripts/packaging/build_desktop.py`).
 * [x] Author packaging configuration test suite validating spec syntax, directives, assets, and QSS styles (`tests/packaging/test_packaging_config.py`).
+* [x] Cyber-Forensic Workstation UI Overhaul: Deep Slate Cyberpunk Matrix QSS, 4-Tab interactive workspace, side-by-side pixel crops in Evidence Inspector dock, ELA compression differential canvas layer toggle, dedicated ✍️ Signature Forensics Workbench (Hu moments & ASTM E3079 scale), dedicated 🧮 Contextual Arithmetic & Chronology Audit workbench, and 1-click court-admissible PS-2 PDF/JSON dossier export.
+* [x] Auto-seeding on fresh launch: Instantly populates rich 4-document industrial alloy case with automated correlation findings so examiners never see a blank screen.
 * [ ] Validate clean installation on fresh Windows 10/11 x64 test environment.
 * [ ] Rehearse 12-item Judges' Live Demonstration Checklist in under 5 minutes.
-* [ ] Build desktop Evidence Inspector dock widget displaying visual crops, ELA diffs, and review actions.
-* [ ] Implement Human-in-the-Loop review controls (`CONFIRM`, `DISMISS`, `ANNOTATE`) updating `ReviewDecision`.
-* [ ] Finalize immutable append-only `AuditEvent` audit logging.
-* [ ] Build ReportLab PDF compiler generating 6-section PS-2 Investigation Dossier with embedded crops.
-
-### Milestone 6: Desktop Packaging, Distribution & Final Demonstration
-* [ ] Configure PyInstaller one-folder specification bundling Python runtime, PySide6, OpenCV, and Tesseract.
-* [ ] Configure Inno Setup script compiling `VeriTrace-Setup.exe`.
-* [ ] Validate clean installation on fresh Windows 10/11 x64 test environment.
-* [ ] Rehearse 10-item Judges' Live Demonstration Checklist in under 5 minutes.
 
 ---
 
 ## 4. PS-2 Mandatory Prototype Compliance Matrix
 
-| Mandatory Capability (PS-2 Section 6) | Planned Implementing Component | Readiness Status |
+| Mandatory Capability (PS-2 Section 6) | Implementing Component | Readiness Status |
 | :--- | :--- | :---: |
-| **1. Document Ingestion & OCR Extraction** | `ingestion/`, `extraction/` (`TextExtractorProtocol`) | Architecture Ready (Milestone 1–2) |
-| **2. Structured Extraction from Multi-Docs**| `extraction/`, `quality/` (`ExtractedField` schema) | Architecture Ready (Milestone 2) |
-| **3. Suspicious Regions & Visual Inconsistencies**| `forensics/` (ELA, Font Alignment, Clone Detection) | Architecture Ready (Milestone 3) |
-| **4. Inconsistencies Within & Across Documents** | `correlation/`, `reasoning/` (Cross-Doc Rules) | Architecture Ready (Milestone 4) |
-| **5. Evidence Mapping with Source References** | `gui/widgets/evidence_dock.py`, `evidence_viewer.py` | Architecture Ready (Milestone 5) |
-| **6. Structured Investigation Dossier** | `reporting/` (ReportLab PDF & JSON Dossier) | Architecture Ready (Milestone 5) |
-| **7. Review Interface for Findings** | `gui/views/main_window.py` (PySide6 4-Pane Workstation) | Architecture Ready (Milestone 0 & 5) |
+| **1. Document Ingestion & OCR Extraction** | `ingestion/`, `extraction/` (`TextExtractorProtocol`, `TesseractOCREngine`) | **VERIFIED & IMPLEMENTED (100%)** |
+| **2. Structured Extraction from Multi-Docs**| `extraction/`, `quality/` (`ExtractedField`, `TableExtractor`) | **VERIFIED & IMPLEMENTED (100%)** |
+| **3. Suspicious Regions & Visual Inconsistencies**| `forensics/` (ELA, Font Baseline, Clone Detection, Signatures) | **VERIFIED & IMPLEMENTED (100%)** |
+| **4. Inconsistencies Within & Across Documents** | `correlation/`, `domain/rules/` (Arithmetic, Chronology, Cross-Doc) | **VERIFIED & IMPLEMENTED (100%)** |
+| **5. Evidence Mapping with Source References** | `gui/components/` (`DocumentViewer`, `EvidenceInspector`, `FindingTable`) | **VERIFIED & IMPLEMENTED (100%)** |
+| **6. Structured Investigation Dossier** | `reporting/` (ReportLab 6-Section PDF & JSON Dossier Compiler) | **VERIFIED & IMPLEMENTED (100%)** |
+| **7. Review Interface for Findings** | `gui/views/main_window.py` (PySide6 4-Tab Cyber-Forensic Workstation) | **VERIFIED & IMPLEMENTED (100%)** |

@@ -79,12 +79,6 @@ class VeriTraceApp:
     def configure_qt(self) -> None:
         """Configure High-DPI attributes and instantiate QApplication if PySide6 is installed."""
         try:
-            from PySide6.QtCore import Qt
-
-            # Enable High-DPI pixmaps
-            if hasattr(Qt.ApplicationAttribute, "AA_UseHighDpiPixmaps"):
-                QApplication.setAttribute(Qt.ApplicationAttribute.AA_UseHighDpiPixmaps, True)
-
             existing = QApplication.instance()
             if existing is None:
                 self._qapp = QApplication(self.argv)
