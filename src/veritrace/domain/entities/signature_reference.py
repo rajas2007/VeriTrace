@@ -27,6 +27,13 @@ class SignatureReferenceProfile:
 
     INVARIANT: Reference signatures require verified legal provenance, written signatory
     consent, and RBAC governance. Machine similarity does NOT prove legal authorship.
+    Comparison thresholds and assessment scales are application-defined optical heuristics,
+    not certified forensic standards. Authoritative verification requires qualified
+    human examination.
+
+    SECURITY NOTE: Reference images stored at `crop_image_path` and `embedding_vector` BLOBs
+    are not encrypted with application-layer cryptography. Host-level volume encryption
+    (e.g., BitLocker, LUKS) is relied upon. Raw signature image bytes must never be logged.
     """
 
     id: str

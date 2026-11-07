@@ -51,12 +51,9 @@ class DashboardBannerWidget(QWidget):
     """Investigation header banner displaying metrics and correlation trigger controls."""
 
     run_correlation_requested = Signal(bool)  # is_order_closed
-<<<<<<< HEAD
     run_forensics_requested = Signal()
     generate_dossier_requested = Signal()
-=======
     export_dossier_requested = Signal()
->>>>>>> 4b23890e073b4435bd8606178ff05403f236f444
 
     def __init__(self, parent: Any = None) -> None:
         super().__init__(parent)
@@ -97,7 +94,6 @@ class DashboardBannerWidget(QWidget):
         self._btn_correlate.clicked.connect(self._on_correlate_clicked)
         action_bar.addWidget(self._btn_correlate)
 
-<<<<<<< HEAD
         self._btn_forensics = QPushButton("Scan Forensics", self)
         self._btn_forensics.setStyleSheet("padding: 8px 16px; font-size: 13px; font-weight: 600;")
         self._btn_forensics.setToolTip(
@@ -113,13 +109,12 @@ class DashboardBannerWidget(QWidget):
         )
         self._btn_dossier.clicked.connect(self._on_dossier_clicked)
         action_bar.addWidget(self._btn_dossier)
-=======
+
         self._btn_export_dossier = QPushButton("📄 Export PS-2 Dossier (PDF)", self)
         self._btn_export_dossier.setObjectName("accentButton")
         self._btn_export_dossier.setStyleSheet("padding: 8px 16px; font-size: 13px;")
         self._btn_export_dossier.clicked.connect(self.export_dossier_requested.emit)
         action_bar.addWidget(self._btn_export_dossier)
->>>>>>> 4b23890e073b4435bd8606178ff05403f236f444
 
         main_layout.addLayout(action_bar)
 

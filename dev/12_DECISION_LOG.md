@@ -531,7 +531,7 @@ This register documents all fundamental architectural decisions established for 
      - Gate visual forensic signals using `ExtractionQualityReport` (downgrading confidence on degraded/blurred documents).
      - Prohibit elevating single, isolated visual anomalies to high-severity findings; require multi-signal corroboration across independent measurements (e.g. ELA anomaly corroborated by font baseline misalignment or cross-document contradiction).
   4. **Correct Language Operational Readiness:** Reclassify Priority 1 languages (English, Hindi, Marathi) from "Validated for Release" to "Stage 2: Initial Implementation and Benchmarking", and establish explicit empirical acceptance criteria (CER, WER, conjunct/matra accuracy, Indic numeral normalization).
-* **Consequences:** Positive: Eliminates schema ambiguity; provides flexible multi-script support without table explosion; aligns forensic claims with SWGDOC/ASTM scientific standards. Negative: Requires calibration against labelled ground-truth datasets during testing milestones.
+* **Consequences:** Positive: Eliminates schema ambiguity; provides flexible multi-script support without table explosion; aligns forensic claims with SWGDOC scientific document examination guidelines. Negative: Requires calibration against labelled ground-truth datasets during testing milestones.
 
 ---
 

@@ -33,6 +33,7 @@ from veritrace.application.dto.investigation import (
     ReviewDecisionType,
     ReviewFindingRequestDTO,
 )
+from veritrace.application.dto.signature_reference import SignatureReferenceDTO
 from veritrace.application.services.cross_document_correlation_service import (
     CrossDocumentCorrelationService,
 )
@@ -77,12 +78,9 @@ class MainWindow(QMainWindow):
         investigation_service: InvestigationService,
         correlation_service: CrossDocumentCorrelationService,
         ingestion_service: DocumentIngestionService | None = None,
-<<<<<<< HEAD
         extraction_service: TextExtractionService | None = None,
-=======
         dossier_export_service: DossierExportService | None = None,
         forensic_analysis_service: ForensicAnalysisService | None = None,
->>>>>>> 4b23890e073b4435bd8606178ff05403f236f444
         uow_factory: Any = None,
         organization_id: str = "org_11111111111111111111111111111111",
         parent: Any = None,
@@ -98,6 +96,7 @@ class MainWindow(QMainWindow):
         self._uow_factory = uow_factory
         self._organization_id = organization_id
 
+        self._dossier_export_service: DossierExportService | None
         if dossier_export_service:
             self._dossier_export_service = dossier_export_service
         elif uow_factory:
@@ -276,12 +275,9 @@ class MainWindow(QMainWindow):
 
         self._dashboard_banner = DashboardBannerWidget(central_container)
         self._dashboard_banner.run_correlation_requested.connect(self._on_run_correlation)
-<<<<<<< HEAD
         self._dashboard_banner.run_forensics_requested.connect(self._on_run_forensics)
         self._dashboard_banner.generate_dossier_requested.connect(self._on_generate_dossier)
-=======
         self._dashboard_banner.export_dossier_requested.connect(self._on_export_pdf_dossier)
->>>>>>> 4b23890e073b4435bd8606178ff05403f236f444
         central_layout.addWidget(self._dashboard_banner)
 
         self._tabs = QTabWidget(central_container)
@@ -303,6 +299,12 @@ class MainWindow(QMainWindow):
         # Tab 2: Signature Forensics Workbench
         self._signature_workbench = SignatureWorkbenchWidget(self._tabs)
         self._signature_workbench.run_verification_requested.connect(self._on_run_signatures)
+        self._signature_workbench.create_subject_requested.connect(
+            self._on_create_authorized_subject
+        )
+        self._signature_workbench.enroll_reference_requested.connect(
+            self._on_enroll_signature_reference
+        )
         self._tabs.addTab(self._signature_workbench, "✍️ Signature Workbench")
 
         # Tab 3: Contextual Arithmetic & Chronology Audit
@@ -410,6 +412,9 @@ class MainWindow(QMainWindow):
         if self._forensic_analysis_service:
             audit_items = self._forensic_analysis_service.run_contextual_audit(inv_id, org_id)
             self._contextual_audit.set_audit_items(audit_items)
+
+        # 6. Enrolled Signature References
+        self._load_signature_references()
 
     def _on_run_correlation(self, is_order_closed: bool) -> None:
         """Trigger asynchronous background cross-document correlation."""
@@ -865,6 +870,56 @@ class MainWindow(QMainWindow):
             logger.exception("JSON export failed: %s", e)
             self._show_message("Export Failed", str(e), is_error=True)
 
+    def _load_signature_references(self) -> None:
+        """Fetch authorized subjects and signature reference profiles for tenant."""
+        if not hasattr(self, "_signature_workbench"):
+            return
+        try:
+            subjects = self._investigation_service.list_authorized_subjects(self._organization_id)
+            references = self._investigation_service.list_signature_references(
+                self._organization_id
+            )
+            self._signature_workbench.set_subjects(subjects)
+            self._signature_workbench.set_references(references)
+        except Exception as e:
+            logger.warning("Failed to load signature references: %s", e)
+
+    def _on_create_authorized_subject(
+        self, full_name: str, designation: str, id_reference: str
+    ) -> None:
+        """Register an authorized signatory."""
+        try:
+            self._investigation_service.create_authorized_subject(
+                organization_id=self._organization_id,
+                full_name=full_name,
+                designation=designation,
+                id_reference=id_reference,
+            )
+            self._load_signature_references()
+            self._status_bar.set_status(f"Authorized subject '{full_name}' created.")
+        except Exception as e:
+            self._show_message("Subject Registration Failed", str(e), is_error=True)
+
+    def _on_enroll_signature_reference(self, data: dict[str, str]) -> None:
+        """Enroll a specimen signature reference under chain of custody."""
+        try:
+            from veritrace.application.dto.signature_reference import SignatureReferenceEnrollDTO
+
+            dto = SignatureReferenceEnrollDTO(
+                organization_id=self._organization_id,
+                subject_id=data["subject_id"],
+                crop_image_path=data["crop_image_path"],
+                source_document_ref=data["source_document_ref"],
+                consent_mandate_ref=data["consent_mandate_ref"],
+                investigation_id=self._active_investigation_id,
+                access_role_required=data.get("access_role_required", "FORENSIC_INVESTIGATOR"),
+            )
+            self._investigation_service.enroll_signature_reference(dto)
+            self._load_signature_references()
+            self._status_bar.set_status("Specimen signature reference enrolled.")
+        except Exception as e:
+            self._show_message("Enrollment Failed", str(e), is_error=True)
+
     def _on_run_signatures(self) -> None:
         """Detect and verify signatures across all documents in active investigation."""
         if not self._active_investigation_id or not self._forensic_analysis_service:
@@ -886,16 +941,36 @@ class MainWindow(QMainWindow):
                     )
                     all_detections.extend(sigs)
 
-        # Build pairwise comparisons if 2 or more signatures found
+        # Check if an enrolled reference profile is selected in the workbench
+        selected_ref_id = self._signature_workbench.get_selected_reference_id()
+        selected_ref: SignatureReferenceDTO | None = None
+        if selected_ref_id:
+            for sig_ref in self._investigation_service.list_signature_references(
+                self._organization_id
+            ):
+                if sig_ref.id == selected_ref_id:
+                    selected_ref = sig_ref
+                    break
+
         comparisons = []
-        if len(all_detections) >= 2:
-            ref = all_detections[0]
+        if selected_ref and Path(selected_ref.crop_image_path).exists():
+            for q in all_detections:
+                comp = self._forensic_analysis_service.compare_signatures(
+                    questioned_crop_path=q.crop_path,
+                    reference_crop_path=selected_ref.crop_image_path,
+                    questioned_name=f"{q.document_name} (p.{q.page_number})",
+                    reference_name=f"Enrolled Specimen ({selected_ref.source_document_ref})",
+                    expected_reference_hash=selected_ref.sha256_hash,
+                )
+                comparisons.append(comp)
+        elif len(all_detections) >= 2:
+            first_det = all_detections[0]
             for q in all_detections[1:]:
                 comp = self._forensic_analysis_service.compare_signatures(
                     questioned_crop_path=q.crop_path,
-                    reference_crop_path=ref.crop_path,
+                    reference_crop_path=first_det.crop_path,
                     questioned_name=f"{q.document_name} (p.{q.page_number})",
-                    reference_name=f"{ref.document_name} (p.{ref.page_number})",
+                    reference_name=f"{first_det.document_name} (p.{first_det.page_number})",
                 )
                 comparisons.append(comp)
         elif len(all_detections) == 1:
@@ -938,7 +1013,7 @@ class MainWindow(QMainWindow):
             "VeriTrace Cross-Document Intelligence Workstation v1.0\n\n"
             "Forensic capabilities:\n"
             "• Visual ELA Heatmap Differential & Baseline Analysis\n"
-            "• Invariant Hu Moments Signature Verification (ASTM E3079)\n"
+            "• Invariant Hu Moments Signature Verification (VeriTrace Optical Heuristics)\n"
             "• Cross-Document Contradiction & Correlation Matrix\n"
             "• Contextual Procurement Math & Chronology Audit\n"
             "• PS-2 Cryptographically Verified PDF Dossier Compilation\n\n"

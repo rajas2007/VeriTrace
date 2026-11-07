@@ -148,7 +148,7 @@ pie title Milestone 1 Progress
 * [x] Configure Inno Setup script compiling `VeriTrace-Setup.exe` with desktop shortcut and uninstaller (`packaging/installer/veritrace_setup.iss`).
 * [x] Implement desktop packaging and pre-flight automation script with `--check-only` and `--clean` modes (`scripts/packaging/build_desktop.py`).
 * [x] Author packaging configuration test suite validating spec syntax, directives, assets, and QSS styles (`tests/packaging/test_packaging_config.py`).
-* [x] Cyber-Forensic Workstation UI Overhaul: Deep Slate Cyberpunk Matrix QSS, 4-Tab interactive workspace, side-by-side pixel crops in Evidence Inspector dock, ELA compression differential canvas layer toggle, dedicated ✍️ Signature Forensics Workbench (Hu moments & ASTM E3079 scale), dedicated 🧮 Contextual Arithmetic & Chronology Audit workbench, and 1-click court-admissible PS-2 PDF/JSON dossier export.
+* [x] Cyber-Forensic Workstation UI Overhaul: Deep Slate Cyberpunk Matrix QSS, 4-Tab interactive workspace, side-by-side pixel crops in Evidence Inspector dock, ELA compression differential canvas layer toggle, dedicated ✍️ Signature Forensics Workbench (Hu moments & VeriTrace optical heuristics scale), dedicated 🧮 Contextual Arithmetic & Chronology Audit workbench, and 1-click court-admissible PS-2 PDF/JSON dossier export.
 * [x] Auto-seeding on fresh launch: Instantly populates rich 4-document industrial alloy case with automated correlation findings so examiners never see a blank screen.
 * [ ] Validate clean installation on fresh Windows 10/11 x64 test environment.
 * [ ] Rehearse 12-item Judges' Live Demonstration Checklist in under 5 minutes.

@@ -15,6 +15,9 @@ from veritrace.infrastructure.persistence.repositories.finding_repository import
 from veritrace.infrastructure.persistence.repositories.investigation_repository import (
     SqliteInvestigationRepository,
 )
+from veritrace.infrastructure.persistence.repositories.signature_reference_repository import (
+    SqliteSignatureReferenceRepository,
+)
 from veritrace.infrastructure.persistence.unit_of_work import SqlAlchemyUnitOfWork
 
 __all__ = [
@@ -24,4 +27,5 @@ __all__ = [
     "SqliteEvidenceRepository",
     "SqliteFindingRepository",
     "SqliteInvestigationRepository",
+    "SqliteSignatureReferenceRepository",
 ]

@@ -1071,3 +1071,218 @@ def test_finding_deletion_blocked_by_review_decision(db_path: Path, alembic_conf
             assert session.get(ReviewDecisionModel, "rev_rev_guard_00000000000000000001") is None
     finally:
         engine.dispose()
+
+
+def test_migration_002_forward_from_revision_001(db_path: Path, alembic_config: Config) -> None:
+    """Verify forward migration 002 from existing revision 001 database creates unique index."""
+    # 1. Upgrade to revision 001 only (simulating existing deployment)
+    command.upgrade(alembic_config, "001_initial_schema")
+
+    url = f"sqlite:///{db_path.as_posix()}"
+    engine = create_db_engine(url)
+
+    try:
+        inspector = inspect(engine)
+        indexes_001 = {idx["name"] for idx in inspector.get_indexes("signature_references")}
+        assert "idx_signature_references_subject_id" in indexes_001
+        assert "idx_signature_references_org_id" in indexes_001
+        assert "uq_signature_references_subject_hash" not in indexes_001
+
+        # Populate baseline data at revision 001
+        session_factory = create_session_factory(engine)
+        now = datetime.now(UTC)
+        with session_scope(session_factory) as session:
+            session.add(
+                OrganizationModel(
+                    id="org_mig_002_test_00000000000001",
+                    name="Migration Org",
+                    industry_sector="TESTING",
+                    created_at=now,
+                )
+            )
+            session.add(
+                AuthorizedSubjectModel(
+                    id="subj_mig_002_test_000000000001",
+                    organization_id="org_mig_002_test_00000000000001",
+                    full_name="Subject One",
+                    designation="Engineer",
+                    id_reference="EMP-001",
+                    created_at=now,
+                )
+            )
+            session.add(
+                SignatureReferenceProfileModel(
+                    id="sigref_mig_002_test_0000000001",
+                    subject_id="subj_mig_002_test_000000000001",
+                    organization_id="org_mig_002_test_00000000000001",
+                    crop_image_path="test_crop.png",
+                    sha256_hash="1" * 64,
+                    source_document_ref="DOC-01",
+                    consent_mandate_ref="MANDATE-01",
+                    enrollment_date=now,
+                )
+            )
+    finally:
+        engine.dispose()
+
+    # 2. Forward upgrade to head (revision 002)
+    command.upgrade(alembic_config, "head")
+
+    engine2 = create_db_engine(url)
+    try:
+        inspector2 = inspect(engine2)
+        indexes_002 = {idx["name"] for idx in inspector2.get_indexes("signature_references")}
+        assert "uq_signature_references_subject_hash" in indexes_002
+
+        # 3. Verify unique constraint rejects duplicate insertion across sessions
+        session_factory2 = create_session_factory(engine2)
+        with pytest.raises(IntegrityError), session_scope(session_factory2) as session2:
+            session2.add(
+                SignatureReferenceProfileModel(
+                    id="sigref_mig_002_test_0000000002",
+                    subject_id="subj_mig_002_test_000000000001",
+                    organization_id="org_mig_002_test_00000000000001",
+                    crop_image_path="test_crop2.png",
+                    sha256_hash="1" * 64,  # Duplicate hash for same subject
+                    source_document_ref="DOC-02",
+                    consent_mandate_ref="MANDATE-02",
+                    enrollment_date=now,
+                )
+            )
+
+        # Non-duplicate with different hash succeeds
+        with session_scope(session_factory2) as session2:
+            session2.add(
+                SignatureReferenceProfileModel(
+                    id="sigref_mig_002_test_0000000003",
+                    subject_id="subj_mig_002_test_000000000001",
+                    organization_id="org_mig_002_test_00000000000001",
+                    crop_image_path="test_crop3.png",
+                    sha256_hash="2" * 64,  # Distinct hash
+                    source_document_ref="DOC-03",
+                    consent_mandate_ref="MANDATE-03",
+                    enrollment_date=now,
+                )
+            )
+
+        with session_scope(session_factory2) as session2:
+            assert (
+                session2.get(SignatureReferenceProfileModel, "sigref_mig_002_test_0000000003")
+                is not None
+            )
+    finally:
+        engine2.dispose()
+
+
+def test_migration_002_fails_safely_on_existing_duplicates(
+    db_path: Path, alembic_config: Config
+) -> None:
+    """Verify migration 002 aborts safely without data loss if duplicate rows exist."""
+    command.upgrade(alembic_config, "001_initial_schema")
+
+    url = f"sqlite:///{db_path.as_posix()}"
+    engine = create_db_engine(url)
+    now = datetime.now(UTC)
+
+    try:
+        session_factory = create_session_factory(engine)
+        with session_scope(session_factory) as session:
+            session.add(
+                OrganizationModel(
+                    id="org_dup_fail_0000000000000001",
+                    name="Duplicate Test Org",
+                    industry_sector="TESTING",
+                    created_at=now,
+                )
+            )
+            session.add(
+                AuthorizedSubjectModel(
+                    id="subj_dup_fail_00000000000001",
+                    organization_id="org_dup_fail_0000000000000001",
+                    full_name="Duplicate Subject",
+                    designation="Inspector",
+                    id_reference="EMP-DUP",
+                    created_at=now,
+                )
+            )
+            # Insert two identical subject+hash profiles (allowed under revision 001)
+            session.add(
+                SignatureReferenceProfileModel(
+                    id="sigref_dup_0000000000000001",
+                    subject_id="subj_dup_fail_00000000000001",
+                    organization_id="org_dup_fail_0000000000000001",
+                    crop_image_path="crop1.png",
+                    sha256_hash="f" * 64,
+                    source_document_ref="DOC-DUP-1",
+                    consent_mandate_ref="MANDATE-DUP-1",
+                    enrollment_date=now,
+                )
+            )
+            session.add(
+                SignatureReferenceProfileModel(
+                    id="sigref_dup_0000000000000002",
+                    subject_id="subj_dup_fail_00000000000001",
+                    organization_id="org_dup_fail_0000000000000001",
+                    crop_image_path="crop2.png",
+                    sha256_hash="f" * 64,  # Duplicate hash
+                    source_document_ref="DOC-DUP-2",
+                    consent_mandate_ref="MANDATE-DUP-2",
+                    enrollment_date=now,
+                )
+            )
+    finally:
+        engine.dispose()
+
+    # Upgrading to head must fail with clear actionable error
+    with pytest.raises(RuntimeError, match="Found 1 duplicate signature reference specimen"):
+        command.upgrade(alembic_config, "head")
+
+    # Confirm neither row was deleted or corrupted
+    engine2 = create_db_engine(url)
+    try:
+        session_factory2 = create_session_factory(engine2)
+        with session_scope(session_factory2) as session2:
+            r1 = session2.get(SignatureReferenceProfileModel, "sigref_dup_0000000000000001")
+            r2 = session2.get(SignatureReferenceProfileModel, "sigref_dup_0000000000000002")
+            assert r1 is not None
+            assert r2 is not None
+    finally:
+        engine2.dispose()
+
+
+def test_migration_002_downgrade_and_reupgrade(db_path: Path, alembic_config: Config) -> None:
+    """Verify downgrade drops unique index and re-upgrade recreates it cleanly."""
+    command.upgrade(alembic_config, "head")
+
+    url = f"sqlite:///{db_path.as_posix()}"
+    engine = create_db_engine(url)
+    try:
+        inspector = inspect(engine)
+        assert "uq_signature_references_subject_hash" in {
+            idx["name"] for idx in inspector.get_indexes("signature_references")
+        }
+    finally:
+        engine.dispose()
+
+    # Downgrade to 001
+    command.downgrade(alembic_config, "001_initial_schema")
+
+    engine2 = create_db_engine(url)
+    try:
+        inspector2 = inspect(engine2)
+        indexes_after_down = {idx["name"] for idx in inspector2.get_indexes("signature_references")}
+        assert "uq_signature_references_subject_hash" not in indexes_after_down
+        assert "idx_signature_references_subject_id" in indexes_after_down
+    finally:
+        engine2.dispose()
+
+    # Re-upgrade to head
+    command.upgrade(alembic_config, "head")
+
+    engine3 = create_db_engine(url)
+    try:
+        inspector3 = inspect(engine3)
+        indexes_after_reup = {idx["name"] for idx in inspector3.get_indexes("signature_references")}
+        assert "uq_signature_references_subject_hash" in indexes_after_reup
+    finally:
+        engine3.dispose()

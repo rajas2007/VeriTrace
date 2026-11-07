@@ -1,5 +1,6 @@
 """Unit tests for SignatureVerifier forensic comparison and epistemic assessment."""
 
+import hashlib
 from datetime import timedelta
 from pathlib import Path
 
@@ -164,11 +165,12 @@ def test_verify_enrolled_reference_profile(tmp_path: Path):
     verifier = SignatureVerifier()
     emb = verifier.compute_embedding(crop_ref)
 
+    real_hash = hashlib.sha256(ref_path.read_bytes()).hexdigest()
     profile = SignatureReferenceProfile.create(
         subject_id=generate_id(SUBJ_PREFIX),
         organization_id=generate_id(ORG_PREFIX),
         crop_image_path=str(ref_path),
-        sha256_hash="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        sha256_hash=real_hash,
         source_document_ref="doc_onboarding_scan",
         consent_mandate_ref="consent_form_2026_01",
         embedding_vector=emb,
@@ -264,3 +266,181 @@ def test_create_proposal_for_anomalous_signature():
     assert proposal.severity in (FindingSeverity.MEDIUM, FindingSeverity.HIGH)
     assert proposal.confidence > 0.0
     assert "signature_id" in proposal.measurements
+
+
+def test_unmodified_reference_passes_integrity_verification(tmp_path: Path):
+    """Verify unmodified enrolled reference passes SHA-256 integrity check."""
+    crop_ref = create_sample_signature(1)
+    ref_path = tmp_path / "valid_ref.png"
+    cv2.imwrite(str(ref_path), crop_ref)
+
+    file_bytes = ref_path.read_bytes()
+    expected_hash = hashlib.sha256(file_bytes).hexdigest()
+
+    verifier = SignatureVerifier()
+    profile = SignatureReferenceProfile.create(
+        subject_id=generate_id(SUBJ_PREFIX),
+        organization_id=generate_id(ORG_PREFIX),
+        crop_image_path=str(ref_path),
+        sha256_hash=expected_hash,
+        source_document_ref="doc_ref_101",
+        consent_mandate_ref="mandate_ref_101",
+        embedding_vector=verifier.compute_embedding(crop_ref),
+        access_role_required="FORENSIC_INVESTIGATOR",
+    )
+
+    res = verifier.verify_against_reference(
+        questioned_crop=create_sample_signature(1),
+        reference_profile_or_crop=profile,
+        user_role="FORENSIC_INVESTIGATOR",
+    )
+
+    assert res.assessment == SignatureAssessmentLevel.SIMILARITY_WITH_REFERENCE
+    assert res.estimate.metric_embedding_distance is not None
+    assert res.estimate.metric_embedding_distance < 0.10
+    assert res.uncertainty_score < 0.20
+
+
+def test_modified_reference_image_bytes_fail_verification(tmp_path: Path):
+    """Verify modifying reference bytes aborts comparison with INSUFFICIENT_EVIDENCE."""
+    crop_ref = create_sample_signature(1)
+    ref_path = tmp_path / "tampered_ref.png"
+    cv2.imwrite(str(ref_path), crop_ref)
+
+    file_bytes = ref_path.read_bytes()
+    expected_hash = hashlib.sha256(file_bytes).hexdigest()
+
+    verifier = SignatureVerifier()
+    profile = SignatureReferenceProfile.create(
+        subject_id=generate_id(SUBJ_PREFIX),
+        organization_id=generate_id(ORG_PREFIX),
+        crop_image_path=str(ref_path),
+        sha256_hash=expected_hash,
+        source_document_ref="doc_ref_102",
+        consent_mandate_ref="mandate_ref_102",
+        embedding_vector=verifier.compute_embedding(crop_ref),
+        access_role_required="FORENSIC_INVESTIGATOR",
+    )
+
+    # Tamper with the physical file on disk by appending a byte
+    with open(ref_path, "ab") as f:
+        f.write(b"\x00")
+
+    res = verifier.verify_against_reference(
+        questioned_crop=create_sample_signature(1),
+        reference_profile_or_crop=profile,
+        user_role="FORENSIC_INVESTIGATOR",
+    )
+
+    assert res.assessment == SignatureAssessmentLevel.INSUFFICIENT_EVIDENCE
+    assert res.estimate.metric_embedding_distance is None
+    assert res.uncertainty_score == 1.0
+    assert "Chain-of-Custody Integrity Violation" in res.notes
+    assert profile.sha256_hash == expected_hash  # Stored hash must never be overwritten
+
+
+def test_replaced_reference_file_with_different_image_fails(tmp_path: Path):
+    """Verify replacing enrolled reference with a different image fails integrity verification."""
+    crop_ref = create_sample_signature(1)
+    ref_path = tmp_path / "replaced_ref.png"
+    cv2.imwrite(str(ref_path), crop_ref)
+
+    expected_hash = hashlib.sha256(ref_path.read_bytes()).hexdigest()
+
+    verifier = SignatureVerifier()
+    profile = SignatureReferenceProfile.create(
+        subject_id=generate_id(SUBJ_PREFIX),
+        organization_id=generate_id(ORG_PREFIX),
+        crop_image_path=str(ref_path),
+        sha256_hash=expected_hash,
+        source_document_ref="doc_ref_103",
+        consent_mandate_ref="mandate_ref_103",
+        access_role_required="FORENSIC_INVESTIGATOR",
+    )
+
+    # Replace with completely different image
+    cv2.imwrite(str(ref_path), create_sample_signature(3))
+
+    res = verifier.verify_against_reference(
+        questioned_crop=create_sample_signature(1),
+        reference_profile_or_crop=profile,
+        user_role="FORENSIC_INVESTIGATOR",
+    )
+
+    assert res.assessment == SignatureAssessmentLevel.INSUFFICIENT_EVIDENCE
+    assert res.estimate.metric_embedding_distance is None
+    assert "failed SHA-256 integrity verification" in res.notes
+
+
+def test_missing_reference_file_remains_safely_inconclusive(tmp_path: Path):
+    """Verify missing reference image file cleanly returns inconclusive without crashing."""
+    missing_path = tmp_path / "deleted_specimen.png"
+    fake_hash = "a" * 64
+
+    profile = SignatureReferenceProfile.create(
+        subject_id=generate_id(SUBJ_PREFIX),
+        organization_id=generate_id(ORG_PREFIX),
+        crop_image_path=str(missing_path),
+        sha256_hash=fake_hash,
+        source_document_ref="doc_ref_104",
+        consent_mandate_ref="mandate_ref_104",
+        access_role_required="FORENSIC_INVESTIGATOR",
+    )
+
+    verifier = SignatureVerifier()
+    res = verifier.verify_against_reference(
+        questioned_crop=create_sample_signature(1),
+        reference_profile_or_crop=profile,
+        user_role="FORENSIC_INVESTIGATOR",
+    )
+
+    assert res.assessment == SignatureAssessmentLevel.INSUFFICIENT_EVIDENCE
+    assert res.estimate.metric_embedding_distance is None
+    assert res.uncertainty_score == 1.0
+    assert "file not found on disk" in res.notes
+
+
+def test_failed_integrity_check_never_produces_similarity_result(tmp_path: Path):
+    """Verify corrupted reference NEVER produces a similarity score even if embedding is stored."""
+    crop_ref = create_sample_signature(1)
+    ref_path = tmp_path / "corrupted_specimen.png"
+    cv2.imwrite(str(ref_path), crop_ref)
+
+    expected_hash = hashlib.sha256(ref_path.read_bytes()).hexdigest()
+
+    verifier = SignatureVerifier()
+    stored_embedding = verifier.compute_embedding(crop_ref)
+
+    profile = SignatureReferenceProfile.create(
+        subject_id=generate_id(SUBJ_PREFIX),
+        organization_id=generate_id(ORG_PREFIX),
+        crop_image_path=str(ref_path),
+        sha256_hash=expected_hash,
+        source_document_ref="doc_ref_105",
+        consent_mandate_ref="mandate_ref_105",
+        embedding_vector=stored_embedding,
+        access_role_required="FORENSIC_INVESTIGATOR",
+    )
+
+    # Corrupt the image on disk
+    ref_path.write_bytes(b"corrupted raw data")
+
+    res = verifier.verify_against_reference(
+        questioned_crop=create_sample_signature(1),
+        reference_profile_or_crop=profile,
+        user_role="FORENSIC_INVESTIGATOR",
+    )
+
+    assert res.assessment != SignatureAssessmentLevel.SIMILARITY_WITH_REFERENCE
+    assert res.assessment == SignatureAssessmentLevel.INSUFFICIENT_EVIDENCE
+    assert res.estimate.metric_embedding_distance is None
+    assert res.uncertainty_score == 1.0
+
+    # Also verify expected_reference_hash check directly on path input
+    res_direct = verifier.verify_against_reference(
+        questioned_crop=create_sample_signature(1),
+        reference_profile_or_crop=ref_path,
+        expected_reference_hash=expected_hash,
+    )
+    assert res_direct.assessment == SignatureAssessmentLevel.INSUFFICIENT_EVIDENCE
+    assert res_direct.estimate.metric_embedding_distance is None

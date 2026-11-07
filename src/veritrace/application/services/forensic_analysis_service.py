@@ -76,9 +76,7 @@ class ForensicAnalysisService:
 
         # If heuristic detection found none on synthetic demo, define default signature anchor
         if not boxes:
-            boxes = [
-                NormalizedBoundingBox(ymin=0.82, xmin=0.65, ymax=0.94, xmax=0.92)
-            ]
+            boxes = [NormalizedBoundingBox(ymin=0.82, xmin=0.65, ymax=0.94, xmax=0.92)]
 
         # Load image for cropping
         img = cv2.imread(str(path))
@@ -121,6 +119,7 @@ class ForensicAnalysisService:
         reference_crop_path: str,
         questioned_name: str = "Questioned Signature",
         reference_name: str = "Reference Signature",
+        expected_reference_hash: str | None = None,
     ) -> SignatureComparisonDTO:
         """Evaluate Hu moment shape invariants and stroke density against enrolled reference."""
         q_path = Path(questioned_crop_path)
@@ -145,10 +144,18 @@ class ForensicAnalysisService:
                 reference_profile_or_crop=r_path,
                 document_id="doc_questioned",
                 page_number=1,
+                expected_reference_hash=expected_reference_hash,
             )
-            dist = float(res.estimate.metric_embedding_distance or 0.15)
+            dist = (
+                float(res.estimate.metric_embedding_distance)
+                if res.estimate.metric_embedding_distance is not None
+                else 0.0
+            )
             coverage = float(res.measurement.stroke_pixel_coverage_pct)
-            is_match = "SIMILARITY" in res.assessment.value or "DETECTED" in res.assessment.value
+            is_match = (
+                "SIMILARITY" in res.assessment.value
+                and res.assessment.value != "INSUFFICIENT_EVIDENCE"
+            )
             return SignatureComparisonDTO(
                 questioned_doc_name=questioned_name,
                 questioned_crop_path=str(q_path.resolve()),
@@ -209,7 +216,8 @@ class ForensicAnalysisService:
                 expected_value="SS 316L (Per PO-2026-IND-001)",
                 actual_value="SS 304 (Delivered on DC-98741 / MTC-H8821)",
                 involved_documents=[
-                    d for d in ["PO-2026-IND-001.pdf", "DC-98741.pdf", "MTC-H8821.pdf"]
+                    d
+                    for d in ["PO-2026-IND-001.pdf", "DC-98741.pdf", "MTC-H8821.pdf"]
                     if d in doc_names
                 ],
             )
@@ -233,7 +241,8 @@ class ForensicAnalysisService:
                 expected_value="800.00 KG (Receipted)",
                 actual_value="1,000.00 KG (Billed)",
                 involved_documents=[
-                    d for d in ["INV-88992.pdf", "DC-98741.pdf", "PO-2026-IND-001.pdf"]
+                    d
+                    for d in ["INV-88992.pdf", "DC-98741.pdf", "PO-2026-IND-001.pdf"]
                     if d in doc_names
                 ],
             )

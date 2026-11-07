@@ -49,6 +49,8 @@ class CopyMoveMatch:
     inlier_match_count: int
     similarity_score: float  # [0.0 - 1.0]
     match_type: str  # "SIGNATURE", "STAMP", "GRAPHIC"
+    is_suppressed: bool = False
+    suppression_reason: str | None = None
 
 
 @dataclass(slots=True)

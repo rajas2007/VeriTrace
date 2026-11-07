@@ -64,9 +64,9 @@ class ContextualAuditWidget(QWidget):
         # Top Table
         self._table = QTableWidget(splitter)
         self._table.setColumnCount(6)
-        self._table.setHorizontalHeaderLabels([
-            "Rule Code", "Category", "Status", "Expected Value", "Actual Value", "Involved Docs"
-        ])
+        self._table.setHorizontalHeaderLabels(
+            ["Rule Code", "Category", "Status", "Expected Value", "Actual Value", "Involved Docs"]
+        )
         hh = self._table.horizontalHeader()
         hh.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         hh.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)

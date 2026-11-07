@@ -9,6 +9,7 @@ from veritrace.domain.interfaces.document_repository import DocumentRepository
 from veritrace.domain.interfaces.evidence_repository import EvidenceRepository
 from veritrace.domain.interfaces.finding_repository import FindingRepository
 from veritrace.domain.interfaces.investigation_repository import InvestigationRepository
+from veritrace.domain.interfaces.signature_reference_repository import SignatureReferenceRepository
 
 
 @runtime_checkable
@@ -47,6 +48,11 @@ class UnitOfWork(Protocol):
         """Audit event repository scoped to this unit of work."""
         ...
 
+    @property
+    def signature_references(self) -> SignatureReferenceRepository:
+        """Signature reference and authorized subject repository scoped to this unit of work."""
+        ...
+
     def __enter__(self) -> UnitOfWork: ...
 
     def __exit__(
@@ -61,5 +67,5 @@ class UnitOfWork(Protocol):
         ...
 
     def rollback(self) -> None:
-        """Explicitly roll back the current transaction."""
+        """Roll back the current transaction."""
         ...

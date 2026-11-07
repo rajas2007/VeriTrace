@@ -9,6 +9,7 @@ from veritrace.domain.interfaces.document_repository import DocumentRepository
 from veritrace.domain.interfaces.evidence_repository import EvidenceRepository
 from veritrace.domain.interfaces.finding_repository import FindingRepository
 from veritrace.domain.interfaces.investigation_repository import InvestigationRepository
+from veritrace.domain.interfaces.signature_reference_repository import SignatureReferenceRepository
 from veritrace.domain.interfaces.unit_of_work import UnitOfWork
 from veritrace.infrastructure.persistence.repositories.audit_event_repository import (
     SqliteAuditEventRepository,
@@ -24,6 +25,9 @@ from veritrace.infrastructure.persistence.repositories.finding_repository import
 )
 from veritrace.infrastructure.persistence.repositories.investigation_repository import (
     SqliteInvestigationRepository,
+)
+from veritrace.infrastructure.persistence.repositories.signature_reference_repository import (
+    SqliteSignatureReferenceRepository,
 )
 
 
@@ -42,6 +46,7 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         self._findings: FindingRepository | None = None
         self._evidence: EvidenceRepository | None = None
         self._audit_events: AuditEventRepository | None = None
+        self._signature_references: SignatureReferenceRepository | None = None
 
     @property
     def session(self) -> Session:
@@ -85,6 +90,13 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
             raise RuntimeError("UnitOfWork is not active. Use within a 'with' block.")
         return self._audit_events
 
+    @property
+    def signature_references(self) -> SignatureReferenceRepository:
+        """Signature reference and authorized subject repository scoped to this unit of work."""
+        if self._signature_references is None:
+            raise RuntimeError("UnitOfWork is not active. Use within a 'with' block.")
+        return self._signature_references
+
     def __enter__(self) -> SqlAlchemyUnitOfWork:
         """Initialize session and instantiate shared repositories."""
         self._session = self._session_factory()
@@ -93,6 +105,7 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         self._findings = SqliteFindingRepository(self._session)
         self._evidence = SqliteEvidenceRepository(self._session)
         self._audit_events = SqliteAuditEventRepository(self._session)
+        self._signature_references = SqliteSignatureReferenceRepository(self._session)
         return self
 
     def __exit__(
@@ -108,14 +121,7 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
             else:
                 self.commit()
         finally:
-            if self._session is not None:
-                self._session.close()
-                self._session = None
-                self._investigations = None
-                self._documents = None
-                self._findings = None
-                self._evidence = None
-                self._audit_events = None
+            self._close_session()
 
     def commit(self) -> None:
         """Explicitly commit the current transaction."""
@@ -123,6 +129,17 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
             self._session.commit()
 
     def rollback(self) -> None:
-        """Explicitly roll back the current transaction."""
+        """Roll back the current transaction."""
         if self._session is not None:
             self._session.rollback()
+
+    def _close_session(self) -> None:
+        if self._session is not None:
+            self._session.close()
+            self._session = None
+            self._investigations = None
+            self._documents = None
+            self._findings = None
+            self._evidence = None
+            self._audit_events = None
+            self._signature_references = None

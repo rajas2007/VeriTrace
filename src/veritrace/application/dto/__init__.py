@@ -32,8 +32,16 @@ from veritrace.application.dto.investigation import (
     ReviewDecisionDTO,
     ReviewFindingRequestDTO,
 )
+from veritrace.application.dto.signature_reference import (
+    AuthorizedSubjectCreateDTO,
+    AuthorizedSubjectDTO,
+    SignatureReferenceDTO,
+    SignatureReferenceEnrollDTO,
+)
 
 __all__ = [
+    "AuthorizedSubjectCreateDTO",
+    "AuthorizedSubjectDTO",
     "ContextualAuditItemDTO",
     "CorrelationDiscrepancyDTO",
     "CorrelationRequestDTO",
@@ -54,4 +62,6 @@ __all__ = [
     "ReviewFindingRequestDTO",
     "SignatureComparisonDTO",
     "SignatureDetectionDTO",
+    "SignatureReferenceDTO",
+    "SignatureReferenceEnrollDTO",
 ]

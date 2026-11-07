@@ -39,9 +39,7 @@ class DossierExportService:
     def export_dossier(self, request: DossierExportRequestDTO) -> DossierExportResultDTO:
         """Compile and persist official PS-2 Investigation Dossier in PDF and JSON formats."""
         with self._uow_factory() as uow:
-            inv = uow.investigations.get_by_id(
-                request.investigation_id, request.organization_id
-            )
+            inv = uow.investigations.get_by_id(request.investigation_id, request.organization_id)
             if not inv:
                 raise EntityNotFoundError(
                     f"Investigation '{request.investigation_id}' not found "
@@ -125,8 +123,8 @@ class DossierExportService:
 
             # Compute sha256 of the exported PDF
             hasher = hashlib.sha256()
-            with open(final_pdf_path, "rb") as f:
-                while chunk := f.read(65536):
+            with open(final_pdf_path, "rb") as pdf_file:
+                while chunk := pdf_file.read(65536):
                     hasher.update(chunk)
             sha256_hash = hasher.hexdigest()
 

@@ -375,7 +375,7 @@ def test_signature_comparison_against_reference_profile(forensic_env):
         subject_id=subj_id,
         organization_id=org_id,
         crop_image_path=str(ref_crop_path),
-        sha256_hash=hashlib.sha256(ref_crop.tobytes()).hexdigest(),
+        sha256_hash=hashlib.sha256(ref_crop_path.read_bytes()).hexdigest(),
         source_document_ref="REF-SPECIMEN-01",
         consent_mandate_ref="MANDATE-2026-001",
         enrollment_date=datetime.now(UTC),

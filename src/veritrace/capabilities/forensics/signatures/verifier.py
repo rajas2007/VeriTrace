@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import math
 from pathlib import Path
 from typing import Protocol, runtime_checkable
@@ -10,6 +11,7 @@ import cv2
 import numpy as np
 
 from veritrace.capabilities.forensics.models import ForensicProposal
+from veritrace.capabilities.forensics.signatures.crop_quality import SignatureCropQualityAssessor
 from veritrace.capabilities.forensics.signatures.detector import SignatureDetector
 from veritrace.capabilities.forensics.signatures.stroke_analyzer import SignatureStrokeAnalyzer
 from veritrace.domain.entities.signature_reference import SignatureReferenceProfile
@@ -56,6 +58,7 @@ class SignatureForensicsProtocol(Protocol):
         page_number: int = 1,
         normalized_bbox: NormalizedBoundingBox | None = None,
         user_role: str | None = None,
+        expected_reference_hash: str | None = None,
     ) -> SignatureAnalysisResult:
         """Compare a questioned signature crop against an enrolled reference profile or image."""
         ...
@@ -66,17 +69,24 @@ class SignatureVerifier:
 
     Hu moment shape descriptors, and enrolled chain-of-custody reference samples.
     Adheres strictly to the Six-Level Epistemic Assessment Scale.
+
+    NOTE: Hu moment distances, stroke thresholds, and 6-level epistemic assessments
+    are VeriTrace application-defined optical heuristics. They are NOT certified forensic
+    standards and do NOT establish legal signature authenticity or authorship.
+    Qualified human document examination remains strictly necessary.
     """
 
     def __init__(
         self,
         detector: SignatureDetector | None = None,
         stroke_analyzer: SignatureStrokeAnalyzer | None = None,
+        quality_assessor: SignatureCropQualityAssessor | None = None,
         distance_threshold_match: float = 0.25,
         distance_threshold_anomaly: float = 0.55,
     ) -> None:
         self._detector = detector or SignatureDetector()
         self._stroke_analyzer = stroke_analyzer or SignatureStrokeAnalyzer()
+        self._quality_assessor = quality_assessor or SignatureCropQualityAssessor()
         self._distance_threshold_match = distance_threshold_match
         self._distance_threshold_anomaly = distance_threshold_anomaly
 
@@ -110,6 +120,7 @@ class SignatureVerifier:
         page_number: int = 1,
         normalized_bbox: NormalizedBoundingBox | None = None,
         user_role: str | None = None,
+        expected_reference_hash: str | None = None,
     ) -> SignatureAnalysisResult:
         """Compare a questioned signature crop against an enrolled reference profile or image.
 
@@ -161,6 +172,158 @@ class SignatureVerifier:
                         "Forensic comparison disallowed under data governance policy."
                     ),
                 )
+
+            # Check reference image file integrity against enrolled sha256_hash
+            ref_path = Path(reference_profile_or_crop.crop_image_path)
+            if not ref_path.is_file():
+                meas, est = self.analyze_stroke(questioned_crop, bbox)
+                return SignatureAnalysisResult(
+                    signature_id=sig_id,
+                    document_id=document_id,
+                    page_number=page_number,
+                    measurement=meas,
+                    estimate=SignatureEstimate(
+                        apparent_stroke_smoothness=est.apparent_stroke_smoothness,
+                        metric_embedding_distance=None,
+                        comparison_reference_id=ref_id,
+                    ),
+                    assessment=SignatureAssessmentLevel.INSUFFICIENT_EVIDENCE,
+                    uncertainty_score=1.0,
+                    notes=(
+                        f"Enrolled reference image file not found on disk at '{ref_path}'. "
+                        "Forensic comparison aborted under chain-of-custody integrity policy."
+                    ),
+                )
+
+            try:
+                ref_bytes = ref_path.read_bytes()
+                computed_hash = hashlib.sha256(ref_bytes).hexdigest()
+            except Exception as e:
+                meas, est = self.analyze_stroke(questioned_crop, bbox)
+                return SignatureAnalysisResult(
+                    signature_id=sig_id,
+                    document_id=document_id,
+                    page_number=page_number,
+                    measurement=meas,
+                    estimate=SignatureEstimate(
+                        apparent_stroke_smoothness=est.apparent_stroke_smoothness,
+                        metric_embedding_distance=None,
+                        comparison_reference_id=ref_id,
+                    ),
+                    assessment=SignatureAssessmentLevel.INSUFFICIENT_EVIDENCE,
+                    uncertainty_score=1.0,
+                    notes=f"Failed to read enrolled reference file '{ref_path}': {e}",
+                )
+
+            if computed_hash != reference_profile_or_crop.sha256_hash:
+                meas, est = self.analyze_stroke(questioned_crop, bbox)
+                return SignatureAnalysisResult(
+                    signature_id=sig_id,
+                    document_id=document_id,
+                    page_number=page_number,
+                    measurement=meas,
+                    estimate=SignatureEstimate(
+                        apparent_stroke_smoothness=est.apparent_stroke_smoothness,
+                        metric_embedding_distance=None,
+                        comparison_reference_id=ref_id,
+                    ),
+                    assessment=SignatureAssessmentLevel.INSUFFICIENT_EVIDENCE,
+                    uncertainty_score=1.0,
+                    notes=(
+                        f"Chain-of-Custody Integrity Violation: Reference signature crop for "
+                        f"profile '{ref_id}' failed SHA-256 integrity verification "
+                        f"(expected {reference_profile_or_crop.sha256_hash[:16]}..., "
+                        f"actual {computed_hash[:16]}...). "
+                        "Automated comparison aborted to prevent corrupted evidence "
+                        "from entering the dossier."
+                    ),
+                )
+        elif expected_reference_hash is not None:
+            computed_ref_hash: str | None = None
+            if isinstance(reference_profile_or_crop, (Path, str)):
+                r_p = Path(reference_profile_or_crop)
+                if not r_p.is_file():
+                    meas, est = self.analyze_stroke(questioned_crop, bbox)
+                    return SignatureAnalysisResult(
+                        signature_id=sig_id,
+                        document_id=document_id,
+                        page_number=page_number,
+                        measurement=meas,
+                        estimate=SignatureEstimate(
+                            apparent_stroke_smoothness=est.apparent_stroke_smoothness,
+                            metric_embedding_distance=None,
+                        ),
+                        assessment=SignatureAssessmentLevel.INSUFFICIENT_EVIDENCE,
+                        uncertainty_score=1.0,
+                        notes=f"Reference signature image file not found on disk at '{r_p}'.",
+                    )
+                try:
+                    computed_ref_hash = hashlib.sha256(r_p.read_bytes()).hexdigest()
+                except Exception as e:
+                    meas, est = self.analyze_stroke(questioned_crop, bbox)
+                    return SignatureAnalysisResult(
+                        signature_id=sig_id,
+                        document_id=document_id,
+                        page_number=page_number,
+                        measurement=meas,
+                        estimate=SignatureEstimate(
+                            apparent_stroke_smoothness=est.apparent_stroke_smoothness,
+                            metric_embedding_distance=None,
+                        ),
+                        assessment=SignatureAssessmentLevel.INSUFFICIENT_EVIDENCE,
+                        uncertainty_score=1.0,
+                        notes=f"Failed to read reference file: {e}",
+                    )
+            elif isinstance(reference_profile_or_crop, bytes):
+                computed_ref_hash = hashlib.sha256(reference_profile_or_crop).hexdigest()
+
+            if computed_ref_hash is not None and computed_ref_hash != expected_reference_hash:
+                meas, est = self.analyze_stroke(questioned_crop, bbox)
+                return SignatureAnalysisResult(
+                    signature_id=sig_id,
+                    document_id=document_id,
+                    page_number=page_number,
+                    measurement=meas,
+                    estimate=SignatureEstimate(
+                        apparent_stroke_smoothness=est.apparent_stroke_smoothness,
+                        metric_embedding_distance=None,
+                    ),
+                    assessment=SignatureAssessmentLevel.INSUFFICIENT_EVIDENCE,
+                    uncertainty_score=1.0,
+                    notes=(
+                        f"Chain-of-Custody Integrity Violation: Reference signature crop "
+                        f"failed SHA-256 verification (expected {expected_reference_hash[:16]}..., "
+                        f"actual {computed_ref_hash[:16]}...). Comparison aborted."
+                    ),
+                )
+
+        # 1.5 Quality Assessment Gate: Verify resolution, blur, contrast, and boundary completeness
+        quality = self._quality_assessor.evaluate(questioned_crop)
+        if not quality.is_adequate:
+            return SignatureAnalysisResult(
+                signature_id=sig_id,
+                document_id=document_id,
+                page_number=page_number,
+                measurement=SignatureMeasurement(
+                    normalized_bbox=bbox,
+                    apparent_stroke_width_mean_px=0.0,
+                    apparent_stroke_width_variance_px=0.0,
+                    stroke_pixel_coverage_pct=quality.stroke_coverage_pct,
+                    boundary_mask_discontinuity=quality.boundary_discontinuity,
+                ),
+                estimate=SignatureEstimate(
+                    apparent_stroke_smoothness=0.0,
+                    metric_embedding_distance=None,
+                    comparison_reference_id=ref_id,
+                ),
+                assessment=SignatureAssessmentLevel.INSUFFICIENT_EVIDENCE,
+                uncertainty_score=0.95,
+                notes=(
+                    f"Signature crop quality limitation: {'; '.join(quality.reasons)}. "
+                    "Automated optical comparison aborted under forensic reliability policy. "
+                    "Epistemic rating: INSUFFICIENT_EVIDENCE. Human review required."
+                ),
+            )
 
         # 2. Extract measurements and optical estimate
         try:

@@ -19,7 +19,11 @@ if TYPE_CHECKING:
 
 
 class SignatureReferenceProfileModel(Base):
-    """Enrolled reference signature sample maintained under strict chain-of-custody."""
+    """Enrolled reference signature sample maintained under strict chain-of-custody.
+
+    SECURITY NOTE: Reference crops and embedding vectors are not encrypted via
+    application-layer cryptography (host-level volume encryption is relied upon).
+    """
 
     __tablename__ = "signature_references"
 
@@ -67,4 +71,5 @@ class SignatureReferenceProfileModel(Base):
     __table_args__ = (
         Index("idx_signature_references_subject_id", "subject_id"),
         Index("idx_signature_references_org_id", "organization_id"),
+        Index("uq_signature_references_subject_hash", "subject_id", "sha256_hash", unique=True),
     )

@@ -63,7 +63,15 @@ class RelationType(StrEnum):
 
 
 class SignatureAssessmentLevel(StrEnum):
-    """Standardized Six-Level Epistemic Assessment Scale for Signature Forensics."""
+    """Standardized Six-Level Epistemic Assessment Scale for Signature Forensics.
+
+    NOTE: The six assessment levels, along with all associated optical metrics
+    (crop dimensions, Laplacian variance, contrast, stroke coverage, boundary
+    clipping, and Hu moment thresholds), are VeriTrace application-defined optical
+    heuristics. They are NOT certified forensic standards and do NOT establish
+    signature authenticity or authorship. Authoritative verification strictly requires
+    qualified human document examination.
+    """
 
     SIGNATURE_DETECTED = "SIGNATURE_DETECTED"
     VISUAL_ANOMALY_OBSERVED = "VISUAL_ANOMALY_OBSERVED"

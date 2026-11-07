@@ -272,7 +272,8 @@ class EvidenceInspectorDock(QDockWidget):
             pix = QPixmap(orig_crop_path)
             if not pix.isNull():
                 scaled = pix.scaled(
-                    140, 100,
+                    140,
+                    100,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 )
@@ -287,7 +288,8 @@ class EvidenceInspectorDock(QDockWidget):
             pix_ela = QPixmap(ela_crop_path)
             if not pix_ela.isNull():
                 scaled_ela = pix_ela.scaled(
-                    140, 100,
+                    140,
+                    100,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 )

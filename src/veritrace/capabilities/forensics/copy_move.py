@@ -44,6 +44,35 @@ class CopyMoveDetector:
         keypoints, descriptors = self._orb.detectAndCompute(gray, None)
         return keypoints, descriptors
 
+    @staticmethod
+    def evaluate_layout_suppression(
+        source_bbox: NormalizedBoundingBox,
+        target_bbox: NormalizedBoundingBox,
+    ) -> tuple[bool, str | None]:
+        """Evaluate if matched regions lie within recurring standardized layout zones.
+
+        Identifies recurring corporate letterheads (top header margin) and standard footers
+        (bottom pagination/form metadata) to suppress false-positive tampering findings
+        while preserving spatial coordinates for investigator inspection.
+        """
+        # Header / Logo Zone: Both bounding boxes in top 18% of page canvas
+        if source_bbox.ymax <= 0.18 and target_bbox.ymax <= 0.18:
+            return (
+                True,
+                "Match localized entirely within recurring header margin (ymax <= 0.18). "
+                "Suppressed as likely legitimate corporate letterhead or vendor logo.",
+            )
+
+        # Footer Zone: Both bounding boxes in bottom 15% of page canvas
+        if source_bbox.ymin >= 0.85 and target_bbox.ymin >= 0.85:
+            return (
+                True,
+                "Match localized entirely within recurring footer margin (ymin >= 0.85). "
+                "Suppressed as standard page footer, pagination, or template disclaimer.",
+            )
+
+        return False, None
+
     def match_regions(
         self,
         source_crop: np.ndarray,
@@ -93,6 +122,9 @@ class CopyMoveDetector:
         if inliers >= self._min_inlier_matches:
             similarity = min(1.0, float(inliers / max(len(kp1), len(kp2))))
             similarity = max(0.6, similarity)
+            is_suppressed, suppression_reason = self.evaluate_layout_suppression(
+                source_bbox, target_bbox
+            )
             return CopyMoveMatch(
                 source_page=source_page,
                 source_bbox=source_bbox,
@@ -101,6 +133,8 @@ class CopyMoveDetector:
                 inlier_match_count=inliers,
                 similarity_score=similarity,
                 match_type=match_type,
+                is_suppressed=is_suppressed,
+                suppression_reason=suppression_reason,
             )
 
         return None
@@ -176,6 +210,7 @@ class CopyMoveDetector:
                 )
 
                 similarity = min(1.0, float(inliers / len(good_matches)))
+                is_suppressed, suppression_reason = self.evaluate_layout_suppression(bbox1, bbox2)
                 return [
                     CopyMoveMatch(
                         source_page=page1_num,
@@ -185,6 +220,8 @@ class CopyMoveDetector:
                         inlier_match_count=inliers,
                         similarity_score=similarity,
                         match_type="CLONED_PATCH",
+                        is_suppressed=is_suppressed,
+                        suppression_reason=suppression_reason,
                     )
                 ]
 

@@ -246,7 +246,7 @@ flowchart TD
 * **Coordinate Anchoring:** Anchor signature bounding boxes as `NormalizedBoundingBox [ymin, xmin, ymax, xmax]` tied to specific `document_id` and `page_number`.
 
 ### 4.3 Scientific Boundaries of Static 2D Scanned Signature Analysis
-In forensic document examination (SWGDOC / ASTM standards), analysis of static scanned 2D images operates under strict physical and scientific limits:
+In forensic document examination (SWGDOC guidelines), analysis of static scanned 2D images operates under strict physical and scientific limits:
 
 #### 4.3.1 What CAN Be Directly Measured from Static 2D Scans
 1. **2D Geometry & Spatial Extent:** Exact bounding box $[ymin, xmin, ymax, xmax]$, aspect ratio, slant angle, and spatial relationship to form guidelines.

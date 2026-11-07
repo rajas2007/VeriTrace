@@ -5,6 +5,7 @@ from veritrace.domain.interfaces.document_repository import DocumentRepository
 from veritrace.domain.interfaces.evidence_repository import EvidenceRepository
 from veritrace.domain.interfaces.finding_repository import FindingRepository
 from veritrace.domain.interfaces.investigation_repository import InvestigationRepository
+from veritrace.domain.interfaces.signature_reference_repository import SignatureReferenceRepository
 from veritrace.domain.interfaces.unit_of_work import UnitOfWork
 
 __all__ = [
@@ -13,5 +14,6 @@ __all__ = [
     "EvidenceRepository",
     "FindingRepository",
     "InvestigationRepository",
+    "SignatureReferenceRepository",
     "UnitOfWork",
 ]
