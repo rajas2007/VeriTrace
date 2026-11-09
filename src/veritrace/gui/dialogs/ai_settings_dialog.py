@@ -37,6 +37,7 @@ class AiSettingsDialog(QDialog):
         self.setWindowTitle("AI Reasoning & Privacy Configuration")
         self.setMinimumWidth(520)
         self._service = investigation_service
+        self._cached_api_key: str | None = None
 
         self._init_ui()
         self._load_current_settings()
@@ -90,6 +91,9 @@ class AiSettingsDialog(QDialog):
 
         self._model_combo = QComboBox(self)
         self._model_combo.addItem("llama-3.3-70b-versatile")
+        self._model_combo.addItem("openai/gpt-oss-20b")
+        self._model_combo.addItem("qwen/qwen3.8-27b")
+        self._model_combo.addItem("openai/gpt-oss-120b")
         self._model_combo.addItem("llama-3.1-8b-instant")
         form.addRow("Model Engine:", self._model_combo)
 
@@ -123,15 +127,21 @@ class AiSettingsDialog(QDialog):
             idx = self._mode_combo.findData(mode)
             if idx >= 0:
                 self._mode_combo.setCurrentIndex(idx)
+            if hasattr(provider, "_model_name") and provider._model_name:
+                m_idx = self._model_combo.findText(provider._model_name)
+                if m_idx >= 0:
+                    self._model_combo.setCurrentIndex(m_idx)
         else:
             self._mode_combo.setCurrentIndex(0)  # Default Mode A
 
-        # Load persisted DPAPI key if available
+        # Load persisted DPAPI key or environment key if available
         if hasattr(self._service, "get_persisted_ai_key"):
             persisted = self._service.get_persisted_ai_key()
             if isinstance(persisted, str) and persisted:
-                self._api_key_edit.setText(persisted)
+                self._cached_api_key = persisted
                 self._persist_checkbox.setChecked(True)
+                if self._mode_combo.currentData() != PrivacyMode.MODE_A_OFFLINE:
+                    self._api_key_edit.setText(persisted)
 
         self._update_ui_state()
 
@@ -155,6 +165,9 @@ class AiSettingsDialog(QDialog):
     def _update_ui_state(self) -> None:
         mode = self._mode_combo.currentData()
         if mode == PrivacyMode.MODE_A_OFFLINE:
+            typed = self._api_key_edit.text().strip()
+            if typed:
+                self._cached_api_key = typed
             self._api_key_edit.setEnabled(False)
             self._api_key_edit.clear()
             self._btn_test_conn.setEnabled(False)
@@ -165,6 +178,8 @@ class AiSettingsDialog(QDialog):
             )
         elif mode == PrivacyMode.MODE_B_STATISTICAL:
             self._api_key_edit.setEnabled(True)
+            if not self._api_key_edit.text() and self._cached_api_key:
+                self._api_key_edit.setText(self._cached_api_key)
             self._btn_test_conn.setEnabled(True)
             self._persist_checkbox.setEnabled(True)
             self._desc_lbl.setText(
@@ -174,6 +189,8 @@ class AiSettingsDialog(QDialog):
             )
         elif mode == PrivacyMode.MODE_C_REDACTED:
             self._api_key_edit.setEnabled(True)
+            if not self._api_key_edit.text() and self._cached_api_key:
+                self._api_key_edit.setText(self._cached_api_key)
             self._btn_test_conn.setEnabled(True)
             self._persist_checkbox.setEnabled(True)
             self._desc_lbl.setText(
@@ -184,7 +201,11 @@ class AiSettingsDialog(QDialog):
     def _on_save(self) -> None:
         """Apply configured provider to investigation service."""
         mode = self._mode_combo.currentData()
-        api_key = self._api_key_edit.text().strip() or None
+        api_key = (
+            None
+            if mode == PrivacyMode.MODE_A_OFFLINE
+            else (self._api_key_edit.text().strip() or None)
+        )
         model_name = self._model_combo.currentText()
         persist_key = (
             self._persist_checkbox.isChecked() if mode != PrivacyMode.MODE_A_OFFLINE else False

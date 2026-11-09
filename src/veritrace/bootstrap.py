@@ -34,6 +34,13 @@ def resolve_data_directory() -> Path:
 
 def bootstrap_application() -> None:
     """Perform early application bootstrap before Qt initialization."""
+    try:
+        from dotenv import load_dotenv
+
+        load_dotenv()
+    except Exception:
+        pass
+
     setup_logging()
     data_dir = resolve_data_directory()
     logger.info(f"VeriTrace runtime initialized. Target data dir: {data_dir}")

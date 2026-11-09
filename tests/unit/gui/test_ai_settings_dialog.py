@@ -123,8 +123,9 @@ def test_ai_settings_dialog_test_connection_trigger(qapp, monkeypatch):
     )
 
 
-def test_ai_settings_dialog_real_service_integration(qapp, monkeypatch):
+def test_ai_settings_dialog_real_service_integration(qapp, monkeypatch, tmp_path):
     """Verify end-to-end wiring with real InvestigationService instance."""
+    monkeypatch.setenv("VERITRACE_DATA_DIR", str(tmp_path))
     from PySide6.QtWidgets import QMessageBox
 
     monkeypatch.setattr(

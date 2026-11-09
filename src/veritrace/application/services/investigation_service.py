@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import logging
+import os
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -128,7 +129,11 @@ class InvestigationService:
             key_mgr.delete_secret_string("groq_api_key")
             resolved_key = None
         else:
-            resolved_key = api_key or key_mgr.load_secret_string("groq_api_key")
+            resolved_key = (
+                api_key
+                or key_mgr.load_secret_string("groq_api_key")
+                or os.environ.get("GROQ_API_KEY")
+            )
             if persist_key and resolved_key:
                 key_mgr.save_secret_string("groq_api_key", resolved_key)
 
@@ -149,7 +154,11 @@ class InvestigationService:
         from veritrace.infrastructure.ai.groq_client import GroqLLMProvider
         from veritrace.infrastructure.security.dpapi_store import DpapiDataEncryptionKey
 
-        resolved_key = api_key or DpapiDataEncryptionKey().load_secret_string("groq_api_key")
+        resolved_key = (
+            api_key
+            or DpapiDataEncryptionKey().load_secret_string("groq_api_key")
+            or os.environ.get("GROQ_API_KEY")
+        )
         if not resolved_key:
             return False, "No API key provided. Please enter a valid Groq API key."
 
@@ -161,10 +170,16 @@ class InvestigationService:
         return probe_provider.test_connection()
 
     def get_persisted_ai_key(self) -> str | None:
-        """Retrieve DPAPI-sealed Groq API key if available."""
+        """Retrieve DPAPI-sealed Groq API key if available, falling back to environment."""
         from veritrace.infrastructure.security.dpapi_store import DpapiDataEncryptionKey
 
-        return DpapiDataEncryptionKey().load_secret_string("groq_api_key")
+        try:
+            persisted = DpapiDataEncryptionKey().load_secret_string("groq_api_key")
+            if persisted:
+                return persisted
+        except Exception:
+            pass
+        return os.environ.get("GROQ_API_KEY")
 
     def clear_persisted_ai_key(self) -> bool:
         """Eradicate DPAPI-sealed Groq API key."""

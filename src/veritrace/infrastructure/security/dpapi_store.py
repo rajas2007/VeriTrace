@@ -31,8 +31,12 @@ class DpapiDataEncryptionKey:
         if key_store_dir:
             self._store_dir = Path(key_store_dir)
         else:
-            appdata = os.environ.get("LOCALAPPDATA", "")
-            base = Path(appdata) / "VeriTrace" if appdata else Path.home() / ".veritrace"
+            data_dir = os.environ.get("VERITRACE_DATA_DIR")
+            if data_dir:
+                base = Path(data_dir)
+            else:
+                appdata = os.environ.get("LOCALAPPDATA", "")
+                base = Path(appdata) / "VeriTrace" if appdata else Path.home() / ".veritrace"
             self._store_dir = base / "security"
 
         self._store_dir.mkdir(parents=True, exist_ok=True)
