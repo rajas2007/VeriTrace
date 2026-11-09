@@ -75,23 +75,24 @@ QMenu::separator {
 QToolBar {
     background-color: #090d14;
     border-bottom: 1px solid #1c2438;
-    spacing: 8px;
-    padding: 6px 12px;
+    spacing: 5px;
+    padding: 3px 6px;
 }
 
 QToolBar::separator {
     width: 1px;
     background-color: #1c2438;
-    margin: 4px 8px;
+    margin: 3px 6px;
 }
 
 QToolButton {
     background-color: #0f1420;
     color: #cbd5e1;
     border: 1px solid #1c2438;
-    border-radius: 6px;
-    padding: 6px 12px;
+    border-radius: 5px;
+    padding: 4px 9px;
     font-weight: 500;
+    font-size: 11.5px;
 }
 
 QToolButton:hover {
@@ -285,12 +286,12 @@ QTabWidget::pane {
 QTabBar::tab {
     background-color: #0f1420;
     color: #94a3b8;
-    padding: 9px 20px;
+    padding: 7px 15px;
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
     border: 1px solid transparent;
     font-weight: 600;
-    font-size: 12px;
+    font-size: 11.5px;
 }
 
 QTabBar::tab:selected {

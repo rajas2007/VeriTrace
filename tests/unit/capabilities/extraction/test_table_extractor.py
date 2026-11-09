@@ -32,7 +32,7 @@ def bank_statement_tokens() -> list[ExtractedToken]:
     # Column 0: Date [0.10, 0.25]
     # Column 1: Description [0.30, 0.60]
     # Column 2: Credit [0.65, 0.85]
-    tokens = [
+    return [
         # Row 0: Headers
         make_tok("Date", 0.10, 0.10, 0.13, 0.25),
         make_tok("Description", 0.10, 0.30, 0.13, 0.55),
@@ -48,7 +48,6 @@ def bank_statement_tokens() -> list[ExtractedToken]:
         make_tok("CREDIT", 0.20, 0.47, 0.23, 0.58),
         make_tok("12000", 0.20, 0.65, 0.23, 0.78),
     ]
-    return tokens
 
 
 def test_extract_tables_from_tokens(bank_statement_tokens: list[ExtractedToken]):

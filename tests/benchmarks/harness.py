@@ -180,7 +180,7 @@ class OcrBenchmarkHarness:
         cat_map: dict[str, str] = {s.category_id: s.category_name for s in samples}
         summaries: list[CategoryBenchmarkSummary] = []
 
-        categories = sorted(set(e.category_id for e in evaluations))
+        categories = sorted({e.category_id for e in evaluations})
         for cat_id in categories:
             cat_evals = [e for e in evaluations if e.category_id == cat_id]
             n = len(cat_evals)

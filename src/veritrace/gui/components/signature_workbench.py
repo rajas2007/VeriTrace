@@ -366,7 +366,7 @@ class SignatureWorkbenchWidget(QWidget):
         q_layout.addWidget(self._lbl_q_title)
         self._lbl_q_img = QLabel("No Image", crops_card)
         self._lbl_q_img.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._lbl_q_img.setMinimumSize(180, 110)
+        self._lbl_q_img.setMinimumSize(140, 85)
         self._lbl_q_img.setStyleSheet(
             "background: #06090f; border: 1px solid #1c2438; "
             "border-radius: 6px; color: #64748b;"
@@ -381,7 +381,7 @@ class SignatureWorkbenchWidget(QWidget):
         r_layout.addWidget(self._lbl_r_title)
         self._lbl_r_img = QLabel("No Image", crops_card)
         self._lbl_r_img.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._lbl_r_img.setMinimumSize(180, 110)
+        self._lbl_r_img.setMinimumSize(140, 85)
         self._lbl_r_img.setStyleSheet(
             "background: #06090f; border: 1px solid #1c2438; "
             "border-radius: 6px; color: #64748b;"
@@ -435,14 +435,16 @@ class SignatureWorkbenchWidget(QWidget):
 
         self._txt_explanation = QTextEdit(metrics_card)
         self._txt_explanation.setReadOnly(True)
-        self._txt_explanation.setMaximumHeight(85)
+        self._txt_explanation.setMaximumHeight(70)
         metrics_layout.addWidget(self._txt_explanation)
 
         right_layout.addWidget(metrics_card)
         right_layout.addStretch()
 
         splitter.addWidget(right_box)
-        splitter.setSizes([450, 550])
+        splitter.setSizes([340, 420])
+        splitter.setStretchFactor(0, 1)
+        splitter.setStretchFactor(1, 1)
 
         main_layout.addWidget(splitter, 1)
 

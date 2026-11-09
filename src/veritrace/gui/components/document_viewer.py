@@ -259,7 +259,9 @@ class SideBySideDocumentViewer(QWidget):
 
         self._splitter.addWidget(left_container)
         self._splitter.addWidget(right_container)
-        self._splitter.setSizes([500, 500])
+        self._splitter.setSizes([350, 350])
+        self._splitter.setStretchFactor(0, 1)
+        self._splitter.setStretchFactor(1, 1)
         main_layout.addWidget(self._splitter, 1)
 
     def load_comparison(

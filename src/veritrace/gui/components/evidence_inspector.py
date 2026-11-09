@@ -117,8 +117,8 @@ class EvidenceInspectorDock(QDockWidget):
 
         self._lbl_orig_crop = QLabel("No crop available", crops_box)
         self._lbl_orig_crop.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._lbl_orig_crop.setMinimumSize(130, 95)
-        self._lbl_orig_crop.setMaximumHeight(125)
+        self._lbl_orig_crop.setMinimumSize(95, 70)
+        self._lbl_orig_crop.setMaximumHeight(100)
         self._lbl_orig_crop.setStyleSheet(
             "background-color: #06090f; border: 1px solid #1c2438; "
             "border-radius: 6px; color: #64748b; font-size: 11px;"
@@ -127,8 +127,8 @@ class EvidenceInspectorDock(QDockWidget):
 
         self._lbl_ela_crop = QLabel("No crop available", crops_box)
         self._lbl_ela_crop.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._lbl_ela_crop.setMinimumSize(130, 95)
-        self._lbl_ela_crop.setMaximumHeight(125)
+        self._lbl_ela_crop.setMinimumSize(95, 70)
+        self._lbl_ela_crop.setMaximumHeight(100)
         self._lbl_ela_crop.setStyleSheet(
             "background-color: #06090f; border: 1px solid #1c2438; "
             "border-radius: 6px; color: #64748b; font-size: 11px;"
@@ -147,7 +147,7 @@ class EvidenceInspectorDock(QDockWidget):
 
         self._txt_narrative = QTextEdit(content)
         self._txt_narrative.setReadOnly(True)
-        self._txt_narrative.setMaximumHeight(110)
+        self._txt_narrative.setMaximumHeight(85)
         layout.addWidget(self._txt_narrative)
 
         # 4. Adjudication History
@@ -159,7 +159,7 @@ class EvidenceInspectorDock(QDockWidget):
 
         self._txt_history = QTextEdit(content)
         self._txt_history.setReadOnly(True)
-        self._txt_history.setMaximumHeight(90)
+        self._txt_history.setMaximumHeight(70)
         layout.addWidget(self._txt_history)
 
         # 5. Human Review Action Box
@@ -191,7 +191,7 @@ class EvidenceInspectorDock(QDockWidget):
         self._txt_rationale.setPlaceholderText(
             "Enter objective forensic justification for confirming or dismissing this finding..."
         )
-        self._txt_rationale.setMaximumHeight(70)
+        self._txt_rationale.setMaximumHeight(55)
         review_layout.addWidget(self._txt_rationale)
 
         # Action Buttons
@@ -288,8 +288,8 @@ class EvidenceInspectorDock(QDockWidget):
             pix = QPixmap(orig_crop_path)
             if not pix.isNull():
                 scaled = pix.scaled(
-                    140,
-                    100,
+                    110,
+                    80,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 )
@@ -304,8 +304,8 @@ class EvidenceInspectorDock(QDockWidget):
             pix_ela = QPixmap(ela_crop_path)
             if not pix_ela.isNull():
                 scaled_ela = pix_ela.scaled(
-                    140,
-                    100,
+                    110,
+                    80,
                     Qt.AspectRatioMode.KeepAspectRatio,
                     Qt.TransformationMode.SmoothTransformation,
                 )

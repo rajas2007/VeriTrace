@@ -169,8 +169,7 @@ class TextNormalizer:
         if total_counted == 0:
             return "Latn"
 
-        primary_script = max(counts, key=counts.get)  # type: ignore[arg-type]
-        return primary_script
+        return max(counts, key=counts.get)  # type: ignore[arg-type]
 
     @classmethod
     def detect_language_profile(cls, text: str) -> LanguageDetectionProfile:

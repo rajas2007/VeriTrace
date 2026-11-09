@@ -153,7 +153,7 @@ class DocumentClassifier:
         if not combined_text.strip():
             return DocumentType.UNCLASSIFIED, 0.0
 
-        keyword_scores: dict[DocumentType, float] = {dtype: 0.0 for dtype in _CLASSIFICATION_RULES}
+        keyword_scores: dict[DocumentType, float] = dict.fromkeys(_CLASSIFICATION_RULES, 0.0)
 
         # 1. Evaluate keyword matches against extracted content
         for dtype, rules in _CLASSIFICATION_RULES.items():

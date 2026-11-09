@@ -76,8 +76,7 @@ class DpapiDataEncryptionKey:
             raise OSError(f"CryptProtectData failed with Windows error code: {err}")
 
         try:
-            encrypted_data = ctypes.string_at(out_blob.pbData, out_blob.cbData)
-            return encrypted_data
+            return ctypes.string_at(out_blob.pbData, out_blob.cbData)
         finally:
             kernel32.LocalFree(out_blob.pbData)
 
@@ -112,8 +111,7 @@ class DpapiDataEncryptionKey:
             raise OSError(f"CryptUnprotectData failed with Windows error code: {err}")
 
         try:
-            plaintext = ctypes.string_at(out_blob.pbData, out_blob.cbData)
-            return plaintext
+            return ctypes.string_at(out_blob.pbData, out_blob.cbData)
         finally:
             kernel32.LocalFree(out_blob.pbData)
 

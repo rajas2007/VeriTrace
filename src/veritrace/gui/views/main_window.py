@@ -87,7 +87,23 @@ class MainWindow(QMainWindow):
     ) -> None:
         super().__init__(parent)
         self.setWindowTitle("VeriTrace Workstation — Cross-Document Forensic Intelligence")
-        self.resize(1440, 920)
+        self.setMinimumSize(960, 580)
+
+        # Adaptively size window to screen geometry
+        from PySide6.QtWidgets import QApplication
+
+        screen = QApplication.primaryScreen()
+        if screen:
+            avail = screen.availableGeometry()
+            target_w = min(1360, max(960, int(avail.width() * 0.90)))
+            target_h = min(820, max(600, int(avail.height() * 0.88)))
+            self.resize(target_w, target_h)
+            self.move(
+                avail.x() + (avail.width() - target_w) // 2,
+                avail.y() + (avail.height() - target_h) // 2,
+            )
+        else:
+            self.resize(1180, 720)
 
         self._investigation_service = investigation_service
         self._correlation_service = correlation_service
@@ -264,8 +280,8 @@ class MainWindow(QMainWindow):
 
         # 1. Left Sidebar
         self._sidebar = InvestigationSidebar(main_splitter)
-        self._sidebar.setMinimumWidth(280)
-        self._sidebar.setMaximumWidth(360)
+        self._sidebar.setMinimumWidth(220)
+        self._sidebar.setMaximumWidth(320)
         self._sidebar.investigation_selected.connect(self._on_investigation_selected)
         self._sidebar.document_selected.connect(self._on_document_selected)
         self._sidebar.new_investigation_requested.connect(self._on_new_investigation)
@@ -276,7 +292,7 @@ class MainWindow(QMainWindow):
         # 2. Central Workspace
         central_container = QWidget(main_splitter)
         central_layout = QVBoxLayout(central_container)
-        central_layout.setContentsMargins(8, 8, 8, 8)
+        central_layout.setContentsMargins(6, 6, 6, 6)
         central_layout.setSpacing(6)
 
         self._dashboard_banner = DashboardBannerWidget(central_container)
@@ -287,6 +303,7 @@ class MainWindow(QMainWindow):
         central_layout.addWidget(self._dashboard_banner)
 
         self._tabs = QTabWidget(central_container)
+        self._tabs.setDocumentMode(True)
 
         # Tab 0: Contradiction Matrix & Findings
         matrix_container = QWidget(self._tabs)
@@ -320,14 +337,16 @@ class MainWindow(QMainWindow):
 
         central_layout.addWidget(self._tabs, 1)
         main_splitter.addWidget(central_container)
-        main_splitter.setSizes([320, 1120])
+        main_splitter.setSizes([240, 780])
+        main_splitter.setStretchFactor(0, 0)
+        main_splitter.setStretchFactor(1, 1)
 
         self.setCentralWidget(main_splitter)
 
         # 3. Right Evidence Inspector Dock
         self._inspector_dock = EvidenceInspectorDock(self)
-        self._inspector_dock.setMinimumWidth(320)
-        self._inspector_dock.setMaximumWidth(420)
+        self._inspector_dock.setMinimumWidth(260)
+        self._inspector_dock.setMaximumWidth(360)
         self._inspector_dock.review_action_submitted.connect(self._on_review_submitted)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self._inspector_dock)
 

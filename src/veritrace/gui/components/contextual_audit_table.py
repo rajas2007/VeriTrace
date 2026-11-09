@@ -108,12 +108,14 @@ class ContextualAuditWidget(QWidget):
 
         self._txt_detail_desc = QTextEdit(detail_card)
         self._txt_detail_desc.setReadOnly(True)
-        self._txt_detail_desc.setMaximumHeight(95)
+        self._txt_detail_desc.setMaximumHeight(70)
         detail_layout.addWidget(self._txt_detail_desc)
 
         bottom_layout.addWidget(detail_card)
         splitter.addWidget(bottom_container)
-        splitter.setSizes([450, 200])
+        splitter.setSizes([260, 130])
+        splitter.setStretchFactor(0, 3)
+        splitter.setStretchFactor(1, 1)
 
         main_layout.addWidget(splitter, 1)
 

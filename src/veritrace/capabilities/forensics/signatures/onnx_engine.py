@@ -138,8 +138,7 @@ class SiameseOnnxSignatureEngine:
 
         # 3. Normalize pixel intensities to [0.0, 1.0] and format as NCHW float32
         norm = resized.astype(np.float32) / 255.0
-        tensor = np.expand_dims(norm, axis=(0, 1))  # Shape: (1, 1, 128, 128)
-        return tensor
+        return np.expand_dims(norm, axis=(0, 1))  # Shape: (1, 1, 128, 128)
 
     def compute_embedding(
         self,

@@ -143,7 +143,7 @@ sequenceDiagram
 | **PowerPoint Presentation** | [`../presentation/VeriTrace_Hackathon_Presentation.pptx`](../presentation/VeriTrace_Hackathon_Presentation.pptx) | Official 12-slide 16:9 widescreen presentation deck |
 | **Presentation Markdown** | [`../presentation/VeriTrace_Hackathon_Presentation.md`](../presentation/VeriTrace_Hackathon_Presentation.md) | Markdown presentation source |
 | **High-Res UI Screenshots** | [`../presentation/screenshots/`](../presentation/screenshots/) | 5 high-resolution workstation PNG captures |
-| **Standalone Executable** | [`../dist/VeriTrace/VeriTrace.exe`](../dist/VeriTrace/VeriTrace.exe) | Compiled standalone 64-bit Windows executable |
+| **Standalone Executable** | `dist/VeriTrace/VeriTrace.exe` (Generated via build) | Compiled standalone 64-bit Windows executable |
 
 ---
 

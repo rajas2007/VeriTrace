@@ -57,7 +57,7 @@ def detect_mime_type(content: bytes, filename: str) -> str:
         return "image/png"
     if content.startswith(JPEG_MAGIC):
         return "image/jpeg"
-    if content.startswith(TIFF_LE_MAGIC) or content.startswith(TIFF_BE_MAGIC):
+    if content.startswith((TIFF_LE_MAGIC, TIFF_BE_MAGIC)):
         return "image/tiff"
 
     ext = Path(filename).suffix.lower()

@@ -106,8 +106,7 @@ def create_uneven_illumination_image(base_img: np.ndarray) -> np.ndarray:
     y = np.linspace(1.0, 0.2, h)
     xx, yy = np.meshgrid(x, y)
     mask = (xx * yy)[:, :, np.newaxis]
-    shadowed = (base_img.astype(np.float32) * mask).astype(np.uint8)
-    return shadowed
+    return (base_img.astype(np.float32) * mask).astype(np.uint8)
 
 
 def create_cutoff_image(width: int = 1200, height: int = 1600) -> np.ndarray:

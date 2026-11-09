@@ -102,7 +102,9 @@ class DoclingLayoutAdapter:
                 return self._convert_custom_parsed_data(path.name, parsed_data)
 
             # Native Docling extraction pipeline
-            from docling.document_converter import DocumentConverter  # type: ignore[import-not-found,import-untyped]
+            from docling.document_converter import (
+                DocumentConverter,  # type: ignore[import-not-found,import-untyped]
+            )
 
             converter = DocumentConverter()
             result = converter.convert(str(path))

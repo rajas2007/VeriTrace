@@ -150,14 +150,13 @@ def run_preflight_checks() -> PreflightReport:
     else:
         logger.info("  ℹ Inno Setup Compiler (ISCC.exe): Not installed on host.")
 
-    report = PreflightReport(
+    return PreflightReport(
         python_ok=python_ok,
         python_version=py_ver_str,
         missing_modules=missing_modules,
         missing_assets=missing_assets,
         iscc_path=iscc_path,
     )
-    return report
 
 
 def clean_build_artifacts() -> None:

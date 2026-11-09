@@ -63,10 +63,7 @@ def validate_markdown_links(root: Path) -> tuple[int, list[str]]:
 
                 # Ignore external URLs, mailto, and intra-page anchors
                 if (
-                    link.startswith("http://")
-                    or link.startswith("https://")
-                    or link.startswith("mailto:")
-                    or link.startswith("#")
+                    link.startswith(("http://", "https://", "mailto:", "#"))
                 ):
                     continue
 

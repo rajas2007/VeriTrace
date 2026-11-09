@@ -57,8 +57,7 @@ def load_and_preprocess_image(
         raise ValueError(f"Failed to decode signature image from: {image_path}")
 
     resized = cv2.resize(img, target_size, interpolation=cv2.INTER_AREA)
-    norm = resized.astype(np.float32) / 255.0
-    return norm
+    return resized.astype(np.float32) / 255.0
 
 
 def discover_cedar_dataset(dataset_root: Path) -> dict[str, dict[str, list[Path]]]:
