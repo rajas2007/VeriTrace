@@ -8,11 +8,14 @@ from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QAction, QKeySequence
+from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QFileDialog,
     QMainWindow,
+    QMenu,
     QMessageBox,
+    QPushButton,
+    QSizePolicy,
     QSplitter,
     QTabWidget,
     QToolBar,
@@ -54,6 +57,7 @@ from veritrace.application.services.text_extraction_service import (
 )
 from veritrace.domain.entities.document_page import DocumentPage
 from veritrace.domain.enums.document import DocumentType
+from veritrace.gui.components.common import CommandPaletteDialog, ToastNotification
 from veritrace.gui.components.contextual_audit_table import ContextualAuditWidget
 from veritrace.gui.components.dashboard_widget import DashboardBannerWidget
 from veritrace.gui.components.document_viewer import SideBySideDocumentViewer
@@ -66,6 +70,7 @@ from veritrace.gui.controllers.correlation_worker import CorrelationWorker
 from veritrace.gui.controllers.dossier_worker import DossierWorker
 from veritrace.gui.controllers.forensic_worker import ForensicWorker
 from veritrace.gui.demo_data import seed_industrial_demo
+from veritrace.gui.styles.tokens import ColorTokens, MetricTokens
 
 logger = logging.getLogger("veritrace.gui.main_window")
 
@@ -136,6 +141,7 @@ class MainWindow(QMainWindow):
 
         self._setup_menus()
         self._setup_toolbar()
+        self._setup_shortcuts()
         self._setup_ui()
         self._load_investigations()
 
@@ -190,6 +196,13 @@ class MainWindow(QMainWindow):
         # 2. View Menu
         view_menu = menubar.addMenu("&View")
 
+        act_palette = QAction("Command &Palette...", self)
+        act_palette.setShortcut(QKeySequence("Ctrl+K"))
+        act_palette.triggered.connect(self._open_command_palette)
+        view_menu.addAction(act_palette)
+
+        view_menu.addSeparator()
+
         act_zoom_in = QAction("Zoom &In", self)
         act_zoom_in.setShortcut(QKeySequence("Ctrl++"))
         act_zoom_in.triggered.connect(lambda: self._doc_viewer._left_canvas.zoom_in())
@@ -234,45 +247,170 @@ class MainWindow(QMainWindow):
         act_demo_ind.triggered.connect(self._on_load_demo)
         demos_menu.addAction(act_demo_ind)
 
-        # 5. Help Menu
+        # 6. Help Menu
         help_menu = menubar.addMenu("&Help")
         act_about = QAction("&About VeriTrace Workstation", self)
         act_about.triggered.connect(self._on_about)
         help_menu.addAction(act_about)
 
     def _setup_toolbar(self) -> None:
-        """Create quick action forensic toolbar."""
+        """Create sleek, consolidated top action toolbar with Command Palette."""
         toolbar = QToolBar("Forensic Actions", self)
         toolbar.setMovable(False)
+        toolbar.setFloatable(False)
+        toolbar.setStyleSheet(
+            f"QToolBar {{ background-color: {ColorTokens.SURFACE_SIDEBAR}; "
+            f"border-bottom: 1px solid {ColorTokens.BORDER_SUBTLE}; "
+            "padding: 4px 10px; spacing: 8px; }"
+        )
 
-        act_import = toolbar.addAction("📥 Import Document")
-        act_import.triggered.connect(self._on_add_document)
-
-        act_run = toolbar.addAction("⚡ Run Full Forensics")
-        act_run.triggered.connect(lambda: self._on_run_correlation(False))
+        # 1. Search / Command Palette Trigger
+        self._btn_search_palette = QPushButton("🔍  Search commands or findings... (Ctrl+K)", self)
+        self._btn_search_palette.setObjectName("paletteTrigger")
+        self._btn_search_palette.setFixedWidth(280)
+        self._btn_search_palette.setStyleSheet(
+            f"QPushButton {{ background-color: {ColorTokens.BACKGROUND_BASE}; "
+            f"border: 1px solid {ColorTokens.BORDER_SUBTLE}; "
+            f"border-radius: {MetricTokens.RADIUS_MD}; "
+            f"padding: 5px 12px; color: {ColorTokens.TEXT_MUTED}; "
+            f"font-size: {MetricTokens.FONT_SIZE_XS}; text-align: left; }} "
+            f"QPushButton:hover {{ border-color: {ColorTokens.ACCENT_PRIMARY}; "
+            f"color: {ColorTokens.TEXT_PRIMARY}; }}"
+        )
+        self._btn_search_palette.clicked.connect(self._open_command_palette)
+        toolbar.addWidget(self._btn_search_palette)
 
         toolbar.addSeparator()
 
-        act_export_pdf = toolbar.addAction("📄 Export PS-2 Dossier (PDF)")
-        act_export_pdf.triggered.connect(self._on_export_pdf_dossier)
+        # 2. Quick Import Document
+        btn_import = QPushButton("+ Import Document", self)
+        btn_import.setObjectName("secondaryButton")
+        btn_import.setStyleSheet(
+            f"padding: 5px 12px; font-size: {MetricTokens.FONT_SIZE_XS}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_MEDIUM};"
+        )
+        btn_import.clicked.connect(self._on_add_document)
+        toolbar.addWidget(btn_import)
 
-        act_export_json = toolbar.addAction("📊 Export JSON Dossier")
-        act_export_json.triggered.connect(self._on_export_json_dossier)
+        # 3. Primary Run Correlation
+        btn_run = QPushButton("⚡ Run Full Forensics", self)
+        btn_run.setObjectName("primaryButton")
+        btn_run.setStyleSheet(
+            f"padding: 5px 14px; font-size: {MetricTokens.FONT_SIZE_XS}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_BOLD};"
+        )
+        btn_run.clicked.connect(lambda: self._on_run_correlation(False))
+        toolbar.addWidget(btn_run)
 
-        toolbar.addSeparator()
+        # Spacer to push overflow to right
+        spacer = QWidget(self)
+        spacer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        toolbar.addWidget(spacer)
 
-        act_sig = toolbar.addAction("✍️ Signature Workbench")
-        act_sig.triggered.connect(lambda: self._tabs.setCurrentIndex(2))
+        # 4. Consolidated 'More Actions' Menu
+        more_btn = QPushButton("More Actions ▾", self)
+        more_btn.setObjectName("secondaryButton")
+        more_btn.setStyleSheet(
+            f"padding: 5px 12px; font-size: {MetricTokens.FONT_SIZE_XS}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_MEDIUM};"
+        )
+        more_menu = QMenu(more_btn)
 
-        act_audit = toolbar.addAction("🧮 Math & Chronology Audit")
-        act_audit.triggered.connect(lambda: self._tabs.setCurrentIndex(3))
+        act_dossier_pdf = more_menu.addAction("Export PS-2 Dossier (PDF)...")
+        act_dossier_pdf.triggered.connect(self._on_export_pdf_dossier)
 
-        toolbar.addSeparator()
+        act_dossier_json = more_menu.addAction("Export JSON Dossier...")
+        act_dossier_json.triggered.connect(self._on_export_json_dossier)
 
-        act_demo = toolbar.addAction("🔄 Load Demo Case")
-        act_demo.triggered.connect(self._on_load_demo)
+        more_menu.addSeparator()
+
+        act_forensic_scan = more_menu.addAction("Scan Visual Forensics...")
+        act_forensic_scan.triggered.connect(self._on_run_forensics)
+
+        act_load_demo = more_menu.addAction("Load Industrial Alloy Demo Case")
+        act_load_demo.triggered.connect(self._on_load_demo)
+
+        more_menu.addSeparator()
+
+        act_settings = more_menu.addAction("AI Reasoning & Privacy Settings...")
+        act_settings.triggered.connect(self._on_ai_settings)
+
+        more_btn.setMenu(more_menu)
+        toolbar.addWidget(more_btn)
 
         self.addToolBar(toolbar)
+
+    def _setup_shortcuts(self) -> None:
+        """Register global application keyboard shortcuts."""
+        palette_shortcut = QShortcut(QKeySequence("Ctrl+K"), self)
+        palette_shortcut.activated.connect(self._open_command_palette)
+
+    def _open_command_palette(self) -> None:
+        """Open Raycast/Linear-style command launcher."""
+        commands = [
+            (
+                "⚡ Run Full Forensics",
+                "Execute deterministic cross-document correlation across all ingested evidence",
+                lambda: self._on_run_correlation(False),
+            ),
+            (
+                "📥 Import Evidence Document",
+                "Ingest PDF or high-resolution image document into active investigation",
+                self._on_add_document,
+            ),
+            (
+                "📄 Export PS-2 Dossier (PDF)",
+                "Compile complete sealed legal PDF forensic investigation dossier",
+                self._on_export_pdf_dossier,
+            ),
+            (
+                "📊 Export Structured JSON Dossier",
+                "Export cryptographic JSON payload containing complete case findings",
+                self._on_export_json_dossier,
+            ),
+            (
+                "👁️ Scan Visual Forensics",
+                "Scan document pages for copy-move tampering, morphology, and signatures",
+                self._on_run_forensics,
+            ),
+            (
+                "✍️ Signature Verification Workbench",
+                "Navigate to Hu moments optical signature comparison tab",
+                lambda: self._tabs.setCurrentIndex(2),
+            ),
+            (
+                "🧮 Procurement & Chronology Audit",
+                "Navigate to procurement math and weighbridge arithmetic tab",
+                lambda: self._tabs.setCurrentIndex(3),
+            ),
+            (
+                "🔍 Contradiction Matrix",
+                "Navigate to primary discrepancy table tab",
+                lambda: self._tabs.setCurrentIndex(0),
+            ),
+            (
+                "🖼️ Side-by-Side Evidence Canvas",
+                "Navigate to dual-canvas page and ELA comparison viewer",
+                lambda: self._tabs.setCurrentIndex(1),
+            ),
+            (
+                "🔄 Load Industrial Alloy Demo Case",
+                "Seed and load 4-document demo (PO, Challan, MTC, Invoice)",
+                self._on_load_demo,
+            ),
+            (
+                "➕ New Investigation Case",
+                "Create a new forensic case in current organization",
+                self._on_new_investigation,
+            ),
+            (
+                "⚙️ AI Reasoning & Privacy Settings",
+                "Configure model provider, offline air-gap mode, and PII redaction",
+                self._on_ai_settings,
+            ),
+        ]
+        dlg = CommandPaletteDialog(commands, self)
+        dlg.exec()
 
     def _setup_ui(self) -> None:
         # Central Splitter
@@ -308,10 +446,11 @@ class MainWindow(QMainWindow):
         # Tab 0: Contradiction Matrix & Findings
         matrix_container = QWidget(self._tabs)
         matrix_layout = QVBoxLayout(matrix_container)
-        matrix_layout.setContentsMargins(4, 4, 4, 4)
+        matrix_layout.setContentsMargins(0, 0, 0, 0)
         self._finding_table = FindingTableWidget(matrix_container)
         self._finding_table.finding_selected.connect(self._on_finding_selected)
         self._finding_table.finding_activated.connect(self._on_finding_activated)
+        self._finding_table.run_forensics_requested.connect(lambda: self._on_run_correlation(False))
         matrix_layout.addWidget(self._finding_table)
         self._tabs.addTab(matrix_container, "Contradiction Matrix")
 
@@ -353,7 +492,7 @@ class MainWindow(QMainWindow):
         # 4. Status Bar
         self._status_bar = VeriTraceStatusBar(self)
         self.setStatusBar(self._status_bar)
-        self._status_bar.set_telemetry(f"Org: {self._organization_id}")
+        self._status_bar.set_telemetry(f"Org: {self._organization_id[:16]}...")
 
     def _load_investigations(self) -> None:
         """Fetch investigations for organization, auto-seeding demo on first launch."""
@@ -388,7 +527,9 @@ class MainWindow(QMainWindow):
     def _on_investigation_selected(self, investigation_id: str) -> None:
         """Handle case selection and load documents and findings."""
         self._active_investigation_id = investigation_id
-        self._status_bar.set_telemetry(f"Org: {self._organization_id} | Case: {investigation_id}")
+        self._status_bar.set_telemetry(
+            f"Org: {self._organization_id[:12]}... | Case: {investigation_id[:12]}..."
+        )
         self._reload_case_data()
 
     def _reload_case_data(self) -> None:
@@ -482,6 +623,10 @@ class MainWindow(QMainWindow):
             f"Correlation complete: {summary.discrepancies_count} discrepancies, "
             f"{summary.corroborations_count} corroborations."
         )
+        ToastNotification.show_toast(
+            self,
+            f"Forensics complete: {summary.discrepancies_count} discrepancies identified",
+        )
         self._reload_case_data()
 
     def _on_correlation_error(self, err_msg: str) -> None:
@@ -522,6 +667,9 @@ class MainWindow(QMainWindow):
         self._status_bar.finish_progress(
             f"Forensic scan complete: {findings_count} visual findings recorded."
         )
+        ToastNotification.show_toast(
+            self, f"Forensic scan complete: {findings_count} findings recorded"
+        )
         self._reload_case_data()
 
     def _on_forensics_error(self, err_msg: str) -> None:
@@ -560,6 +708,7 @@ class MainWindow(QMainWindow):
     def _on_dossier_finished(self, pdf_path: str, json_path: str) -> None:
         self._dashboard_banner.set_dossier_enabled(True)
         self._status_bar.finish_progress(f"Dossier ready: {Path(pdf_path).name}")
+        ToastNotification.show_toast(self, "PS-2 Investigation Dossier compiled successfully")
         self._show_message(
             "Investigation Dossier Compiled",
             f"PS-2 Investigation Dossier generated successfully:\n\n"
@@ -729,6 +878,7 @@ class MainWindow(QMainWindow):
             self._status_bar.set_status(
                 f"Finding {finding_id} adjudicated as {decision.value} by {reviewer_id}."
             )
+            ToastNotification.show_toast(self, f"Adjudication recorded: {decision.value}")
         except Exception as e:
             logger.exception("Review adjudication failed: %s", e)
             self._show_message(
@@ -751,6 +901,7 @@ class MainWindow(QMainWindow):
             self._investigation_service.list_investigations(self._organization_id),
             selected_id=new_inv.id,
         )
+        ToastNotification.show_toast(self, f"New case created: {ref}")
 
     def _on_add_document(self) -> None:
         """Select file from dialog and ingest into case."""
@@ -806,6 +957,7 @@ class MainWindow(QMainWindow):
 
             self._reload_case_data()
             self._status_bar.set_status(f"Ingested document: {Path(file_path).name}")
+            ToastNotification.show_toast(self, f"Ingested {Path(file_path).name}")
         except Exception as e:
             logger.exception("Document ingestion failed: %s", e)
             self._show_message("Ingestion Failed", str(e), is_error=True)
@@ -831,6 +983,7 @@ class MainWindow(QMainWindow):
             self._status_bar.set_status(
                 "Industrial Demo Loaded: PO, Challan, MTC, and Invoice ready for correlation."
             )
+            ToastNotification.show_toast(self, "Alloy Demo loaded (4 documents)")
         except Exception as e:
             logger.exception("Failed to seed industrial demo: %s", e)
             self._show_message("Demo Seed Error", str(e), is_error=True)
@@ -863,6 +1016,7 @@ class MainWindow(QMainWindow):
             self._status_bar.set_status(
                 f"Exported PS-2 Dossier PDF: {result.pdf_path} (Hash: {result.sha256_hash[:16]}...)"
             )
+            ToastNotification.show_toast(self, "PS-2 Dossier PDF exported successfully")
             self._show_message(
                 "Dossier Exported Successfully",
                 f"PS-2 Forensic Dossier compiled.\n\n"
@@ -900,6 +1054,7 @@ class MainWindow(QMainWindow):
             )
             result = self._dossier_export_service.export_dossier(req)
             self._status_bar.set_status(f"Exported JSON Dossier: {result.json_path}")
+            ToastNotification.show_toast(self, "JSON Intelligence payload exported")
             self._show_message(
                 "JSON Dossier Exported",
                 f"Standardized PS-2 JSON Payload generated:\n{result.json_path}",
@@ -935,6 +1090,7 @@ class MainWindow(QMainWindow):
             )
             self._load_signature_references()
             self._status_bar.set_status(f"Authorized subject '{full_name}' created.")
+            ToastNotification.show_toast(self, f"Signatory '{full_name}' registered")
         except Exception as e:
             self._show_message("Subject Registration Failed", str(e), is_error=True)
 
@@ -955,6 +1111,7 @@ class MainWindow(QMainWindow):
             self._investigation_service.enroll_signature_reference(dto)
             self._load_signature_references()
             self._status_bar.set_status("Specimen signature reference enrolled.")
+            ToastNotification.show_toast(self, "Specimen reference enrolled")
         except Exception as e:
             self._show_message("Enrollment Failed", str(e), is_error=True)
 

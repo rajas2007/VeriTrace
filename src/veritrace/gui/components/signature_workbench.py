@@ -33,6 +33,7 @@ from veritrace.application.dto.signature_reference import (
     AuthorizedSubjectDTO,
     SignatureReferenceDTO,
 )
+from veritrace.gui.styles.tokens import ColorTokens, MetricTokens
 
 
 class CreateAuthorizedSubjectDialog(QDialog):
@@ -66,6 +67,7 @@ class CreateAuthorizedSubjectDialog(QDialog):
         btn_box = QHBoxLayout()
         btn_box.addStretch()
         self._btn_cancel = QPushButton("Cancel", self)
+        self._btn_cancel.setObjectName("secondaryButton")
         self._btn_cancel.clicked.connect(self.reject)
         btn_box.addWidget(self._btn_cancel)
 
@@ -131,6 +133,7 @@ class EnrollSignatureReferenceDialog(QDialog):
         self._txt_path = QLineEdit(self)
         self._txt_path.setPlaceholderText("Path to high-resolution specimen crop image...")
         self._btn_browse = QPushButton("Browse...", self)
+        self._btn_browse.setObjectName("secondaryButton")
         self._btn_browse.clicked.connect(self._on_browse)
         file_row.addWidget(self._txt_path, 1)
         file_row.addWidget(self._btn_browse)
@@ -141,8 +144,10 @@ class EnrollSignatureReferenceDialog(QDialog):
         self._lbl_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._lbl_preview.setMinimumHeight(100)
         self._lbl_preview.setStyleSheet(
-            "background: #06090f; border: 1px solid #1c2438; "
-            "border-radius: 6px; padding: 6px; color: #64748b;"
+            f"background: {ColorTokens.BACKGROUND_BASE}; "
+            f"border: 1px solid {ColorTokens.BORDER_SUBTLE}; "
+            f"border-radius: {MetricTokens.RADIUS_MD}; "
+            f"padding: 6px; color: {ColorTokens.TEXT_MUTED};"
         )
         form.addRow("Visual Preview:", self._lbl_preview)
 
@@ -164,6 +169,7 @@ class EnrollSignatureReferenceDialog(QDialog):
         btn_box = QHBoxLayout()
         btn_box.addStretch()
         self._btn_cancel = QPushButton("Cancel", self)
+        self._btn_cancel.setObjectName("secondaryButton")
         self._btn_cancel.clicked.connect(self.reject)
         btn_box.addWidget(self._btn_cancel)
 
@@ -243,31 +249,40 @@ class SignatureWorkbenchWidget(QWidget):
         self._references: list[SignatureReferenceDTO] = []
 
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(8, 8, 8, 8)
+        main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(10)
 
         # Header bar
         header_bar = QHBoxLayout()
+        header_bar.setContentsMargins(0, 0, 0, 0)
         header_bar.setSpacing(10)
 
         title_layout = QVBoxLayout()
-        title_lbl = QLabel("✍️ Signature Forensics & Hu Moment Verification", self)
+        title_layout.setSpacing(2)
+        title_lbl = QLabel("Signature Forensics & Optical Verification", self)
         title_lbl.setStyleSheet(
-            "font-size: 15px; font-weight: 800; color: #f1f5f9; letter-spacing: 0.5px;"
+            f"font-size: {MetricTokens.FONT_SIZE_BASE}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_BOLD}; "
+            f"color: {ColorTokens.TEXT_PRIMARY};"
         )
         title_layout.addWidget(title_lbl)
 
         sub_lbl = QLabel(
-            "VeriTrace 6-Level Epistemic Scale, Invariant Hu Moments, and Optical Stroke Analysis",
+            "ASTM E3079 6-level epistemic scale, invariant Hu moments and stroke morphology",
             self,
         )
-        sub_lbl.setStyleSheet("color: #94a3b8; font-size: 11px;")
+        sub_lbl.setStyleSheet(
+            f"color: {ColorTokens.TEXT_MUTED}; font-size: {MetricTokens.FONT_SIZE_XS};"
+        )
         title_layout.addWidget(sub_lbl)
         header_bar.addLayout(title_layout, 1)
 
         self._btn_verify = QPushButton("⚡ Run Signature Verification", self)
         self._btn_verify.setObjectName("primaryButton")
-        self._btn_verify.setStyleSheet("padding: 8px 16px; font-size: 12px; font-weight: 700;")
+        self._btn_verify.setStyleSheet(
+            f"padding: 7px 16px; font-size: {MetricTokens.FONT_SIZE_SM}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_BOLD};"
+        )
         self._btn_verify.clicked.connect(self.run_verification_requested.emit)
         header_bar.addWidget(self._btn_verify)
 
@@ -275,11 +290,14 @@ class SignatureWorkbenchWidget(QWidget):
 
         # Controls Bar: Signatory & Specimen Reference Selection
         controls_bar = QHBoxLayout()
-        controls_bar.setSpacing(10)
+        controls_bar.setContentsMargins(0, 0, 0, 0)
+        controls_bar.setSpacing(8)
 
         lbl_subj = QLabel("Signatory:", self)
         lbl_subj.setStyleSheet(
-            "color: #38bdf8; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;"
+            f"color: {ColorTokens.TEXT_SECONDARY}; "
+            f"font-size: {MetricTokens.FONT_SIZE_XS}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_MEDIUM};"
         )
         controls_bar.addWidget(lbl_subj)
 
@@ -289,12 +307,16 @@ class SignatureWorkbenchWidget(QWidget):
         controls_bar.addWidget(self._combo_subjects)
 
         self._btn_new_subject = QPushButton("+ Signatory", self)
+        self._btn_new_subject.setObjectName("secondaryButton")
+        self._btn_new_subject.setStyleSheet("padding: 3px 8px; font-size: 11px;")
         self._btn_new_subject.clicked.connect(self._on_open_new_subject)
         controls_bar.addWidget(self._btn_new_subject)
 
         lbl_ref = QLabel("Reference Specimen:", self)
         lbl_ref.setStyleSheet(
-            "color: #38bdf8; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;"
+            f"color: {ColorTokens.TEXT_SECONDARY}; "
+            f"font-size: {MetricTokens.FONT_SIZE_XS}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_MEDIUM};"
         )
         controls_bar.addWidget(lbl_ref)
 
@@ -304,6 +326,8 @@ class SignatureWorkbenchWidget(QWidget):
         controls_bar.addWidget(self._combo_references, 1)
 
         self._btn_enroll_ref = QPushButton("+ Enroll Specimen...", self)
+        self._btn_enroll_ref.setObjectName("secondaryButton")
+        self._btn_enroll_ref.setStyleSheet("padding: 3px 8px; font-size: 11px;")
         self._btn_enroll_ref.clicked.connect(self._on_open_enroll_dialog)
         controls_bar.addWidget(self._btn_enroll_ref)
 
@@ -318,9 +342,13 @@ class SignatureWorkbenchWidget(QWidget):
         left_layout.setContentsMargins(0, 0, 0, 0)
         left_layout.setSpacing(6)
 
-        lbl_table_hdr = QLabel("DETECTED QUESTIONED SIGNATURES", left_box)
+        lbl_table_hdr = QLabel("QUESTIONED SIGNATURES", left_box)
         lbl_table_hdr.setStyleSheet(
-            "color: #94a3b8; font-weight: 700; font-size: 11px; letter-spacing: 0.5px;"
+            f"color: {ColorTokens.TEXT_MUTED}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_SEMIBOLD}; "
+            f"font-size: {MetricTokens.FONT_SIZE_XS}; "
+            "letter-spacing: 0.8px; "
+            "text-transform: uppercase;"
         )
         left_layout.addWidget(lbl_table_hdr)
 
@@ -333,6 +361,9 @@ class SignatureWorkbenchWidget(QWidget):
         self._table.setAlternatingRowColors(True)
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self._table.setShowGrid(False)
+        self._table.verticalHeader().setVisible(False)
+        self._table.verticalHeader().setDefaultSectionSize(36)
         self._table.itemSelectionChanged.connect(self._on_row_selected)
         left_layout.addWidget(self._table, 1)
         splitter.addWidget(left_box)
@@ -341,50 +372,70 @@ class SignatureWorkbenchWidget(QWidget):
         right_box = QWidget(splitter)
         right_layout = QVBoxLayout(right_box)
         right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(10)
+        right_layout.setSpacing(8)
 
         # Crops card
         crops_card = QFrame(right_box)
         crops_card.setObjectName("card")
+        crops_card.setStyleSheet(
+            f"background-color: {ColorTokens.SURFACE_CARD}; "
+            f"border: 1px solid {ColorTokens.BORDER_SUBTLE}; "
+            f"border-radius: {MetricTokens.RADIUS_MD}; "
+            "padding: 6px;"
+        )
         crops_layout = QVBoxLayout(crops_card)
-        crops_layout.setContentsMargins(12, 12, 12, 12)
-        crops_layout.setSpacing(10)
+        crops_layout.setContentsMargins(10, 10, 10, 10)
+        crops_layout.setSpacing(8)
 
-        lbl_preview_hdr = QLabel("OPTICAL STROKE COMPARISON", crops_card)
+        lbl_preview_hdr = QLabel("STROKE COMPARISON", crops_card)
         lbl_preview_hdr.setStyleSheet(
-            "color: #38bdf8; font-weight: 700; font-size: 11px; letter-spacing: 0.5px;"
+            f"color: {ColorTokens.TEXT_MUTED}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_SEMIBOLD}; "
+            f"font-size: {MetricTokens.FONT_SIZE_XS}; "
+            "letter-spacing: 0.8px; "
+            "text-transform: uppercase;"
         )
         crops_layout.addWidget(lbl_preview_hdr)
 
         crops_row = QHBoxLayout()
-        crops_row.setSpacing(14)
+        crops_row.setSpacing(12)
 
         # Questioned preview
         q_layout = QVBoxLayout()
+        q_layout.setSpacing(4)
         self._lbl_q_title = QLabel("Questioned Signature", crops_card)
-        self._lbl_q_title.setStyleSheet("font-weight: 700; color: #f1f5f9; font-size: 11px;")
+        self._lbl_q_title.setStyleSheet(
+            f"font-weight: {MetricTokens.FONT_WEIGHT_MEDIUM}; "
+            f"color: {ColorTokens.TEXT_PRIMARY}; font-size: {MetricTokens.FONT_SIZE_XS};"
+        )
         q_layout.addWidget(self._lbl_q_title)
         self._lbl_q_img = QLabel("No Image", crops_card)
         self._lbl_q_img.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._lbl_q_img.setMinimumSize(140, 85)
         self._lbl_q_img.setStyleSheet(
-            "background: #06090f; border: 1px solid #1c2438; "
-            "border-radius: 6px; color: #64748b;"
+            f"background: {ColorTokens.BACKGROUND_BASE}; "
+            f"border: 1px solid {ColorTokens.BORDER_SUBTLE}; "
+            f"border-radius: {MetricTokens.RADIUS_SM}; color: {ColorTokens.TEXT_MUTED};"
         )
         q_layout.addWidget(self._lbl_q_img)
         crops_row.addLayout(q_layout)
 
         # Reference preview
         r_layout = QVBoxLayout()
+        r_layout.setSpacing(4)
         self._lbl_r_title = QLabel("Reference Enrolled", crops_card)
-        self._lbl_r_title.setStyleSheet("font-weight: 700; color: #f1f5f9; font-size: 11px;")
+        self._lbl_r_title.setStyleSheet(
+            f"font-weight: {MetricTokens.FONT_WEIGHT_MEDIUM}; "
+            f"color: {ColorTokens.TEXT_PRIMARY}; font-size: {MetricTokens.FONT_SIZE_XS};"
+        )
         r_layout.addWidget(self._lbl_r_title)
         self._lbl_r_img = QLabel("No Image", crops_card)
         self._lbl_r_img.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._lbl_r_img.setMinimumSize(140, 85)
         self._lbl_r_img.setStyleSheet(
-            "background: #06090f; border: 1px solid #1c2438; "
-            "border-radius: 6px; color: #64748b;"
+            f"background: {ColorTokens.BACKGROUND_BASE}; "
+            f"border: 1px solid {ColorTokens.BORDER_SUBTLE}; "
+            f"border-radius: {MetricTokens.RADIUS_SM}; color: {ColorTokens.TEXT_MUTED};"
         )
         r_layout.addWidget(self._lbl_r_img)
         crops_row.addLayout(r_layout)
@@ -395,42 +446,60 @@ class SignatureWorkbenchWidget(QWidget):
         # Metrics Card
         metrics_card = QFrame(right_box)
         metrics_card.setObjectName("card")
+        metrics_card.setStyleSheet(
+            f"background-color: {ColorTokens.SURFACE_CARD}; "
+            f"border: 1px solid {ColorTokens.BORDER_SUBTLE}; "
+            f"border-radius: {MetricTokens.RADIUS_MD}; "
+            "padding: 6px;"
+        )
         metrics_layout = QVBoxLayout(metrics_card)
-        metrics_layout.setContentsMargins(12, 12, 12, 12)
+        metrics_layout.setContentsMargins(10, 10, 10, 10)
         metrics_layout.setSpacing(8)
 
-        lbl_metric_hdr = QLabel("VERITRACE OPTICAL VERIFICATION METRICS", metrics_card)
+        lbl_metric_hdr = QLabel("VERIFICATION METRICS", metrics_card)
         lbl_metric_hdr.setStyleSheet(
-            "color: #94a3b8; font-weight: 700; font-size: 11px; letter-spacing: 0.5px;"
+            f"color: {ColorTokens.TEXT_MUTED}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_SEMIBOLD}; "
+            f"font-size: {MetricTokens.FONT_SIZE_XS}; "
+            "letter-spacing: 0.8px; "
+            "text-transform: uppercase;"
         )
         metrics_layout.addWidget(lbl_metric_hdr)
 
-        self._lbl_verdict_badge = QLabel("SELECT A COMPARISON ROW", metrics_card)
+        self._lbl_verdict_badge = QLabel("Select a comparison row to view metrics", metrics_card)
         self._lbl_verdict_badge.setStyleSheet(
-            "font-size: 13px; font-weight: 800; color: #38bdf8; padding: 6px 12px; "
-            "background: #0f1420; border: 1px solid #1c2438; border-radius: 6px;"
+            f"font-size: {MetricTokens.FONT_SIZE_SM}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_SEMIBOLD}; "
+            f"color: {ColorTokens.TEXT_MUTED}; padding: 6px 10px; "
+            f"background: {ColorTokens.BACKGROUND_BASE}; "
+            f"border: 1px solid {ColorTokens.BORDER_SUBTLE}; "
+            f"border-radius: {MetricTokens.RADIUS_SM};"
         )
         metrics_layout.addWidget(self._lbl_verdict_badge)
 
         self._lbl_hu_distance = QLabel("Hu Invariant Moments Distance: —", metrics_card)
-        self._lbl_hu_distance.setStyleSheet("color: #f1f5f9; font-size: 12px;")
+        self._lbl_hu_distance.setStyleSheet(
+            f"color: {ColorTokens.TEXT_PRIMARY}; font-size: {MetricTokens.FONT_SIZE_SM};"
+        )
         metrics_layout.addWidget(self._lbl_hu_distance)
 
         self._bar_distance = QProgressBar(metrics_card)
         self._bar_distance.setRange(0, 100)
         self._bar_distance.setValue(0)
-        self._bar_distance.setFixedHeight(8)
+        self._bar_distance.setFixedHeight(6)
         self._bar_distance.setTextVisible(False)
         self._bar_distance.setStyleSheet(
-            "QProgressBar { background: #06090f; border: 1px solid #1c2438; "
-            "border-radius: 4px; } "
-            "QProgressBar::chunk { background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
-            "stop:0 #10b981, stop:1 #ef4444); border-radius: 3px; }"
+            f"QProgressBar {{ background: {ColorTokens.BACKGROUND_BASE}; "
+            f"border: 1px solid {ColorTokens.BORDER_SUBTLE}; border-radius: 3px; }} "
+            f"QProgressBar::chunk {{ background: {ColorTokens.ACCENT_PRIMARY}; "
+            "border-radius: 2px; }"
         )
         metrics_layout.addWidget(self._bar_distance)
 
         self._lbl_stroke_density = QLabel("Stroke Density Ratio: —", metrics_card)
-        self._lbl_stroke_density.setStyleSheet("color: #94a3b8; font-size: 11px;")
+        self._lbl_stroke_density.setStyleSheet(
+            f"color: {ColorTokens.TEXT_MUTED}; font-size: {MetricTokens.FONT_SIZE_XS};"
+        )
         metrics_layout.addWidget(self._lbl_stroke_density)
 
         self._txt_explanation = QTextEdit(metrics_card)
@@ -560,14 +629,15 @@ class SignatureWorkbenchWidget(QWidget):
         self._comparisons = comparisons
         self._table.setRowCount(len(comparisons))
 
-        bold_font = QFont("Segoe UI", 9, QFont.Weight.Bold)
+        bold_font = QFont(MetricTokens.FONT_FAMILY_SANS, 9, QFont.Weight.DemiBold)
+        mono_font = QFont(MetricTokens.FONT_FAMILY_MONO, 9, QFont.Weight.Normal)
 
         for row, c in enumerate(comparisons):
             self._table.setItem(row, 0, QTableWidgetItem(c.questioned_doc_name))
             self._table.setItem(row, 1, QTableWidgetItem(c.reference_doc_name))
 
             dist_item = QTableWidgetItem(f"{c.hu_distance:.3f}")
-            dist_item.setFont(bold_font)
+            dist_item.setFont(mono_font)
             dist_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self._table.setItem(row, 2, dist_item)
 
@@ -575,11 +645,11 @@ class SignatureWorkbenchWidget(QWidget):
             verdict_item.setFont(bold_font)
             verdict_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             if "IDENTIFICATION" in c.assessment_level:
-                verdict_item.setForeground(QColor("#10b981"))
+                verdict_item.setForeground(QColor(ColorTokens.SEVERITY_LOW))
             elif "INCONCLUSIVE" in c.assessment_level or "INSUFFICIENT" in c.assessment_level:
-                verdict_item.setForeground(QColor("#f59e0b"))
+                verdict_item.setForeground(QColor(ColorTokens.SEVERITY_MEDIUM))
             else:
-                verdict_item.setForeground(QColor("#ef4444"))
+                verdict_item.setForeground(QColor(ColorTokens.SEVERITY_CRITICAL))
             self._table.setItem(row, 3, verdict_item)
 
         if comparisons:
@@ -634,19 +704,25 @@ class SignatureWorkbenchWidget(QWidget):
         # Verdict Badge & Colors
         verdict = c.assessment_level.replace("_", " ")
         if "IDENTIFICATION" in c.assessment_level:
-            color = "#10b981"
-            bg = "#064e3b"
+            color = ColorTokens.SEVERITY_LOW
+            bg = ColorTokens.SEVERITY_LOW_TINT
+            border = "rgba(79, 209, 165, 0.3)"
         elif "INCONCLUSIVE" in c.assessment_level or "INSUFFICIENT" in c.assessment_level:
-            color = "#f59e0b"
-            bg = "#78350f"
+            color = ColorTokens.SEVERITY_MEDIUM
+            bg = ColorTokens.SEVERITY_MEDIUM_TINT
+            border = "rgba(245, 166, 35, 0.3)"
         else:
-            color = "#ef4444"
-            bg = "#7f1d1d"
+            color = ColorTokens.SEVERITY_CRITICAL
+            bg = ColorTokens.SEVERITY_CRITICAL_TINT
+            border = "rgba(240, 97, 109, 0.3)"
 
         self._lbl_verdict_badge.setText(f"VERDICT: {verdict}")
         self._lbl_verdict_badge.setStyleSheet(
-            f"font-size: 13px; font-weight: 800; color: #ffffff; padding: 6px 12px; "
-            f"background: {bg}; border: 1px solid {color}; border-radius: 6px;"
+            f"font-size: {MetricTokens.FONT_SIZE_SM}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_BOLD}; "
+            f"color: {color}; padding: 6px 12px; "
+            f"background: {bg}; border: 1px solid {border}; "
+            f"border-radius: {MetricTokens.RADIUS_SM};"
         )
 
         self._lbl_hu_distance.setText(f"Hu Invariant Moments Distance: <b>{c.hu_distance:.4f}</b>")

@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QHeaderView,
     QLabel,
     QLineEdit,
+    QStackedWidget,
     QTableWidget,
     QTableWidgetItem,
     QVBoxLayout,
@@ -19,7 +20,9 @@ from PySide6.QtWidgets import (
 )
 
 from veritrace.application.dto.investigation import FindingResponseDTO
+from veritrace.gui.components.common import EmptyStateWidget
 from veritrace.gui.styles.theme_manager import ThemeManager
+from veritrace.gui.styles.tokens import ColorTokens, MetricTokens
 
 
 class FindingTableWidget(QWidget):
@@ -27,6 +30,7 @@ class FindingTableWidget(QWidget):
 
     finding_selected = Signal(str)  # finding_id
     finding_activated = Signal(str)  # finding_id
+    run_forensics_requested = Signal()
 
     def __init__(self, parent: Any = None) -> None:
         super().__init__(parent)
@@ -37,15 +41,15 @@ class FindingTableWidget(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(8)
 
-        # Filter bar
+        # 1. Filter Bar
         filter_layout = QHBoxLayout()
-        filter_layout.setSpacing(10)
+        filter_layout.setContentsMargins(0, 0, 0, 0)
+        filter_layout.setSpacing(8)
 
-        lbl_filter = QLabel("🔍 Filter:", self)
-        lbl_filter.setStyleSheet(
-            "color: #38bdf8; font-weight: 700; font-size: 11px; letter-spacing: 0.5px;"
-        )
-        filter_layout.addWidget(lbl_filter)
+        self._search_input = QLineEdit(self)
+        self._search_input.setPlaceholderText("Search discrepancy title or narrative...")
+        self._search_input.textChanged.connect(self._apply_filters)
+        filter_layout.addWidget(self._search_input, 1)
 
         self._filter_severity = QComboBox(self)
         self._filter_severity.addItems(["All Severities", "CRITICAL", "HIGH", "MEDIUM", "LOW"])
@@ -65,22 +69,35 @@ class FindingTableWidget(QWidget):
         self._filter_status.currentIndexChanged.connect(self._apply_filters)
         filter_layout.addWidget(self._filter_status)
 
-        self._search_input = QLineEdit(self)
-        self._search_input.setPlaceholderText("Search discrepancy title or narrative...")
-        self._search_input.textChanged.connect(self._apply_filters)
-        filter_layout.addWidget(self._search_input, 1)
-
         self._count_label = QLabel("0 findings", self)
         self._count_label.setStyleSheet(
-            "color: #94a3b8; font-weight: 600; font-size: 11px; "
-            "background: #0f1420; border: 1px solid #1c2438; border-radius: 6px; padding: 5px 10px;"
+            f"color: {ColorTokens.TEXT_MUTED}; "
+            f"font-size: {MetricTokens.FONT_SIZE_XS}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_MEDIUM}; "
+            "padding: 4px 8px;"
         )
         filter_layout.addWidget(self._count_label)
 
         layout.addLayout(filter_layout)
 
+        # 2. Main Area: Stacked Table & Empty State
+        self._stack = QStackedWidget(self)
+
+        # Empty State
+        self._empty_state = EmptyStateWidget(
+            headline="No Contradictions Detected",
+            description=(
+                "Ingest case documents and run cross-document correlation to scan discrepancies."
+            ),
+            icon_char="🔍",
+            cta_text="⚡ Run Full Forensics",
+            parent=self._stack,
+        )
+        self._empty_state.cta_clicked.connect(self.run_forensics_requested.emit)
+        self._stack.addWidget(self._empty_state)
+
         # Table
-        self._table = QTableWidget(self)
+        self._table = QTableWidget(self._stack)
         self._table.setColumnCount(6)
         self._table.setHorizontalHeaderLabels(
             [
@@ -96,6 +113,9 @@ class FindingTableWidget(QWidget):
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self._table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self._table.setShowGrid(False)
+        self._table.verticalHeader().setVisible(False)
+        self._table.verticalHeader().setDefaultSectionSize(38)
 
         header = self._table.horizontalHeader()
         header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
@@ -107,7 +127,9 @@ class FindingTableWidget(QWidget):
 
         self._table.itemSelectionChanged.connect(self._on_selection_changed)
         self._table.itemDoubleClicked.connect(self._on_double_clicked)
-        layout.addWidget(self._table, 1)
+        self._stack.addWidget(self._table)
+
+        layout.addWidget(self._stack, 1)
 
     def set_findings(self, findings: list[FindingResponseDTO]) -> None:
         """Update findings data and refresh filtered view."""
@@ -134,23 +156,26 @@ class FindingTableWidget(QWidget):
             filtered.append(f)
 
         self._filtered_findings = filtered
-        if self._all_findings:
-            self._count_label.setText(f"{len(filtered)} of {len(self._all_findings)} findings")
+
+        if not self._all_findings:
+            self._count_label.setText("0 findings")
+            self._stack.setCurrentIndex(0)  # Show empty state
         else:
-            self._count_label.setText(
-                "0 findings — Click '⚡ Run Full Forensics' to analyze"
-            )
+            self._count_label.setText(f"{len(filtered)} of {len(self._all_findings)} findings")
+            self._stack.setCurrentIndex(1)  # Show table
+
         self._populate_table()
 
     def _populate_table(self) -> None:
         self._table.blockSignals(True)
         self._table.setRowCount(len(self._filtered_findings))
 
-        bold_font = QFont("Segoe UI", 9, QFont.Weight.Bold)
+        bold_font = QFont(MetricTokens.FONT_FAMILY_SANS, 9, QFont.Weight.DemiBold)
+        mono_font = QFont(MetricTokens.FONT_FAMILY_MONO, 9, QFont.Weight.Normal)
 
         for row, f in enumerate(self._filtered_findings):
             # 0: Severity
-            item_sev = QTableWidgetItem(f.severity.value)
+            item_sev = QTableWidgetItem(f"● {f.severity.value}")
             item_sev.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             sev_color = QColor(ThemeManager.get_severity_color(f.severity.value))
             item_sev.setForeground(sev_color)
@@ -164,11 +189,13 @@ class FindingTableWidget(QWidget):
             tier_color = QColor(ThemeManager.get_tier_color(f.epistemic_tier.value))
             item_tier.setForeground(tier_color)
             item_tier.setFont(bold_font)
+            item_tier.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             self._table.setItem(row, 1, item_tier)
 
             # 2: Category
             cat_display = f.category.value.replace("_", " ")
             item_cat = QTableWidgetItem(cat_display)
+            item_cat.setFont(mono_font)
             self._table.setItem(row, 2, item_cat)
 
             # 3: Title
@@ -179,11 +206,12 @@ class FindingTableWidget(QWidget):
             # 4: Confidence
             item_conf = QTableWidgetItem(f"{f.confidence * 100:.0f}%")
             item_conf.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-            item_conf.setFont(bold_font)
+            item_conf.setFont(mono_font)
             self._table.setItem(row, 4, item_conf)
 
             # 5: Review Status
-            item_status = QTableWidgetItem(f.review_status.value)
+            status_display = f.review_status.value.replace("_", " ")
+            item_status = QTableWidgetItem(status_display)
             item_status.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             status_color = QColor(ThemeManager.get_status_color(f.review_status.value))
             item_status.setForeground(status_color)

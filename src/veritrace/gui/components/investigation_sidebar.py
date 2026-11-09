@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 from veritrace.application.dto.document import DocumentIngestionResultDTO
 from veritrace.application.dto.investigation import InvestigationResponseDTO
 from veritrace.gui.styles.theme_manager import ThemeManager
+from veritrace.gui.styles.tokens import ColorTokens, MetricTokens
 
 
 class InvestigationSidebar(QWidget):
@@ -37,21 +38,35 @@ class InvestigationSidebar(QWidget):
         self._investigations: list[InvestigationResponseDTO] = []
         self._documents: list[DocumentIngestionResultDTO] = []
 
+        self.setMinimumWidth(240)
+        self.setMaximumWidth(360)
+
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 10, 10, 10)
+        layout.setContentsMargins(12, 12, 12, 12)
         layout.setSpacing(10)
 
         # 1. Header & Case Switcher
         header_layout = QHBoxLayout()
-        header_title = QLabel("🗂️ INVESTIGATION CASE", self)
+        header_layout.setContentsMargins(0, 0, 0, 0)
+        header_layout.setSpacing(8)
+
+        header_title = QLabel("CASES", self)
         header_title.setStyleSheet(
-            "font-weight: 800; color: #38bdf8; font-size: 11px; letter-spacing: 0.6px;"
+            f"font-size: {MetricTokens.FONT_SIZE_XS}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_SEMIBOLD}; "
+            f"color: {ColorTokens.TEXT_MUTED}; "
+            "letter-spacing: 0.8px; "
+            "text-transform: uppercase;"
         )
         header_layout.addWidget(header_title)
         header_layout.addStretch()
 
         self._btn_new = QPushButton("+ New Case", self)
-        self._btn_new.setStyleSheet("padding: 4px 10px; font-size: 11px; font-weight: 700;")
+        self._btn_new.setObjectName("secondaryButton")
+        self._btn_new.setStyleSheet(
+            f"padding: 3px 8px; font-size: {MetricTokens.FONT_SIZE_XS}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_MEDIUM};"
+        )
         self._btn_new.setToolTip("Create a new investigation case")
         self._btn_new.clicked.connect(self.new_investigation_requested.emit)
         header_layout.addWidget(self._btn_new)
@@ -64,35 +79,62 @@ class InvestigationSidebar(QWidget):
         # 2. Case Details Card
         self._card_frame = QFrame(self)
         self._card_frame.setObjectName("card")
+        self._card_frame.setStyleSheet(
+            f"background-color: {ColorTokens.SURFACE_CARD}; "
+            f"border: 1px solid {ColorTokens.BORDER_SUBTLE}; "
+            f"border-radius: {MetricTokens.RADIUS_MD}; "
+            "padding: 4px;"
+        )
         card_layout = QVBoxLayout(self._card_frame)
-        card_layout.setContentsMargins(10, 10, 10, 10)
-        card_layout.setSpacing(6)
+        card_layout.setContentsMargins(10, 8, 10, 8)
+        card_layout.setSpacing(4)
 
         self._lbl_ref = QLabel("Ref: --", self._card_frame)
-        self._lbl_ref.setStyleSheet("color: #38bdf8; font-weight: 700; font-size: 12px;")
+        self._lbl_ref.setStyleSheet(
+            f"color: {ColorTokens.ACCENT_PRIMARY}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_SEMIBOLD}; "
+            f"font-size: {MetricTokens.FONT_SIZE_SM}; "
+            f"font-family: {MetricTokens.FONT_FAMILY_MONO};"
+        )
         card_layout.addWidget(self._lbl_ref)
 
         self._lbl_status = QLabel("Status: --", self._card_frame)
-        self._lbl_status.setStyleSheet("color: #cbd5e1; font-size: 11px;")
+        self._lbl_status.setStyleSheet(
+            f"color: {ColorTokens.TEXT_SECONDARY}; font-size: {MetricTokens.FONT_SIZE_XS};"
+        )
         card_layout.addWidget(self._lbl_status)
 
         self._lbl_risk = QLabel("Risk: --", self._card_frame)
-        self._lbl_risk.setStyleSheet("color: #cbd5e1; font-size: 11px;")
+        self._lbl_risk.setStyleSheet(
+            f"color: {ColorTokens.TEXT_SECONDARY}; font-size: {MetricTokens.FONT_SIZE_XS};"
+        )
         card_layout.addWidget(self._lbl_risk)
 
         layout.addWidget(self._card_frame)
 
         # 3. Documents Section
         doc_header = QHBoxLayout()
-        doc_title = QLabel("📑 CASE EVIDENCE DOSSIER", self)
+        doc_header.setContentsMargins(0, 4, 0, 0)
+        doc_header.setSpacing(8)
+
+        doc_title = QLabel("EVIDENCE DOSSIER", self)
         doc_title.setStyleSheet(
-            "font-weight: 800; color: #38bdf8; font-size: 11px; letter-spacing: 0.6px;"
+            f"font-size: {MetricTokens.FONT_SIZE_XS}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_SEMIBOLD}; "
+            f"color: {ColorTokens.TEXT_MUTED}; "
+            "letter-spacing: 0.8px; "
+            "text-transform: uppercase;"
         )
         doc_header.addWidget(doc_title)
         doc_header.addStretch()
 
         self._btn_add_doc = QPushButton("+ Import", self)
-        self._btn_add_doc.setStyleSheet("padding: 4px 10px; font-size: 11px; font-weight: 700;")
+        self._btn_add_doc.setObjectName("secondaryButton")
+        self._btn_add_doc.setStyleSheet(
+            f"padding: 3px 8px; font-size: {MetricTokens.FONT_SIZE_XS}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_MEDIUM};"
+        )
+        self._btn_add_doc.setToolTip("Import forensic evidence documents")
         self._btn_add_doc.clicked.connect(self.add_document_requested.emit)
         doc_header.addWidget(self._btn_add_doc)
         layout.addLayout(doc_header)
@@ -106,9 +148,15 @@ class InvestigationSidebar(QWidget):
         layout.addWidget(self._doc_tree, 1)
 
         # 4. Demo Data Action
-        self._btn_demo = QPushButton("🔄 Load Industrial Alloy Demo (4 Docs)", self)
-        self._btn_demo.setObjectName("primaryButton")
-        self._btn_demo.setStyleSheet("padding: 9px 14px; font-size: 12px; font-weight: 700;")
+        self._btn_demo = QPushButton("Load Sample Demo Case (4 Docs)", self)
+        self._btn_demo.setObjectName("secondaryButton")
+        self._btn_demo.setToolTip(
+            "Load Industrial Alloy Demo Case with 4 cross-referenced documents"
+        )
+        self._btn_demo.setStyleSheet(
+            f"padding: 8px 12px; font-size: {MetricTokens.FONT_SIZE_SM}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_MEDIUM};"
+        )
         self._btn_demo.clicked.connect(self.load_demo_requested.emit)
         layout.addWidget(self._btn_demo)
 
@@ -142,9 +190,12 @@ class InvestigationSidebar(QWidget):
         risk_color = ThemeManager.get_severity_color(
             "CRITICAL" if inv.risk_score >= 0.75 else "MEDIUM" if inv.risk_score >= 0.4 else "LOW"
         )
+        cls_val = inv.risk_classification.value
         self._lbl_risk.setText(
-            f"Risk Score: <span style='color: {risk_color}; font-weight: 800; font-size: 12px;'>"
-            f"{inv.risk_score:.2f} ({inv.risk_classification.value})</span>"
+            f"Risk: <span style='color: {risk_color}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_BOLD}; "
+            f"font-size: {MetricTokens.FONT_SIZE_SM};'>"
+            f"{inv.risk_score:.2f} ({cls_val})</span>"
         )
 
     def set_documents(self, documents: list[DocumentIngestionResultDTO]) -> None:

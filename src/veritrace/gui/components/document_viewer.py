@@ -31,6 +31,7 @@ from PySide6.QtWidgets import (
 )
 
 from veritrace.application.dto.investigation import EvidenceResponseDTO
+from veritrace.gui.styles.tokens import ColorTokens, MetricTokens
 
 
 class DocumentCanvasView(QGraphicsView):
@@ -47,8 +48,11 @@ class DocumentCanvasView(QGraphicsView):
         self.setDragMode(QGraphicsView.DragMode.ScrollHandDrag)
         self.setTransformationAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.setResizeAnchor(QGraphicsView.ViewportAnchor.AnchorUnderMouse)
-        self.setBackgroundBrush(QBrush(QColor("#06090f")))
-        self.setStyleSheet("border: 1px solid #1c2438; border-radius: 6px;")
+        self.setBackgroundBrush(QBrush(QColor(ColorTokens.BACKGROUND_BASE)))
+        self.setStyleSheet(
+            f"border: 1px solid {ColorTokens.BORDER_SUBTLE}; "
+            f"border-radius: {MetricTokens.RADIUS_MD};"
+        )
 
         self._pixmap_item: QGraphicsPixmapItem | None = None
         self._highlight_rect: QGraphicsRectItem | None = None
@@ -123,21 +127,21 @@ class DocumentCanvasView(QGraphicsView):
                 0,
                 self._current_image_width,
                 self._current_image_height,
-                QPen(QColor("#1c2438"), 1),
-                QBrush(QColor("#0f1420")),
+                QPen(QColor(ColorTokens.BORDER_SUBTLE), 1),
+                QBrush(QColor(ColorTokens.SURFACE_CARD)),
             )
             title_text = self._scene.addSimpleText(
                 f"{doc_name or self._title} (Page {page_num})",
-                QFont("Segoe UI", 14, QFont.Weight.Bold),
+                QFont(MetricTokens.FONT_FAMILY_SANS, 14, QFont.Weight.Bold),
             )
-            title_text.setBrush(QBrush(QColor("#38bdf8")))
+            title_text.setBrush(QBrush(QColor(ColorTokens.ACCENT_PRIMARY)))
             title_text.setPos(30, 40)
 
             sub_text = self._scene.addSimpleText(
                 "Digital Structured Forensic Representation",
-                QFont("Segoe UI", 10),
+                QFont(MetricTokens.FONT_FAMILY_SANS, 10),
             )
-            sub_text.setBrush(QBrush(QColor("#94a3b8")))
+            sub_text.setBrush(QBrush(QColor(ColorTokens.TEXT_MUTED)))
             sub_text.setPos(30, 75)
 
         # Overlay evidence bounding box if present
@@ -152,16 +156,16 @@ class DocumentCanvasView(QGraphicsView):
             pw = max(6.0, (xmax - xmin) * self._current_image_width)
             ph = max(6.0, (ymax - ymin) * self._current_image_height)
 
-            box_pen = QPen(QColor("#ef4444"), 2.5, Qt.PenStyle.SolidLine)
-            box_brush = QBrush(QColor(239, 68, 68, 45))  # Semi-transparent crimson
+            box_pen = QPen(QColor(ColorTokens.SEVERITY_CRITICAL), 2.0, Qt.PenStyle.SolidLine)
+            box_brush = QBrush(QColor(240, 97, 109, 35))  # Semi-transparent crimson
             self._highlight_rect = self._scene.addRect(px, py, pw, ph, box_pen, box_brush)
 
             # High-tech tag badge
             tag = self._scene.addSimpleText(
                 f"ROI: [{xmin:.3f}, {ymin:.3f}] - [{xmax:.3f}, {ymax:.3f}]",
-                QFont("Segoe UI", 9, QFont.Weight.DemiBold),
+                QFont(MetricTokens.FONT_FAMILY_MONO, 9, QFont.Weight.DemiBold),
             )
-            tag.setBrush(QBrush(QColor("#38bdf8")))
+            tag.setBrush(QBrush(QColor(ColorTokens.ACCENT_PRIMARY)))
             tag.setPos(px, max(0.0, py - 18))
             self._tag_item = tag
 
@@ -190,16 +194,21 @@ class SideBySideDocumentViewer(QWidget):
         super().__init__(parent)
 
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(6, 6, 6, 6)
+        main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(8)
 
         # Header toolbar bar
         header_bar = QHBoxLayout()
-        header_bar.setSpacing(10)
+        header_bar.setContentsMargins(0, 0, 0, 0)
+        header_bar.setSpacing(8)
 
-        header_lbl = QLabel("DUAL-CANVAS FORENSIC COMPARATOR", self)
+        header_lbl = QLabel("COMPARATOR CANVAS", self)
         header_lbl.setStyleSheet(
-            "color: #38bdf8; font-weight: 800; font-size: 11px; letter-spacing: 0.6px;"
+            f"color: {ColorTokens.TEXT_MUTED}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_SEMIBOLD}; "
+            f"font-size: {MetricTokens.FONT_SIZE_XS}; "
+            "letter-spacing: 0.8px; "
+            "text-transform: uppercase;"
         )
         header_bar.addWidget(header_lbl)
         header_bar.addStretch()
@@ -213,14 +222,20 @@ class SideBySideDocumentViewer(QWidget):
 
         # Zoom buttons
         self._btn_zoom_in = QPushButton("+ Zoom In", self)
+        self._btn_zoom_in.setObjectName("secondaryButton")
+        self._btn_zoom_in.setStyleSheet("padding: 3px 8px; font-size: 11px;")
         self._btn_zoom_in.clicked.connect(self._zoom_in_both)
         header_bar.addWidget(self._btn_zoom_in)
 
         self._btn_zoom_out = QPushButton("- Zoom Out", self)
+        self._btn_zoom_out.setObjectName("secondaryButton")
+        self._btn_zoom_out.setStyleSheet("padding: 3px 8px; font-size: 11px;")
         self._btn_zoom_out.clicked.connect(self._zoom_out_both)
         header_bar.addWidget(self._btn_zoom_out)
 
         self._btn_reset_zoom = QPushButton("Fit to Screen", self)
+        self._btn_reset_zoom.setObjectName("secondaryButton")
+        self._btn_reset_zoom.setStyleSheet("padding: 3px 8px; font-size: 11px;")
         self._btn_reset_zoom.clicked.connect(self._reset_both_zooms)
         header_bar.addWidget(self._btn_reset_zoom)
 
@@ -233,11 +248,13 @@ class SideBySideDocumentViewer(QWidget):
         left_container = QWidget(self._splitter)
         left_layout = QVBoxLayout(left_container)
         left_layout.setContentsMargins(0, 0, 0, 0)
-        left_layout.setSpacing(6)
+        left_layout.setSpacing(4)
         self._left_title = QLabel("Source Document", left_container)
         self._left_title.setStyleSheet(
-            "font-weight: 700; color: #38bdf8; padding: 4px 8px; "
-            "background: #0f1420; border: 1px solid #1c2438; border-radius: 6px;"
+            f"font-weight: {MetricTokens.FONT_WEIGHT_SEMIBOLD}; "
+            f"color: {ColorTokens.ACCENT_PRIMARY}; "
+            f"font-size: {MetricTokens.FONT_SIZE_SM}; "
+            "padding: 2px 4px;"
         )
         left_layout.addWidget(self._left_title)
         self._left_canvas = DocumentCanvasView("Source Document", left_container)
@@ -247,11 +264,13 @@ class SideBySideDocumentViewer(QWidget):
         right_container = QWidget(self._splitter)
         right_layout = QVBoxLayout(right_container)
         right_layout.setContentsMargins(0, 0, 0, 0)
-        right_layout.setSpacing(6)
+        right_layout.setSpacing(4)
         self._right_title = QLabel("Target Document", right_container)
         self._right_title.setStyleSheet(
-            "font-weight: 700; color: #f97316; padding: 4px 8px; "
-            "background: #0f1420; border: 1px solid #1c2438; border-radius: 6px;"
+            f"font-weight: {MetricTokens.FONT_WEIGHT_SEMIBOLD}; "
+            f"color: {ColorTokens.SEVERITY_HIGH}; "
+            f"font-size: {MetricTokens.FONT_SIZE_SM}; "
+            "padding: 2px 4px;"
         )
         right_layout.addWidget(self._right_title)
         self._right_canvas = DocumentCanvasView("Target Document", right_container)

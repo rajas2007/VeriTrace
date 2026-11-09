@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QCheckBox,
-    QFrame,
     QHBoxLayout,
     QLabel,
     QPushButton,
@@ -15,44 +14,21 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from veritrace.gui.components.common import StatCard
+from veritrace.gui.styles.tokens import ColorTokens, MetricTokens
 
-class MetricCard(QFrame):
-    """Visual metric card displaying an analytical counter and label."""
+
+class MetricCard(StatCard):
+    """Visual metric card displaying an analytical counter and label (inherits StatCard)."""
 
     def __init__(
-        self, label: str, value: str = "0", color: str = "#38bdf8", parent: Any = None
+        self,
+        label: str,
+        value: str = "0",
+        color: str = ColorTokens.ACCENT_PRIMARY,
+        parent: Any = None,
     ) -> None:
-        super().__init__(parent)
-        self.setObjectName("card")
-        self.setMinimumWidth(80)
-        self.setStyleSheet(
-            f"QFrame#card {{ background-color: #0f1420; border: 1px solid #1c2438; "
-            f"border-top: 3px solid {color}; border-radius: 6px; }}"
-            f"QFrame#card:hover {{ border-color: {color}; }}"
-        )
-
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 6, 10, 6)
-        layout.setSpacing(2)
-
-        self._lbl_value = QLabel(value, self)
-        self._lbl_value.setStyleSheet(
-            f"font-size: 19px; font-weight: 800; color: {color}; "
-            f"font-family: 'Segoe UI', monospace;"
-        )
-        self._lbl_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self._lbl_value)
-
-        self._lbl_label = QLabel(label, self)
-        self._lbl_label.setStyleSheet(
-            "color: #94a3b8; font-size: 9.5px; font-weight: 700; letter-spacing: 0.6px;"
-        )
-        self._lbl_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(self._lbl_label)
-
-    def set_value(self, value: str | int) -> None:
-        """Update counter value."""
-        self._lbl_value.setText(str(value))
+        super().__init__(label=label, value=value, color=color, parent=parent)
 
 
 class DashboardBannerWidget(QWidget):
@@ -67,67 +43,84 @@ class DashboardBannerWidget(QWidget):
         super().__init__(parent)
 
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 4)
-        main_layout.setSpacing(6)
+        main_layout.setContentsMargins(12, 10, 12, 10)
+        main_layout.setSpacing(10)
 
-        # 1. Header Bar: Title (Left) + Order Status & Primary Run Trigger (Right)
+        # 1. Header Bar: Title & Subtitle (Left) + Finalized Switch & Primary CTA (Right)
         header_bar = QHBoxLayout()
-        header_bar.setSpacing(10)
+        header_bar.setContentsMargins(0, 0, 0, 0)
+        header_bar.setSpacing(12)
 
         title_layout = QVBoxLayout()
-        title_layout.setSpacing(1)
-        title_lbl = QLabel("Cross-Document Forensic Intelligence Command", self)
+        title_layout.setSpacing(2)
+        title_lbl = QLabel("Forensic Intelligence Workstation", self)
         title_lbl.setStyleSheet(
-            "font-size: 14px; font-weight: 800; color: #f1f5f9; letter-spacing: 0.4px;"
+            f"font-size: {MetricTokens.FONT_SIZE_BASE}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_BOLD}; "
+            f"color: {ColorTokens.TEXT_PRIMARY}; "
+            "letter-spacing: -0.2px;"
         )
         title_layout.addWidget(title_lbl)
 
         sub_lbl = QLabel(
-            "Deterministic cross-document alignment, physical consistency & PS-2 dossiers",
+            "Cross-document reconciliation, physical tamper detection & PS-2 legal audit dossiers",
             self,
         )
-        sub_lbl.setStyleSheet("color: #94a3b8; font-size: 11px;")
+        sub_lbl.setStyleSheet(
+            f"color: {ColorTokens.TEXT_MUTED}; font-size: {MetricTokens.FONT_SIZE_XS};"
+        )
         title_layout.addWidget(sub_lbl)
         header_bar.addLayout(title_layout, 1)
 
         self._chk_closed = QCheckBox("Orders Finalized", self)
         self._chk_closed.setToolTip(
-            "When checked, under-deliveries are treated as shortages. "
+            "When checked, under-deliveries are treated as shortages.\n"
             "When unchecked, partial deliveries on open orders are recognized without false alerts."
+        )
+        self._chk_closed.setStyleSheet(
+            f"font-size: {MetricTokens.FONT_SIZE_SM}; color: {ColorTokens.TEXT_SECONDARY};"
         )
         header_bar.addWidget(self._chk_closed)
 
         self._btn_correlate = QPushButton("⚡ Run Full Forensics", self)
         self._btn_correlate.setObjectName("primaryButton")
-        self._btn_correlate.setStyleSheet("padding: 6px 14px; font-size: 12px; font-weight: 700;")
+        self._btn_correlate.setStyleSheet(
+            f"padding: 7px 16px; font-size: {MetricTokens.FONT_SIZE_SM}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_BOLD};"
+        )
         self._btn_correlate.clicked.connect(self._on_correlate_clicked)
         header_bar.addWidget(self._btn_correlate)
 
         main_layout.addLayout(header_bar)
 
-        # 2. Bottom Row: Metric Cards (Left) + Secondary Action Buttons (Right)
+        # 2. Bottom Row: Stat Cards (Left) + Secondary Actions (Right)
         bottom_row = QHBoxLayout()
+        bottom_row.setContentsMargins(0, 0, 0, 0)
         bottom_row.setSpacing(8)
 
-        self._card_docs = MetricCard("DOCUMENTS", "0", "#38bdf8", self)
+        self._card_docs = MetricCard("DOCUMENTS", "0", ColorTokens.ACCENT_PRIMARY, self)
         bottom_row.addWidget(self._card_docs)
 
-        self._card_findings = MetricCard("FINDINGS", "0", "#f1f5f9", self)
+        self._card_findings = MetricCard("FINDINGS", "0", ColorTokens.TEXT_PRIMARY, self)
         bottom_row.addWidget(self._card_findings)
 
-        self._card_critical = MetricCard("CRITICAL", "0", "#ef4444", self)
+        self._card_critical = MetricCard("CRITICAL", "0", ColorTokens.SEVERITY_CRITICAL, self)
         bottom_row.addWidget(self._card_critical)
 
-        self._card_high_med = MetricCard("HIGH / MED", "0", "#f97316", self)
+        self._card_high_med = MetricCard("HIGH / MED", "0", ColorTokens.SEVERITY_HIGH, self)
         bottom_row.addWidget(self._card_high_med)
 
-        self._card_relations = MetricCard("RELATIONS", "0", "#10b981", self)
+        self._card_relations = MetricCard("RELATIONS", "0", ColorTokens.SEVERITY_LOW, self)
         bottom_row.addWidget(self._card_relations)
 
-        bottom_row.addSpacing(6)
+        bottom_row.addSpacing(10)
 
         self._btn_forensics = QPushButton("Scan Forensics", self)
-        self._btn_forensics.setStyleSheet("padding: 6px 12px; font-size: 11px; font-weight: 600;")
+        self._btn_forensics.setObjectName("secondaryButton")
+        self._btn_forensics.setStyleSheet(
+            f"padding: 6px 12px; font-size: {MetricTokens.FONT_SIZE_XS}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_MEDIUM};"
+        )
         self._btn_forensics.setToolTip(
             "Scan pages for visual forensics (signatures, morphology, pattern correspondences)"
         )
@@ -135,17 +128,22 @@ class DashboardBannerWidget(QWidget):
         bottom_row.addWidget(self._btn_forensics)
 
         self._btn_dossier = QPushButton("Compile PS-2 Dossier", self)
-        self._btn_dossier.setStyleSheet("padding: 6px 12px; font-size: 11px; font-weight: 600;")
+        self._btn_dossier.setObjectName("secondaryButton")
+        self._btn_dossier.setStyleSheet(
+            f"padding: 6px 12px; font-size: {MetricTokens.FONT_SIZE_XS}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_MEDIUM};"
+        )
         self._btn_dossier.setToolTip(
             "Compile complete 6-section PS-2 Investigation Dossier (JSON & ReportLab PDF)"
         )
         self._btn_dossier.clicked.connect(self._on_dossier_clicked)
         bottom_row.addWidget(self._btn_dossier)
 
-        self._btn_export_dossier = QPushButton("📄 Export PDF", self)
-        self._btn_export_dossier.setObjectName("accentButton")
+        self._btn_export_dossier = QPushButton("Export PDF", self)
+        self._btn_export_dossier.setObjectName("secondaryButton")
         self._btn_export_dossier.setStyleSheet(
-            "padding: 6px 12px; font-size: 11px; font-weight: 700;"
+            f"padding: 6px 12px; font-size: {MetricTokens.FONT_SIZE_XS}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_MEDIUM};"
         )
         self._btn_export_dossier.setToolTip("Export sealed legal PS-2 Investigation Dossier PDF")
         self._btn_export_dossier.clicked.connect(self.export_dossier_requested.emit)

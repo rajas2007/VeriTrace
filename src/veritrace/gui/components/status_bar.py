@@ -12,28 +12,43 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from veritrace.gui.styles.tokens import ColorTokens, MetricTokens
+
 
 class VeriTraceStatusBar(QStatusBar):
     """Forensic status bar displaying stage telemetry and task progress."""
 
     def __init__(self, parent: Any = None) -> None:
         super().__init__(parent)
+        self.setFixedHeight(28)
+        self.setStyleSheet(
+            f"QStatusBar {{ background-color: {ColorTokens.SURFACE_SIDEBAR}; "
+            f"border-top: 1px solid {ColorTokens.BORDER_SUBTLE}; "
+            f"color: {ColorTokens.TEXT_MUTED}; }}"
+        )
 
         self._container = QWidget(self)
         layout = QHBoxLayout(self._container)
-        layout.setContentsMargins(8, 2, 8, 2)
-        layout.setSpacing(14)
+        layout.setContentsMargins(10, 0, 10, 0)
+        layout.setSpacing(12)
 
         self._stage_badge = QLabel("IDLE", self)
         self._stage_badge.setStyleSheet(
-            "background-color: #0f1420; color: #10b981; border: 1px solid #10b981; "
-            "padding: 2px 8px; border-radius: 4px; font-weight: 800; font-size: 10px; "
-            "letter-spacing: 0.5px;"
+            f"background-color: {ColorTokens.SEVERITY_LOW_TINT}; "
+            f"color: {ColorTokens.SEVERITY_LOW}; "
+            "border: 1px solid rgba(79, 209, 165, 0.3); "
+            f"padding: 1px 6px; border-radius: {MetricTokens.RADIUS_SM}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_BOLD}; "
+            f"font-size: 10px; font-family: {MetricTokens.FONT_FAMILY_MONO};"
         )
         layout.addWidget(self._stage_badge)
 
         self._status_label = QLabel("Ready", self)
-        self._status_label.setStyleSheet("color: #f1f5f9; font-weight: 600; font-size: 12px;")
+        self._status_label.setStyleSheet(
+            f"color: {ColorTokens.TEXT_SECONDARY}; "
+            f"font-size: {MetricTokens.FONT_SIZE_XS}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_MEDIUM};"
+        )
         layout.addWidget(self._status_label)
 
         layout.addStretch()
@@ -41,14 +56,22 @@ class VeriTraceStatusBar(QStatusBar):
         self._progress_bar = QProgressBar(self)
         self._progress_bar.setRange(0, 100)
         self._progress_bar.setValue(0)
-        self._progress_bar.setFixedWidth(220)
-        self._progress_bar.setFixedHeight(12)
+        self._progress_bar.setFixedWidth(180)
+        self._progress_bar.setFixedHeight(6)
+        self._progress_bar.setTextVisible(False)
         self._progress_bar.setVisible(False)
+        self._progress_bar.setStyleSheet(
+            f"QProgressBar {{ background: {ColorTokens.BACKGROUND_BASE}; "
+            f"border: 1px solid {ColorTokens.BORDER_SUBTLE}; border-radius: 3px; }} "
+            f"QProgressBar::chunk {{ background: {ColorTokens.ACCENT_PRIMARY}; "
+            "border-radius: 2px; }"
+        )
         layout.addWidget(self._progress_bar)
 
         self._telemetry_label = QLabel("", self)
         self._telemetry_label.setStyleSheet(
-            "color: #64748b; font-size: 11px; font-family: 'Segoe UI', monospace;"
+            f"color: {ColorTokens.TEXT_MUTED}; font-size: 10px; "
+            f"font-family: {MetricTokens.FONT_FAMILY_MONO};"
         )
         layout.addWidget(self._telemetry_label)
 
@@ -60,21 +83,30 @@ class VeriTraceStatusBar(QStatusBar):
         self._stage_badge.setText(stage.upper())
         if stage.upper() in ("READY", "IDLE"):
             self._stage_badge.setStyleSheet(
-                "background-color: #064e3b; color: #34d399; border: 1px solid #10b981; "
-                "padding: 2px 8px; border-radius: 4px; font-weight: 800; font-size: 10px; "
-                "letter-spacing: 0.5px;"
+                f"background-color: {ColorTokens.SEVERITY_LOW_TINT}; "
+                f"color: {ColorTokens.SEVERITY_LOW}; "
+                "border: 1px solid rgba(79, 209, 165, 0.3); "
+                f"padding: 1px 6px; border-radius: {MetricTokens.RADIUS_SM}; "
+                f"font-weight: {MetricTokens.FONT_WEIGHT_BOLD}; "
+                f"font-size: 10px; font-family: {MetricTokens.FONT_FAMILY_MONO};"
             )
         elif stage.upper() in ("ANALYZING", "PROCESSING"):
             self._stage_badge.setStyleSheet(
-                "background-color: #1e3a8a; color: #38bdf8; border: 1px solid #38bdf8; "
-                "padding: 2px 8px; border-radius: 4px; font-weight: 800; font-size: 10px; "
-                "letter-spacing: 0.5px;"
+                f"background-color: {ColorTokens.ACCENT_MUTED}; "
+                f"color: {ColorTokens.ACCENT_PRIMARY}; "
+                "border: 1px solid rgba(91, 140, 255, 0.3); "
+                f"padding: 1px 6px; border-radius: {MetricTokens.RADIUS_SM}; "
+                f"font-weight: {MetricTokens.FONT_WEIGHT_BOLD}; "
+                f"font-size: 10px; font-family: {MetricTokens.FONT_FAMILY_MONO};"
             )
         elif stage.upper() == "ERROR":
             self._stage_badge.setStyleSheet(
-                "background-color: #7f1d1d; color: #f87171; border: 1px solid #ef4444; "
-                "padding: 2px 8px; border-radius: 4px; font-weight: 800; font-size: 10px; "
-                "letter-spacing: 0.5px;"
+                f"background-color: {ColorTokens.SEVERITY_CRITICAL_TINT}; "
+                f"color: {ColorTokens.SEVERITY_CRITICAL}; "
+                "border: 1px solid rgba(240, 97, 109, 0.3); "
+                f"padding: 1px 6px; border-radius: {MetricTokens.RADIUS_SM}; "
+                f"font-weight: {MetricTokens.FONT_WEIGHT_BOLD}; "
+                f"font-size: 10px; font-family: {MetricTokens.FONT_FAMILY_MONO};"
             )
 
     def start_progress(self, message: str = "Processing...") -> None:

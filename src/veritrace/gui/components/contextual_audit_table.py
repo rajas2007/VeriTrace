@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 )
 
 from veritrace.application.dto.forensics import ContextualAuditItemDTO
+from veritrace.gui.styles.tokens import ColorTokens, MetricTokens
 
 
 class ContextualAuditWidget(QWidget):
@@ -32,31 +33,40 @@ class ContextualAuditWidget(QWidget):
         super().__init__(parent)
 
         main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(8, 8, 8, 8)
+        main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(10)
 
         # Header bar
         header_bar = QHBoxLayout()
+        header_bar.setContentsMargins(0, 0, 0, 0)
         header_bar.setSpacing(10)
 
         title_layout = QVBoxLayout()
-        title_lbl = QLabel("🧮 Contextual Arithmetic & Chronology Audit Workbench", self)
+        title_layout.setSpacing(2)
+        title_lbl = QLabel("Contextual Procurement & Chronology Audit", self)
         title_lbl.setStyleSheet(
-            "font-size: 15px; font-weight: 800; color: #f1f5f9; letter-spacing: 0.5px;"
+            f"font-size: {MetricTokens.FONT_SIZE_BASE}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_BOLD}; "
+            f"color: {ColorTokens.TEXT_PRIMARY};"
         )
         title_layout.addWidget(title_lbl)
 
         sub_lbl = QLabel(
-            "Procurement math checks, weighbridge reconciliation, and temporal order validation",
+            "Procurement arithmetic, weighbridge reconciliation, and temporal audit",
             self,
         )
-        sub_lbl.setStyleSheet("color: #94a3b8; font-size: 11px;")
+        sub_lbl.setStyleSheet(
+            f"color: {ColorTokens.TEXT_MUTED}; font-size: {MetricTokens.FONT_SIZE_XS};"
+        )
         title_layout.addWidget(sub_lbl)
         header_bar.addLayout(title_layout, 1)
 
         self._btn_audit = QPushButton("⚡ Run Contextual Audit", self)
         self._btn_audit.setObjectName("primaryButton")
-        self._btn_audit.setStyleSheet("padding: 8px 16px; font-size: 12px; font-weight: 700;")
+        self._btn_audit.setStyleSheet(
+            f"padding: 7px 16px; font-size: {MetricTokens.FONT_SIZE_SM}; "
+            f"font-weight: {MetricTokens.FONT_WEIGHT_BOLD};"
+        )
         self._btn_audit.clicked.connect(self.run_audit_requested.emit)
         header_bar.addWidget(self._btn_audit)
 
@@ -82,6 +92,9 @@ class ContextualAuditWidget(QWidget):
         self._table.setAlternatingRowColors(True)
         self._table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self._table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
+        self._table.setShowGrid(False)
+        self._table.verticalHeader().setVisible(False)
+        self._table.verticalHeader().setDefaultSectionSize(36)
         self._table.itemSelectionChanged.connect(self._on_row_selected)
         splitter.addWidget(self._table)
 
@@ -93,14 +106,24 @@ class ContextualAuditWidget(QWidget):
 
         detail_card = QFrame(bottom_container)
         detail_card.setObjectName("card")
+        detail_card.setStyleSheet(
+            f"background-color: {ColorTokens.SURFACE_CARD}; "
+            f"border: 1px solid {ColorTokens.BORDER_SUBTLE}; "
+            f"border-radius: {MetricTokens.RADIUS_MD}; "
+            "padding: 6px;"
+        )
         detail_layout = QVBoxLayout(detail_card)
-        detail_layout.setContentsMargins(12, 12, 12, 12)
-        detail_layout.setSpacing(8)
+        detail_layout.setContentsMargins(10, 10, 10, 10)
+        detail_layout.setSpacing(6)
 
         self._lbl_detail_title = QLabel(
             "Select an audit item above to view forensic details", detail_card
         )
-        self._lbl_detail_title.setStyleSheet("font-weight: 800; font-size: 13px; color: #38bdf8;")
+        self._lbl_detail_title.setStyleSheet(
+            f"font-weight: {MetricTokens.FONT_WEIGHT_BOLD}; "
+            f"font-size: {MetricTokens.FONT_SIZE_BASE}; "
+            f"color: {ColorTokens.TEXT_PRIMARY};"
+        )
         detail_layout.addWidget(self._lbl_detail_title)
 
         self._lbl_detail_badge = QLabel("", detail_card)
@@ -126,22 +149,24 @@ class ContextualAuditWidget(QWidget):
         self._items = items
         self._table.setRowCount(len(items))
 
-        bold_font = QFont("Segoe UI", 9, QFont.Weight.Bold)
+        bold_font = QFont(MetricTokens.FONT_FAMILY_SANS, 9, QFont.Weight.DemiBold)
+        mono_font = QFont(MetricTokens.FONT_FAMILY_MONO, 9, QFont.Weight.Normal)
 
         for row, item in enumerate(items):
             code_item = QTableWidgetItem(item.rule_code)
-            code_item.setFont(bold_font)
+            code_item.setFont(mono_font)
             self._table.setItem(row, 0, code_item)
 
             self._table.setItem(row, 1, QTableWidgetItem(item.category.replace("_", " ")))
 
-            status_item = QTableWidgetItem(item.status.replace("_", " "))
+            status_display = f"● {item.status}"
+            status_item = QTableWidgetItem(status_display)
             status_item.setFont(bold_font)
             status_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             if item.status == "PASSED":
-                status_item.setForeground(QColor("#10b981"))
+                status_item.setForeground(QColor(ColorTokens.SEVERITY_LOW))
             else:
-                status_item.setForeground(QColor("#ef4444"))
+                status_item.setForeground(QColor(ColorTokens.SEVERITY_CRITICAL))
             self._table.setItem(row, 2, status_item)
 
             self._table.setItem(row, 3, QTableWidgetItem(item.expected_value))
@@ -162,10 +187,12 @@ class ContextualAuditWidget(QWidget):
         item = self._items[row]
         self._lbl_detail_title.setText(f"{item.rule_code}: {item.rule_name}")
 
-        color = "#10b981" if item.status == "PASSED" else "#ef4444"
+        color = (
+            ColorTokens.SEVERITY_LOW if item.status == "PASSED" else ColorTokens.SEVERITY_CRITICAL
+        )
         self._lbl_detail_badge.setText(
-            f"Category: <b>{item.category}</b> | "
-            f"Status: <b style='color:{color};'>{item.status}</b> | "
+            f"Category: <b>{item.category}</b>  |  "
+            f"Status: <b style='color:{color};'>{item.status}</b>  |  "
             f"Severity: <b>{item.severity}</b>"
         )
         self._txt_detail_desc.setPlainText(

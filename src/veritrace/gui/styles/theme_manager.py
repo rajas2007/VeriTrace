@@ -10,29 +10,32 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+from veritrace.gui.styles.tokens import ColorTokens, format_pill_html
+
 logger = logging.getLogger("veritrace.gui.styles.theme_manager")
 
 CURRENT_DIR = Path(__file__).resolve().parent
 DEFAULT_QSS_PATH = CURRENT_DIR / "dark_theme.qss"
 
+# Linear/Vercel-inspired desaturated semantic colors
 SEVERITY_COLORS: dict[str, str] = {
-    "CRITICAL": "#ef4444",
-    "HIGH": "#f97316",
-    "MEDIUM": "#eab308",
-    "LOW": "#64748b",
+    "CRITICAL": ColorTokens.CRITICAL_FG,
+    "HIGH": ColorTokens.HIGH_FG,
+    "MEDIUM": ColorTokens.MEDIUM_FG,
+    "LOW": ColorTokens.LOW_FG,
 }
 
 STATUS_COLORS: dict[str, str] = {
-    "CONFIRMED": "#10b981",
-    "DISMISSED": "#64748b",
-    "PENDING_REVIEW": "#3b82f6",
-    "ANNOTATED": "#a855f7",
+    "CONFIRMED": ColorTokens.LOW_FG,
+    "DISMISSED": ColorTokens.TEXT_MUTED,
+    "PENDING_REVIEW": ColorTokens.INFO_FG,
+    "ANNOTATED": "#B794F4",
 }
 
 TIER_COLORS: dict[str, str] = {
-    "CONFIRMED_OBSERVATION": "#06b6d4",
-    "DETECTED_INCONSISTENCY": "#f97316",
-    "SUSPECTED_MANIPULATION": "#ef4444",
+    "CONFIRMED_OBSERVATION": ColorTokens.LOW_FG,
+    "DETECTED_INCONSISTENCY": ColorTokens.HIGH_FG,
+    "SUSPECTED_MANIPULATION": ColorTokens.CRITICAL_FG,
 }
 
 
@@ -89,24 +92,93 @@ class ThemeManager:
     @classmethod
     def get_severity_color(cls, severity: str) -> str:
         """Return hex color code for a severity level."""
-        return SEVERITY_COLORS.get(severity.upper(), "#64748b")
+        return SEVERITY_COLORS.get(severity.upper(), ColorTokens.TEXT_MUTED)
 
     @classmethod
     def get_status_color(cls, status: str) -> str:
         """Return hex color code for a review status."""
-        return STATUS_COLORS.get(status.upper(), "#64748b")
+        return STATUS_COLORS.get(status.upper(), ColorTokens.TEXT_MUTED)
 
     @classmethod
     def get_tier_color(cls, tier: str) -> str:
         """Return hex color code for an epistemic tier."""
-        return TIER_COLORS.get(tier.upper(), "#f97316")
+        return TIER_COLORS.get(tier.upper(), ColorTokens.HIGH_FG)
 
     @classmethod
     def format_badge_html(cls, text: str, bg_color: str, fg_color: str = "#ffffff") -> str:
-        """Return styled HTML span badge."""
-        return (
-            f"<span style='background-color: {bg_color}; color: {fg_color}; "
-            f"padding: 3px 9px; border-radius: 9px; font-weight: 700; font-size: 11px; "
-            f"letter-spacing: 0.3px;'>"
-            f"{text}</span>"
+        """Return styled HTML span badge (preserved for existing caller compatibility)."""
+        # If passed an explicit hex color for bg, use a refined pill presentation
+        return format_pill_html(
+            text=text,
+            fg_color=fg_color,
+            bg_color=bg_color,
+            border_color="rgba(255, 255, 255, 0.12)",
+        )
+
+    @classmethod
+    def format_severity_pill(cls, severity: str) -> str:
+        """Return a modern Linear-style 12% tint pill badge for severity."""
+        sev = severity.upper()
+        if sev == "CRITICAL":
+            return format_pill_html(
+                sev, ColorTokens.CRITICAL_FG, ColorTokens.CRITICAL_BG, ColorTokens.CRITICAL_BORDER
+            )
+        if sev == "HIGH":
+            return format_pill_html(
+                sev, ColorTokens.HIGH_FG, ColorTokens.HIGH_BG, ColorTokens.HIGH_BORDER
+            )
+        if sev == "MEDIUM":
+            return format_pill_html(
+                sev, ColorTokens.MEDIUM_FG, ColorTokens.MEDIUM_BG, ColorTokens.MEDIUM_BORDER
+            )
+        return format_pill_html(sev, ColorTokens.LOW_FG, ColorTokens.LOW_BG, ColorTokens.LOW_BORDER)
+
+    @classmethod
+    def format_tier_pill(cls, tier: str) -> str:
+        """Return a modern 12% tint pill badge for epistemic tiers."""
+        t = tier.upper()
+        display = t.replace("_", " ")
+        if "MANIPULATION" in t:
+            return format_pill_html(
+                display,
+                ColorTokens.CRITICAL_FG,
+                ColorTokens.CRITICAL_BG,
+                ColorTokens.CRITICAL_BORDER,
+            )
+        if "INCONSISTENCY" in t:
+            return format_pill_html(
+                display,
+                ColorTokens.HIGH_FG,
+                ColorTokens.HIGH_BG,
+                ColorTokens.HIGH_BORDER,
+            )
+        return format_pill_html(
+            display,
+            ColorTokens.LOW_FG,
+            ColorTokens.LOW_BG,
+            ColorTokens.LOW_BORDER,
+        )
+
+    @classmethod
+    def format_status_pill(cls, status: str) -> str:
+        """Return a modern 12% tint pill badge for review status."""
+        st = status.upper()
+        display = st.replace("_", " ")
+        if st == "CONFIRMED":
+            return format_pill_html(
+                display, ColorTokens.LOW_FG, ColorTokens.LOW_BG, ColorTokens.LOW_BORDER
+            )
+        if st == "DISMISSED":
+            return format_pill_html(
+                display,
+                ColorTokens.TEXT_MUTED,
+                "rgba(107, 117, 135, 0.12)",
+                "rgba(107, 117, 135, 0.25)",
+            )
+        if st == "PENDING_REVIEW":
+            return format_pill_html(
+                display, ColorTokens.INFO_FG, ColorTokens.INFO_BG, ColorTokens.INFO_BORDER
+            )
+        return format_pill_html(
+            display, "#B794F4", "rgba(183, 148, 244, 0.12)", "rgba(183, 148, 244, 0.3)"
         )
